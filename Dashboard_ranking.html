@@ -74,7 +74,12 @@ th.sorted .sa{color:#84cc16;}
 .chart-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;}
 .chart-card-title{font-size:.88rem;font-weight:700;color:var(--text);}
 .chart-card-sub{font-size:.66rem;color:var(--muted);margin-top:.1rem;}
-.chart-wrap{position:relative;height:240px;}
+.chart-wrap{position:relative;height:260px;}
+.chart-toggle{background:var(--bg);border:1.5px solid var(--border);border-radius:6px;
+              padding:.28rem .75rem;font-size:.7rem;font-family:"Inter",sans-serif;font-weight:600;
+              color:var(--muted);cursor:pointer;transition:all .15s;}
+.chart-toggle:hover{border-color:var(--green);color:var(--text);}
+.chart-toggle.active{background:var(--navy);border-color:var(--navy);color:#fff;}
 @media(max-width:768px){
   .layout{flex-direction:column;}
   .sidebar{width:100%;height:auto;position:relative;top:0;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;border-right:none;border-bottom:1px solid var(--border);}
@@ -149,11 +154,15 @@ th.sorted .sa{color:#84cc16;}
     <div class="chart-card">
       <div class="chart-card-hdr">
         <div>
-          <div class="chart-card-title">📊 Score TOTAL por Unidad de Negocio</div>
-          <div class="chart-card-sub">Promedio ponderado del período filtrado · semáforo: 🟢 ≥90% · 🟡 75–89% · 🔴 &lt;75%</div>
+          <div class="chart-card-title" id="chartTitle">📊 Score TOTAL por Unidad de Negocio</div>
+          <div class="chart-card-sub">Semáforo: 🟢 ≥90% · 🟡 75–89% · 🔴 &lt;75%</div>
+        </div>
+        <div style="display:flex;gap:.4rem">
+          <button class="chart-toggle active" id="btnUDN" onclick="setChartMode('udn')">Por UDN</button>
+          <button class="chart-toggle" id="btnSem" onclick="setChartMode('sem')">Por Semana</button>
         </div>
       </div>
-      <div class="chart-wrap"><canvas id="chartUDN"></canvas></div>
+      <div class="chart-wrap"><canvas id="chartMain"></canvas></div>
     </div>
 
     <!-- TABLA JEFE -->
@@ -346,19 +355,50 @@ function updateSemBanner(){
   }
 }
 
+let chartMode='udn'; // 'udn' | 'sem'
+
+function setChartMode(mode){
+  chartMode=mode;
+  document.getElementById('btnUDN').classList.toggle('active', mode==='udn');
+  document.getElementById('btnSem').classList.toggle('active', mode==='sem');
+  document.getElementById('chartTitle').textContent = mode==='udn'
+    ? '📊 Score TOTAL por Unidad de Negocio'
+    : '📈 Evolución del Score TOTAL por Semana';
+  renderChart(getFiltered());
+}
+
 function renderChart(filtered){
-  const udnRows=aggregateBy(filtered,C.udn).filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
-  const labels=udnRows.map(r=>r.key);
-  const values=udnRows.map(r=>+r.tot.toFixed(1));
-  const colors=values.map(v=>sColor(v));
+  const ctx=document.getElementById('chartMain').getContext('2d');
+  if(chartInst){chartInst.destroy();chartInst=null;}
 
-  const ctx=document.getElementById('chartUDN').getContext('2d');
-  if(chartInst) chartInst.destroy();
+  let labels=[], values=[], colors=[];
 
-  // Dynamic height based on # of UDNs
-  const minH=180, rowH=38;
-  const h=Math.max(minH, labels.length*rowH);
-  document.querySelector('.chart-wrap').style.height=h+'px';
+  if(chartMode==='udn'){
+    // Vertical bars by UDN
+    const rows=aggregateBy(filtered,C.udn).filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
+    labels=rows.map(r=>r.key);
+    values=rows.map(r=>+r.tot.toFixed(1));
+    colors=values.map(v=>sColor(v));
+    document.querySelector('.chart-wrap').style.height='260px';
+  } else {
+    // Vertical bars by Semana (evolution)
+    function semNum(s){const n=parseInt(String(s).replace(/\D/g,''));return isNaN(n)?0:n;}
+    const semMap={};
+    filtered.forEach(r=>{
+      const k=(r[C.sem]||'').trim(); if(!k) return;
+      if(!semMap[k]) semMap[k]=[];
+      const v=pct(r[C.tot]); if(v!==null) semMap[k].push(v);
+    });
+    const semKeys=Object.keys(semMap).sort((a,b)=>semNum(a)-semNum(b));
+    labels=semKeys.map(s=>'Sem '+s);
+    values=semKeys.map(k=>{
+      const vs=semMap[k]; return vs.length?+( vs.reduce((a,b)=>a+b,0)/vs.length ).toFixed(1):null;
+    });
+    colors=values.map(v=>v!==null?sColor(v):'#9ca3af');
+    document.querySelector('.chart-wrap').style.height='260px';
+  }
+
+  if(!labels.length){ return; }
 
   chartInst=new Chart(ctx,{
     type:'bar',
@@ -367,34 +407,30 @@ function renderChart(filtered){
       datasets:[{
         label:'Score TOTAL %',
         data:values,
-        backgroundColor:colors.map(c=>c+'cc'),
+        backgroundColor:colors.map(c=>c+'bb'),
         borderColor:colors,
         borderWidth:1.5,
-        borderRadius:5,
+        borderRadius:6,
         borderSkipped:false
       }]
     },
     options:{
-      indexAxis:'y',
       responsive:true,
       maintainAspectRatio:false,
       plugins:{
         legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label:ctx=>' '+ctx.parsed.x.toFixed(1)+'%'
-          }
-        }
+        tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1)+'%' : '–'}`}}
       },
       scales:{
         x:{
-          min:0,max:100,
-          grid:{color:'rgba(0,0,0,.05)'},
-          ticks:{font:{size:10},callback:v=>v+'%'}
+          grid:{display:false},
+          ticks:{font:{size:10,weight:'600'}}
         },
         y:{
-          grid:{display:false},
-          ticks:{font:{size:11,weight:'600'}}
+          min:0,max:100,
+          grid:{color:'rgba(0,0,0,.05)'},
+          ticks:{font:{size:10},callback:v=>v+'%'},
+          border:{display:false}
         }
       }
     }
