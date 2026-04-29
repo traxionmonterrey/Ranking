@@ -70,11 +70,68 @@ th.sorted .sa{color:#84cc16;}
 .sem-banner .sem-val{font-size:1.1rem;font-weight:800;color:#84cc16;letter-spacing:.02em;}
 .sem-banner .sem-sub{font-size:.68rem;color:#9ca3af;margin-left:auto;}
 
+/* ── FILTER TOGGLE (mobile only) ── */
+.filter-toggle{display:none;width:100%;background:var(--navy);color:#e5e7eb;border:none;
+               border-radius:8px;padding:.55rem .85rem;font-size:.78rem;font-family:"Inter",sans-serif;
+               font-weight:600;cursor:pointer;text-align:left;gap:.5rem;align-items:center;}
+.filter-toggle svg{width:14px;height:14px;stroke:#84cc16;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;}
+.filter-toggle .ft-arrow{margin-left:auto;font-size:.65rem;transition:transform .25s;}
+.filter-toggle.open .ft-arrow{transform:rotate(180deg);}
+
 @media(max-width:768px){
+  /* NAV */
+  nav{padding:10px 16px;gap:10px;}
+  nav a.brand{font-size:16px;}
+
+  /* LAYOUT */
   .layout{flex-direction:column;}
-  .sidebar{width:100%;height:auto;position:relative;top:0;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;border-right:none;border-bottom:1px solid var(--border);}
-  .sidebar .sb-title{grid-column:1/-1;}
-  .kpi-grid{grid-template-columns:1fr 1fr;}
+
+  /* SIDEBAR → collapsible panel */
+  .sidebar{
+    width:100%;height:auto;position:relative;top:0;
+    border-right:none;border-bottom:1px solid var(--border);
+    padding:.6rem .75rem;gap:.5rem;overflow:visible;
+  }
+  .filter-toggle{display:flex;}
+  .sidebar-filters{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;padding-top:.45rem;}
+  .sidebar-filters.collapsed{display:none;}
+  .sidebar-filters .fg:last-child{grid-column:1/-1;}
+  .sb-title{display:none;} /* replaced by toggle button */
+
+  /* MAIN */
+  .main{padding:.75rem .65rem;gap:.75rem;}
+
+  /* BANNER */
+  .sem-banner{padding:.55rem .85rem;border-radius:8px;}
+  .sem-banner .sem-val{font-size:.95rem;}
+  .sem-banner .sem-sub{font-size:.62rem;}
+
+  /* KPIs: 3 en una fila compactos */
+  .kpi-grid{grid-template-columns:repeat(3,1fr);gap:.45rem;}
+  .kpi{padding:.65rem .6rem;border-top-width:3px;}
+  .kpi::after{display:none;}
+  .kpi-icon{font-size:.85rem;margin-bottom:.18rem;}
+  .kpi-val{font-size:1.15rem;}
+  .kpi-lbl{font-size:.55rem;margin-top:.15rem;}
+  .kpi-sub{font-size:.62rem;margin-top:.1rem;}
+
+  /* TABLE CARD */
+  .table-hdr{padding:.6rem .75rem;flex-wrap:wrap;gap:.4rem;}
+  .th-left .ttl{font-size:.8rem;}
+  .th-left .sub{display:none;}
+  .table-card{border-radius:8px;}
+
+  /* TABLE SCROLL */
+  .data-table{table-layout:auto;min-width:620px;}
+  .data-table thead th{font-size:.55rem;padding:.35rem .45rem;}
+  .data-table tbody td{font-size:.68rem;padding:.28rem .45rem;}
+}
+
+@media(max-width:400px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr);gap:.3rem;}
+  .kpi-val{font-size:1rem;}
+  .kpi-lbl{font-size:.5rem;}
+  .kpi-sub{font-size:.58rem;}
 }
 </style>
 </head>
@@ -92,19 +149,29 @@ th.sorted .sa{color:#84cc16;}
 
 <div class="layout">
   <aside class="sidebar">
+    <button class="filter-toggle" id="filterToggle" onclick="toggleFilters()">
+      <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      Filtros
+      <span class="ft-arrow">▼</span>
+    </button>
     <div class="sb-title">Filtros <button class="sb-reset" onclick="resetFilters()" title="Limpiar">↺</button></div>
-    <div class="fg"><label>Unidad de Negocio</label>
-      <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
-    <div class="fg"><label>Jefe</label>
-      <select id="f-jef" onchange="onFilter()"><option value="">Todos</option></select></div>
-    <div class="fg"><label>Coordinador</label>
-      <select id="f-coord" onchange="onFilter()"><option value="">Todos</option></select></div>
-    <div class="fg"><label>Operador</label>
-      <select id="f-ope" onchange="onFilter()"><option value="">Todos</option></select></div>
-    <div class="fg"><label>Mes</label>
-      <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
-    <div class="fg"><label>Semana</label>
-      <select id="f-sem" onchange="onFilter()"><option value="">Todas</option></select></div>
+    <div class="sidebar-filters collapsed" id="sidebarFilters">
+      <div class="fg"><label>Unidad de Negocio</label>
+        <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
+      <div class="fg"><label>Jefe</label>
+        <select id="f-jef" onchange="onFilter()"><option value="">Todos</option></select></div>
+      <div class="fg"><label>Coordinador</label>
+        <select id="f-coord" onchange="onFilter()"><option value="">Todos</option></select></div>
+      <div class="fg"><label>Operador</label>
+        <select id="f-ope" onchange="onFilter()"><option value="">Todos</option></select></div>
+      <div class="fg"><label>Mes</label>
+        <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
+      <div class="fg"><label>Semana</label>
+        <select id="f-sem" onchange="onFilter()"><option value="">Todas</option></select></div>
+      <div class="fg" style="grid-column:1/-1">
+        <button style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:.3rem;font-size:.72rem;font-family:'Inter',sans-serif;cursor:pointer;" onclick="resetFilters()">↺ Limpiar filtros</button>
+      </div>
+    </div>
   </aside>
 
   <main class="main">
@@ -137,77 +204,6 @@ th.sorted .sa{color:#84cc16;}
         <div class="kpi-val" id="kpiOpeV">–</div>
         <div class="kpi-lbl">Mejor Operador</div>
         <div class="kpi-sub" id="kpiOpeN">–</div>
-      </div>
-    </div>
-
-    <!-- TABLA UDN -->
-    <div class="table-card">
-      <div class="table-hdr">
-        <div class="th-left">
-          <div class="ttl">🏭 Score por Unidad de Negocio</div>
-          <div class="sub">Promedio del período filtrado</div>
-        </div>
-        <span class="badge" id="cntUDN">– UDNs</span>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="data-table" id="tblUDN">
-          <thead><tr>
-            <th style="width:36px" data-col="rank" data-tbl="udn">#<span class="sa">↓</span></th>
-            <th data-col="key" data-tbl="udn">Unidad de Negocio<span class="sa">↕</span></th>
-            <th class="r" data-col="n" data-tbl="udn">Operadores<span class="sa">↕</span></th>
-            <th class="r" data-col="ini" data-tbl="udn">% NS Inicio<span class="sa">↕</span></th>
-            <th class="r" data-col="lle" data-tbl="udn">% NS Llegada<span class="sa">↕</span></th>
-            <th class="r" data-col="cal" data-tbl="udn">Calidad Ruta<span class="sa">↕</span></th>
-            <th class="r" data-col="seg" data-tbl="udn">Score Seg.<span class="sa">↕</span></th>
-            <th class="r" data-col="ren" data-tbl="udn">Rendimiento<span class="sa">↕</span></th>
-            <th class="r" data-col="tot" data-tbl="udn">TOTAL<span class="sa">↕</span></th>
-          </tr></thead>
-          <tbody id="bodyUDN"><tr><td colspan="9" class="tbl-empty">Cargando…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TABLA JEFE -->
-    <div class="table-card">
-      <div class="table-hdr">
-        <div class="th-left"><div class="ttl">🗂️ Ranking por Jefe</div><div class="sub">Promedio del equipo por período filtrado</div></div>
-        <div class="th-right"><span class="badge" id="cntJef">– jefes</span><button class="btn-exp" onclick="exportTable('jef')">⬇ Excel</button></div>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="data-table" id="tblJef"><thead><tr>
-          <th style="width:36px" data-col="rank" data-tbl="jef">#<span class="sa">↓</span></th>
-          <th data-col="key" data-tbl="jef">Jefe<span class="sa">↕</span></th>
-          <th class="r" data-col="n" data-tbl="jef">Operadores<span class="sa">↕</span></th>
-          <th class="r" data-col="ini" data-tbl="jef">% NS Inicio<span class="sa">↕</span></th>
-          <th class="r" data-col="lle" data-tbl="jef">% NS Llegada<span class="sa">↕</span></th>
-          <th class="r" data-col="cal" data-tbl="jef">Calidad Ruta<span class="sa">↕</span></th>
-          <th class="r" data-col="seg" data-tbl="jef">Score Seg.<span class="sa">↕</span></th>
-          <th class="r" data-col="ren" data-tbl="jef">Rendimiento<span class="sa">↕</span></th>
-          <th class="r" data-col="tot" data-tbl="jef">TOTAL<span class="sa">↕</span></th>
-        </tr></thead><tbody id="bodyJef"><tr><td colspan="9" class="tbl-empty">Cargando…</td></tr></tbody></table>
-      </div>
-    </div>
-
-    <!-- TABLA COORDINADOR -->
-    <div class="table-card">
-      <div class="table-hdr">
-        <div class="th-left"><div class="ttl">🧑‍💼 Ranking por Coordinador</div><div class="sub">Promedio del equipo por período filtrado</div></div>
-        <div class="th-right"><span class="badge" id="cntCoord">– coordinadores</span><button class="btn-exp" onclick="exportTable('coord')">⬇ Excel</button></div>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="data-table" id="tblCoord"><thead><tr>
-          <th style="width:36px" data-col="rank" data-tbl="coord">#<span class="sa">↓</span></th>
-          <th data-col="key" data-tbl="coord">Coordinador<span class="sa">↕</span></th>
-          <th data-col="jef" data-tbl="coord">Jefe<span class="sa">↕</span></th>
-          <th data-col="udn" data-tbl="coord">UDN<span class="sa">↕</span></th>
-          <th class="r" data-col="n" data-tbl="coord">Operadores<span class="sa">↕</span></th>
-          <th class="r" data-col="ini" data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
-          <th class="r" data-col="lle" data-tbl="coord">% NS Llegada<span class="sa">↕</span></th>
-          <th class="r" data-col="cal" data-tbl="coord">Calidad Ruta<span class="sa">↕</span></th>
-          <th class="r" data-col="seg" data-tbl="coord">Score Seg.<span class="sa">↕</span></th>
-          <th class="r" data-col="ren" data-tbl="coord">Rendimiento<span class="sa">↕</span></th>
-          <th class="r" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
-        </tr></thead><tbody id="bodyCoord"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody></table>
       </div>
     </div>
 
@@ -551,6 +547,12 @@ function resetFilters(){
   ['f-udn','f-jef','f-coord','f-ope','f-mes','f-sem'].forEach(id=>document.getElementById(id).value='');
   buildSelects();render();
 }
+function toggleFilters(){
+  const panel=document.getElementById('sidebarFilters');
+  const btn=document.getElementById('filterToggle');
+  const collapsed=panel.classList.toggle('collapsed');
+  btn.classList.toggle('open',!collapsed);
+}
 
 function aggregateBy(rows,groupKey){
   const map={};
@@ -587,12 +589,12 @@ function onSort(th){
 
 function render(){
   const f=getFiltered();
-  const rU=aggregateBy(f,C.udn);
-  const rJ=aggregateBy(f,C.jef),rC=aggregateBy(f,C.coord),rO=aggregateBy(f,C.ope);
+  const rO=aggregateBy(f,C.ope);
+  const rJ=aggregateBy(f,C.jef);
+  const rC=aggregateBy(f,C.coord);
   updateSemBanner();
   renderKPIs(rO,rJ,rC);
-  renderTable('udn',rU);
-  renderTable('jef',rJ);renderTable('coord',rC);renderTable('ope',rO);
+  renderTable('ope',rO);
 }
 
 function renderKPIs(rO,rJ,rC){
@@ -646,6 +648,10 @@ function exportTable(tbl){
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
+  // On desktop show filters, on mobile keep collapsed
+  if(window.innerWidth>768){
+    document.getElementById('sidebarFilters').classList.remove('collapsed');
+  }
   document.querySelectorAll('.data-table thead th[data-col]').forEach(th=>{th.addEventListener('click',()=>onSort(th));});
   loadData();
 });
