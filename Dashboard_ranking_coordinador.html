@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ranking Coordinadores | Traxión</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="favicon-traxion.svg">
 <style>
@@ -241,7 +240,6 @@ th.sorted .sa{color:#84cc16;}
 const SHEET_ID = '122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
 let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',udn:'Unidad de Negocio',coord:'Coordinador',ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',seg:'Score Seguridad',ren:'Rendimiento',tot:'TOTAL'};
 let DATA=[];
-let chartInst=null;
 const SORT={jef:{col:'tot',dir:'desc'},coord:{col:'tot',dir:'desc'},ope:{col:'tot',dir:'desc'},udn:{col:'tot',dir:'desc'}};
 
 function parseLine(line){
@@ -357,136 +355,6 @@ function updateSemBanner(){
   }
 }
 
-let chartMode='udn';
-
-const PALETTE=['#6b7a99','#84cc16','#374151','#9ca3af','#4b5563','#a3e635','#475569','#bef264','#1f2937','#d9f99d'];
-
-function setChartMode(mode){
-  chartMode=mode;
-  document.getElementById('btnUDN').classList.toggle('active', mode==='udn');
-  document.getElementById('btnSem').classList.toggle('active', mode==='sem');
-  document.getElementById('chartTitle').textContent = mode==='udn'
-    ? '📊 Score TOTAL por Unidad de Negocio'
-    : '📈 Tendencia por Semana — Score TOTAL';
-  renderChart(getFiltered());
-}
-
-function renderChart(filtered){
-  const ctx=document.getElementById('chartMain').getContext('2d');
-  if(chartInst){chartInst.destroy();chartInst=null;}
-
-  function semNum(s){const n=parseInt(String(s).replace(/\D/g,''));return isNaN(n)?0:n;}
-
-  if(chartMode==='udn'){
-    // Barras verticales por UDN
-    const rows=aggregateBy(filtered,C.udn).filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
-    if(!rows.length) return;
-    document.querySelector('.chart-wrap').style.height='260px';
-    chartInst=new Chart(ctx,{
-      type:'bar',
-      data:{
-        labels:rows.map(r=>r.key),
-        datasets:[{
-          label:'Score TOTAL %',
-          data:rows.map(r=>+r.tot.toFixed(1)),
-          backgroundColor:'#6b7a99bb',
-          borderColor:'#6b7a99',
-          borderWidth:1.5,
-          borderRadius:6,
-          borderSkipped:false
-        }]
-      },
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y.toFixed(1)}%`}}},
-        scales:{
-          x:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}},
-          y:{min:0,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},callback:v=>v+'%'},border:{display:false}}
-        }
-      }
-    });
-
-  } else {
-    // Líneas por UDN a lo largo de semanas
-    // Obtener semanas únicas ordenadas
-    const allSems=[...new Set(filtered.map(r=>(r[C.sem]||'').trim()).filter(Boolean))]
-      .sort((a,b)=>semNum(a)-semNum(b));
-
-    // Obtener UDNs únicas (si hay filtro de UDN, solo esa)
-    const allUDNs=[...new Set(filtered.map(r=>(r[C.udn]||'').trim()).filter(Boolean))].sort();
-
-    if(!allSems.length||!allUDNs.length) return;
-
-    // Construir mapa: udn → semana → [valores]
-    const udnSemMap={};
-    filtered.forEach(r=>{
-      const udn=(r[C.udn]||'').trim();
-      const sem=(r[C.sem]||'').trim();
-      const v=pct(r[C.tot]);
-      if(!udn||!sem||v===null) return;
-      if(!udnSemMap[udn]) udnSemMap[udn]={};
-      if(!udnSemMap[udn][sem]) udnSemMap[udn][sem]=[];
-      udnSemMap[udn][sem].push(v);
-    });
-
-    const datasets=allUDNs.map((udn,i)=>{
-      const color=PALETTE[i%PALETTE.length];
-      const data=allSems.map(sem=>{
-        const vs=udnSemMap[udn]&&udnSemMap[udn][sem];
-        return vs&&vs.length?+( vs.reduce((a,b)=>a+b,0)/vs.length ).toFixed(1):null;
-      });
-      return{
-        label:udn,
-        data,
-        borderColor:color,
-        backgroundColor:color+'33',
-        borderWidth:2.5,
-        pointRadius:4,
-        pointHoverRadius:6,
-        pointBackgroundColor:color,
-        tension:.35,
-        spanGaps:true
-      };
-    });
-
-    // Altura dinámica: más UDNs → un poco más alto para leyenda
-    const h=allUDNs.length>4?320:260;
-    document.querySelector('.chart-wrap').style.height=h+'px';
-
-    chartInst=new Chart(ctx,{
-      type:'line',
-      data:{
-        labels:allSems.map(s=>'Sem '+s),
-        datasets
-      },
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        interaction:{mode:'index',intersect:false},
-        plugins:{
-          legend:{
-            display:allUDNs.length>1,
-            position:'bottom',
-            labels:{font:{size:10},boxWidth:12,padding:10}
-          },
-          tooltip:{
-            callbacks:{
-              label:c=>` ${c.dataset.label}: ${c.parsed.y!==null?c.parsed.y.toFixed(1)+'%':'–'}`
-            }
-          }
-        },
-        scales:{
-          x:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}},
-          y:{
-            min:0,max:100,
-            grid:{color:'rgba(0,0,0,.05)'},
-            ticks:{font:{size:10},callback:v=>v+'%'},
-            border:{display:false}
-          }
-        }
-      }
-    });
-  }
-}
 
 function fillSel(id,vals,ph){
   const s=document.getElementById(id),cur=s.value;
@@ -597,7 +465,6 @@ function render(){
   updateSemBanner();
   renderKPIs(rC);
   renderTable('coord',rC);
-  renderChart(f);
 }
 
 function renderKPIs(rC){
