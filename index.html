@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traxión | Dashboard Logistic</title>
+    <!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="favicon-traxion.svg">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    font-family:'Segoe UI',Tahoma,Verdana,sans-serif;
+    background:#f3f4f6;
+}
+.layout{
+    display:flex;
+    height:100vh;
+}
+.sidebar{
+    width:260px;
+    background:#1f2937;
+    color:#fff;
+    padding:20px;
+    overflow-y:auto;
+}
+.sidebar h1{
+    color:#84cc16;
+    font-size:22px;
+    margin-bottom:30px;
+    text-align:center;
+}
+.menu-group{
+    margin-bottom:25px;
+}
+.menu-group-title{
+    font-size:11px;
+    color:#9ca3af;
+    margin-bottom:10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    font-weight:700;
+}
+.menu-item{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:12px 15px;
+    margin-bottom:8px;
+    border-radius:8px;
+    color:#e5e7eb;
+    text-decoration:none;
+    font-weight:600;
+    transition:all 0.3s;
+    font-size:14px;
+}
+.menu-item svg{
+    flex-shrink:0;
+    width:18px;
+    height:18px;
+    fill:none;
+    stroke:#9ca3af;
+    stroke-width:1.7;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    transition:stroke 0.3s;
+}
+.menu-item:hover{
+    background:#374151;
+    transform:translateX(5px);
+}
+.menu-item:hover svg{
+    stroke:#84cc16;
+}
+.menu-item.active{
+    background:#84cc16;
+    color:#1f2937;
+}
+.menu-item.active svg{
+    stroke:#1f2937;
+}
+.main{
+    flex:1;
+    background:#fff;
+    position:relative;
+    overflow:hidden;
+}
+.main::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(rgba(255,255,255,.75),rgba(255,255,255,.75)),
+      url("fondotraxion.jpeg");
+    background-size:cover;
+    background-position:center;
+}
+.hero{
+    position:relative;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:40px;
+}
+.hero img{
+    width:180px;
+    margin-bottom:30px;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+}
+.hero h2{
+    font-size:56px;
+    letter-spacing:6px;
+    font-weight:900;
+    color:#1f2937;
+    margin-bottom:10px;
+}
+.hero p{
+    margin-top:10px;
+    font-size:18px;
+    color:#6b7280;
+    font-weight:500;
+}
+.hero .tagline{
+    font-size:16px;
+    color:#84cc16;
+    font-weight:700;
+    margin-top:20px;
+    letter-spacing:2px;
+}
+@media (max-width:1024px){
+    .layout{flex-direction:column}
+    .sidebar{width:100%;max-height:300px}
+}
+@media (max-width:640px){
+    .hero h2{font-size:36px;letter-spacing:3px}
+    .hero p{font-size:16px}
+    .hero img{width:140px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+    <aside class="sidebar">
+        <h1>TRAXIÓN</h1>
+
+        <div class="menu-group">
+            <div class="menu-group-title">Logística</div>
+
+            <!-- Nivel de Servicio — escudo con check -->
+            <a href="Dashboard_NS.html" class="menu-item">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/>
+                    <polyline points="9 12 11 14 15 10"/>
+                </svg>
+                Nivel de Servicio
+            </a>
+
+            <!-- Kilómetros — velocímetro -->
+            <a href="dashboard_kilometros.html" class="menu-item">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 7v1.5"/>
+                    <path d="M7.5 9.5l1 1"/>
+                    <path d="M16.5 9.5l-1 1"/>
+                    <path d="M7 14h1.5"/>
+                    <path d="M15.5 14H17"/>
+                    <path d="M12 14l2.5-3" stroke-width="2"/>
+                    <circle cx="12" cy="14" r="1" fill="#9ca3af" stroke="none"/>
+                </svg>
+                Kilómetros Recorridos
+            </a>
+
+            <!-- Flota Vehicular — camión -->
+            <a href="Dashboard_Flota.html" class="menu-item">
+                <svg viewBox="0 0 24 24">
+                    <rect x="1" y="4" width="13" height="12" rx="1"/>
+                    <path d="M14 8h4l3 4v4h-7V8z"/>
+                    <circle cx="5" cy="18.5" r="2"/>
+                    <circle cx="18" cy="18.5" r="2"/>
+                    <path d="M14 18.5H7"/>
+                </svg>
+                Flota Vehicular
+            </a>
+
+            <!-- Ralentí — motor/ondas -->
+            <a href="Dashboard_ralenti.html" class="menu-item">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M6.34 6.34a8 8 0 1 0 11.32 0"/>
+                    <path d="M12 2v4"/>
+                </svg>
+                Ralentí
+            </a>
+             <!-- Horas de descanso -->
+            <a href="Dashboard_ralenti.html" class="menu-item">
+                <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M6.34 6.34a8 8 0 1 0 11.32 0"/>
+                    <path d="M12 2v4"/>
+                </svg>
+                Dias y horas de Descanso
+            </a>
+
+            
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="hero">
+            <h2>TRAXIÓN</h2>
+            <p>Logística · Operaciones · Seguridad</p>
+            <p class="tagline">Movemos lo más valioso, conectamos destinos</p>
+        </div>
+    </main>
+
+</div>
+</body>
+</html>
