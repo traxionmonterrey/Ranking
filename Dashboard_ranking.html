@@ -216,6 +216,38 @@ th.sorted .sa{color:#84cc16;}
       </div>
     </div>
 
+    <!-- TABLA COORDINADOR -->
+    <div class="table-card">
+      <div class="table-hdr">
+        <div class="th-left">
+          <div class="ttl">🧑‍💼 Ranking por Coordinador</div>
+          <div class="sub">Promedio del equipo por período filtrado</div>
+        </div>
+        <div class="th-right">
+          <span class="badge" id="cntCoord">– coordinadores</span>
+          <button class="btn-exp" onclick="exportTable('coord')">⬇ Excel</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table" id="tblCoord">
+          <thead><tr>
+            <th style="width:36px" data-col="rank" data-tbl="coord">#<span class="sa">↓</span></th>
+            <th data-col="key" data-tbl="coord">Coordinador<span class="sa">↕</span></th>
+            <th data-col="jef" data-tbl="coord">Jefe<span class="sa">↕</span></th>
+            <th data-col="udn" data-tbl="coord">UDN<span class="sa">↕</span></th>
+            <th class="r" data-col="n" data-tbl="coord">Operadores<span class="sa">↕</span></th>
+            <th class="r" data-col="ini" data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
+            <th class="r" data-col="lle" data-tbl="coord">% NS Llegada<span class="sa">↕</span></th>
+            <th class="r" data-col="cal" data-tbl="coord">Calidad Ruta<span class="sa">↕</span></th>
+            <th class="r" data-col="seg" data-tbl="coord">Score Seg.<span class="sa">↕</span></th>
+            <th class="r" data-col="ren" data-tbl="coord">Rendimiento<span class="sa">↕</span></th>
+            <th class="r" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
+          </tr></thead>
+          <tbody id="bodyCoord"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- TABLA OPERADOR -->
     <div class="table-card" style="margin-bottom:1.5rem">
       <div class="table-hdr">
@@ -264,8 +296,9 @@ let C = {
 
 let DATA = [];
 const SORT = {
-  jef:{ col:'tot', dir:'desc' },
-  ope:{ col:'tot', dir:'desc' }
+  jef:  { col:'tot', dir:'desc' },
+  coord:{ col:'tot', dir:'desc' },
+  ope:  { col:'tot', dir:'desc' }
 };
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
@@ -423,30 +456,33 @@ function getFiltered(){
 
 function cascadeSelects(){
   const v=id=>document.getElementById(id).value;
-  const udn=v('f-udn'),jef=v('f-jef'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
+  const udn=v('f-udn'),jef=v('f-jef'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
 
   function sub(...exclude){
     return DATA.filter(r=>{
-      if(!exclude.includes('udn')&&udn&&r[C.udn]!==udn)  return false;
-      if(!exclude.includes('jef')&&jef&&r[C.jef]!==jef)  return false;
-      if(!exclude.includes('ope')&&ope&&r[C.ope]!==ope)  return false;
-      if(!exclude.includes('mes')&&mes&&r[C.mes]!==mes)  return false;
-      if(!exclude.includes('sem')&&sem&&r[C.sem]!==sem)  return false;
+      if(!exclude.includes('udn')   &&udn  &&r[C.udn]  !==udn)   return false;
+      if(!exclude.includes('jef')   &&jef  &&r[C.jef]  !==jef)   return false;
+      if(!exclude.includes('coord') &&coord&&r[C.coord]!==coord)  return false;
+      if(!exclude.includes('ope')   &&ope  &&r[C.ope]  !==ope)   return false;
+      if(!exclude.includes('mes')   &&mes  &&r[C.mes]  !==mes)   return false;
+      if(!exclude.includes('sem')   &&sem  &&r[C.sem]  !==sem)   return false;
       return true;
     });
   }
 
-  fillSel('f-udn',  uniq(sub('udn').map(r=>r[C.udn])),  'Todas');
-  fillSel('f-jef',  uniq(sub('jef').map(r=>r[C.jef])),  'Todos');
-  fillSel('f-ope',  uniq(sub('ope').map(r=>r[C.ope])),  'Todos');
-  fillSel('f-mes',  uniq(sub('mes').map(r=>r[C.mes])),  'Todos');
-  fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),  'Todas');
+  fillSel('f-udn',   uniq(sub('udn').map(r=>r[C.udn])),                      'Todas');
+  fillSel('f-jef',   uniq(sub('jef').map(r=>r[C.jef])),                      'Todos');
+  fillSel('f-coord', uniq(sub('coord').map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
+  fillSel('f-ope',   uniq(sub('ope').map(r=>r[C.ope])),                      'Todos');
+  fillSel('f-mes',   uniq(sub('mes').map(r=>r[C.mes])),                      'Todos');
+  fillSel('f-sem',   uniq(sub('sem').map(r=>r[C.sem])),                      'Todas');
 
-  if(udn)  document.getElementById('f-udn').value=udn;
-  if(jef)  document.getElementById('f-jef').value=jef;
-  if(ope)  document.getElementById('f-ope').value=ope;
-  if(mes)  document.getElementById('f-mes').value=mes;
-  if(sem)  document.getElementById('f-sem').value=sem;
+  if(udn)   document.getElementById('f-udn').value=udn;
+  if(jef)   document.getElementById('f-jef').value=jef;
+  if(coord) document.getElementById('f-coord').value=coord;
+  if(ope)   document.getElementById('f-ope').value=ope;
+  if(mes)   document.getElementById('f-mes').value=mes;
+  if(sem)   document.getElementById('f-sem').value=sem;
 }
 
 function onFilter(){ cascadeSelects(); render(); }
@@ -499,6 +535,8 @@ function sortRows(rows, tbl){
 function onSort(th){
   const col=th.dataset.col, tbl=th.dataset.tbl;
   if(!col||!tbl) return;
+  // Columna # = ordenar por TOTAL descendente (ranking natural)
+  if(col==='rank'){ SORT[tbl].col='tot'; SORT[tbl].dir='desc'; renderTable(tbl); return; }
   if(SORT[tbl].col===col) SORT[tbl].dir=SORT[tbl].dir==='asc'?'desc':'asc';
   else{ SORT[tbl].col=col; SORT[tbl].dir=(col==='key'||col==='nom'||col==='jef'||col==='udn')?'asc':'desc'; }
   renderTable(tbl);
@@ -508,19 +546,21 @@ function onSort(th){
 function render(){
   const f=getFiltered();
   const rJef=aggregateBy(f,C.jef);
+  const rCoord=aggregateBy(f,C.coord);
   const rOpe=aggregateBy(f,C.ope);
-  renderKPIs(rOpe,rJef);
+  renderKPIs(rOpe,rJef,rCoord);
   renderTable('jef',rJef);
+  renderTable('coord',rCoord);
   renderTable('ope',rOpe);
 }
 
-function renderKPIs(rowsOpe, rowsJef){
+function renderKPIs(rowsOpe, rowsJef, rowsCoord){
   // Mejor Jefe
   const topJef=[...rowsJef].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot)[0]||null;
   document.getElementById('kpiJefV').textContent=topJef?topJef.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiJefN').textContent=topJef?topJef.key:'–';
-  // Mejor Coordinador (si existe columna)
-  const coordRows=aggregateBy(getFiltered(),C.coord);
+  // Mejor Coordinador
+  const coordRows=rowsCoord||aggregateBy(getFiltered(),C.coord);
   const topCoord=[...coordRows].filter(r=>r.tot!==null&&r.key).sort((a,b)=>b.tot-a.tot)[0]||null;
   document.getElementById('kpiCoordV').textContent=topCoord?topCoord.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiCoordN').textContent=topCoord?topCoord.key:'–';
@@ -531,14 +571,15 @@ function renderKPIs(rowsOpe, rowsJef){
 }
 
 function renderTable(tbl, rowsInput){
-  const isJef=tbl==='jef';
-  const bodyId=isJef?'bodyJef':'bodyOpe';
-  const cntId=isJef?'cntJef':'cntOpe';
-  const tblEl=document.getElementById(isJef?'tblJef':'tblOpe');
-  const body=document.getElementById(bodyId);
+  const isJef  = tbl==='jef';
+  const isCoord= tbl==='coord';
+  const bodyId = isJef?'bodyJef':isCoord?'bodyCoord':'bodyOpe';
+  const cntId  = isJef?'cntJef' :isCoord?'cntCoord' :'cntOpe';
+  const tblEl  = document.getElementById(isJef?'tblJef':isCoord?'tblCoord':'tblOpe');
+  const body   = document.getElementById(bodyId);
 
   let rows=rowsInput;
-  if(!rows){ const f=getFiltered(); rows=aggregateBy(f,isJef?C.jef:C.ope); }
+  if(!rows){ const f=getFiltered(); rows=aggregateBy(f,isJef?C.jef:isCoord?C.coord:C.ope); }
   rows=sortRows(rows,tbl);
 
   // Update sort arrows
@@ -550,10 +591,11 @@ function renderTable(tbl, rowsInput){
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT[tbl].col}"]`);
   if(sTh){ sTh.classList.add('sorted'); const sa=sTh.querySelector('.sa'); if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓'; }
 
-  document.getElementById(cntId).textContent=rows.length+(isJef?' jefes':' operadores');
+  const colSpan = isJef?9:11;
+  document.getElementById(cntId).textContent=rows.length+(isJef?' jefes':isCoord?' coordinadores':' operadores');
 
   if(!rows.length){
-    body.innerHTML=`<tr><td colspan="${isJef?9:11}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;
+    body.innerHTML=`<tr><td colspan="${colSpan}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;
     return;
   }
 
@@ -563,6 +605,20 @@ function renderTable(tbl, rowsInput){
       return `<tr>
         <td style="text-align:center">${badge}</td>
         <td style="font-weight:600">${r.key||'–'}</td>
+        <td class="r" style="color:var(--muted)">${r.n}</td>
+        <td>${scCell(r.ini)}</td>
+        <td>${scCell(r.lle)}</td>
+        <td>${scCell(r.cal)}</td>
+        <td>${scCell(r.seg)}</td>
+        <td>${scCell(r.ren)}</td>
+        <td class="r">${totCell(r.tot)}</td>
+      </tr>`;
+    } else if(isCoord){
+      return `<tr>
+        <td style="text-align:center">${badge}</td>
+        <td style="font-weight:600">${r.key||'–'}</td>
+        <td style="color:var(--muted)">${r.jef||'–'}</td>
+        <td style="color:var(--muted)">${r.udn||'–'}</td>
         <td class="r" style="color:var(--muted)">${r.n}</td>
         <td>${scCell(r.ini)}</td>
         <td>${scCell(r.lle)}</td>
@@ -591,21 +647,27 @@ function renderTable(tbl, rowsInput){
 
 // ── EXPORT ───────────────────────────────────────────────────────────────────
 function exportTable(tbl){
-  const isJef=tbl==='jef';
+  const isJef  =tbl==='jef';
+  const isCoord=tbl==='coord';
   const f=getFiltered();
-  const rows=sortRows(aggregateBy(f,isJef?C.jef:C.ope),tbl);
+  const groupKey=isJef?C.jef:isCoord?C.coord:C.ope;
+  const rows=sortRows(aggregateBy(f,groupKey),tbl);
   const fmt=v=>v===null?'':+v.toFixed(2);
   const hdrs=isJef
     ?['#','Jefe','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
+    :isCoord
+    ?['#','Coordinador','Jefe','UDN','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
     :['#','Operador','Nómina','Jefe','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
   const data=rows.map((r,i)=>isJef
     ?[i+1,r.key,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
+    :isCoord
+    ?[i+1,r.key,r.jef,r.udn,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
     :[i+1,r.key,r.nom,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
   );
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,isJef?'Ranking Jefes':'Ranking Operadores');
-  XLSX.writeFile(wb,`ranking_${isJef?'jefes':'operadores'}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.utils.book_append_sheet(wb,ws,isJef?'Ranking Jefes':isCoord?'Ranking Coordinadores':'Ranking Operadores');
+  XLSX.writeFile(wb,`ranking_${isJef?'jefes':isCoord?'coordinadores':'operadores'}_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
