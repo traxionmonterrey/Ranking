@@ -69,17 +69,7 @@ th.sorted .sa{color:#84cc16;}
 .sem-banner .sem-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;}
 .sem-banner .sem-val{font-size:1.1rem;font-weight:800;color:#84cc16;letter-spacing:.02em;}
 .sem-banner .sem-sub{font-size:.68rem;color:#9ca3af;margin-left:auto;}
-/* Chart card */
-.chart-card{background:var(--white);border-radius:12px;box-shadow:0 2px 10px rgba(26,34,54,.07);padding:1rem 1.2rem;}
-.chart-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;}
-.chart-card-title{font-size:.88rem;font-weight:700;color:var(--text);}
-.chart-card-sub{font-size:.66rem;color:var(--muted);margin-top:.1rem;}
-.chart-wrap{position:relative;height:260px;}
-.chart-toggle{background:var(--bg);border:1.5px solid var(--border);border-radius:6px;
-              padding:.28rem .75rem;font-size:.7rem;font-family:"Inter",sans-serif;font-weight:600;
-              color:var(--muted);cursor:pointer;transition:all .15s;}
-.chart-toggle:hover{border-color:var(--green);color:var(--text);}
-.chart-toggle.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+
 @media(max-width:768px){
   .layout{flex-direction:column;}
   .sidebar{width:100%;height:auto;position:relative;top:0;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;border-right:none;border-bottom:1px solid var(--border);}
@@ -150,19 +140,31 @@ th.sorted .sa{color:#84cc16;}
       </div>
     </div>
 
-    <!-- GRÁFICA POR UDN -->
-    <div class="chart-card">
-      <div class="chart-card-hdr">
-        <div>
-          <div class="chart-card-title" id="chartTitle">📊 Score TOTAL por Unidad de Negocio</div>
-          <div class="chart-card-sub">Semáforo: 🟢 ≥90% · 🟡 75–89% · 🔴 &lt;75%</div>
+    <!-- TABLA UDN -->
+    <div class="table-card">
+      <div class="table-hdr">
+        <div class="th-left">
+          <div class="ttl">🏭 Score por Unidad de Negocio</div>
+          <div class="sub">Promedio del período filtrado</div>
         </div>
-        <div style="display:flex;gap:.4rem">
-          <button class="chart-toggle active" id="btnUDN" onclick="setChartMode('udn')">Por UDN</button>
-          <button class="chart-toggle" id="btnSem" onclick="setChartMode('sem')">Por Semana</button>
-        </div>
+        <span class="badge" id="cntUDN">– UDNs</span>
       </div>
-      <div class="chart-wrap"><canvas id="chartMain"></canvas></div>
+      <div style="overflow-x:auto">
+        <table class="data-table" id="tblUDN">
+          <thead><tr>
+            <th style="width:36px" data-col="rank" data-tbl="udn">#<span class="sa">↓</span></th>
+            <th data-col="key" data-tbl="udn">Unidad de Negocio<span class="sa">↕</span></th>
+            <th class="r" data-col="n" data-tbl="udn">Operadores<span class="sa">↕</span></th>
+            <th class="r" data-col="ini" data-tbl="udn">% NS Inicio<span class="sa">↕</span></th>
+            <th class="r" data-col="lle" data-tbl="udn">% NS Llegada<span class="sa">↕</span></th>
+            <th class="r" data-col="cal" data-tbl="udn">Calidad Ruta<span class="sa">↕</span></th>
+            <th class="r" data-col="seg" data-tbl="udn">Score Seg.<span class="sa">↕</span></th>
+            <th class="r" data-col="ren" data-tbl="udn">Rendimiento<span class="sa">↕</span></th>
+            <th class="r" data-col="tot" data-tbl="udn">TOTAL<span class="sa">↕</span></th>
+          </tr></thead>
+          <tbody id="bodyUDN"><tr><td colspan="9" class="tbl-empty">Cargando…</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- TABLA JEFE -->
@@ -240,7 +242,7 @@ const SHEET_ID = '122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
 let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',udn:'Unidad de Negocio',coord:'Coordinador',ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',seg:'Score Seguridad',ren:'Rendimiento',tot:'TOTAL'};
 let DATA=[];
 let chartInst=null;
-const SORT={jef:{col:'tot',dir:'desc'},coord:{col:'tot',dir:'desc'},ope:{col:'tot',dir:'desc'}};
+const SORT={jef:{col:'tot',dir:'desc'},coord:{col:'tot',dir:'desc'},ope:{col:'tot',dir:'desc'},udn:{col:'tot',dir:'desc'}};
 
 function parseLine(line){
   const cols=[];let cur='',inQ=false;
@@ -585,10 +587,11 @@ function onSort(th){
 
 function render(){
   const f=getFiltered();
+  const rU=aggregateBy(f,C.udn);
   const rJ=aggregateBy(f,C.jef),rC=aggregateBy(f,C.coord),rO=aggregateBy(f,C.ope);
   updateSemBanner();
   renderKPIs(rO,rJ,rC);
-  renderChart(f);
+  renderTable('udn',rU);
   renderTable('jef',rJ);renderTable('coord',rC);renderTable('ope',rO);
 }
 
@@ -604,20 +607,23 @@ function renderKPIs(rO,rJ,rC){
 }
 
 function renderTable(tbl,rowsInput){
-  const isJ=tbl==='jef',isC=tbl==='coord';
-  const body=document.getElementById(isJ?'bodyJef':isC?'bodyCoord':'bodyOpe');
-  const tblEl=document.getElementById(isJ?'tblJef':isC?'tblCoord':'tblOpe');
+  const isU=tbl==='udn',isJ=tbl==='jef',isC=tbl==='coord';
+  const bodyId=isU?'bodyUDN':isJ?'bodyJef':isC?'bodyCoord':'bodyOpe';
+  const cntId =isU?'cntUDN' :isJ?'cntJef' :isC?'cntCoord':'cntOpe';
+  const tblId =isU?'tblUDN' :isJ?'tblJef' :isC?'tblCoord':'tblOpe';
+  const body=document.getElementById(bodyId);
+  const tblEl=document.getElementById(tblId);
   let rows=rowsInput;
-  if(!rows){const f=getFiltered();rows=aggregateBy(f,isJ?C.jef:isC?C.coord:C.ope);}
+  if(!rows){const f=getFiltered();rows=aggregateBy(f,isU?C.udn:isJ?C.jef:isC?C.coord:C.ope);}
   rows=sortRows(rows,tbl);
   tblEl.querySelectorAll('thead th').forEach(th=>{th.classList.remove('sorted');const sa=th.querySelector('.sa');if(sa) sa.textContent='↕';});
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT[tbl].col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓';}
-  document.getElementById(isJ?'cntJef':isC?'cntCoord':'cntOpe').textContent=rows.length+(isJ?' jefes':isC?' coordinadores':' operadores');
-  if(!rows.length){body.innerHTML=`<tr><td colspan="${isJ?9:11}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  document.getElementById(cntId).textContent=rows.length+(isU?' UDNs':isJ?' jefes':isC?' coordinadores':' operadores');
+  if(!rows.length){body.innerHTML=`<tr><td colspan="${isC?11:9}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>{
     const b=rankBadge(i);
-    if(isJ) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
+    if(isU||isJ) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
     if(isC) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
     return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.nom||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
   }).join('');
