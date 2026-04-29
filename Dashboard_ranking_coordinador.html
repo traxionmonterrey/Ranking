@@ -158,12 +158,6 @@ th.sorted .sa{color:#84cc16;}
     <div class="sidebar-filters collapsed" id="sidebarFilters">
       <div class="fg"><label>Unidad de Negocio</label>
         <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
-      <div class="fg"><label>Jefe</label>
-        <select id="f-jef" onchange="onFilter()"><option value="">Todos</option></select></div>
-      <div class="fg"><label>Coordinador</label>
-        <select id="f-coord" onchange="onFilter()"><option value="">Todos</option></select></div>
-      <div class="fg"><label>Operador</label>
-        <select id="f-ope" onchange="onFilter()"><option value="">Todos</option></select></div>
       <div class="fg"><label>Mes</label>
         <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
       <div class="fg"><label>Semana</label>
@@ -186,7 +180,7 @@ th.sorted .sa{color:#84cc16;}
       <div class="sem-sub" id="semSub"></div>
     </div>
 
-    <div class="kpi-grid">
+    <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
       <div class="kpi" style="--kc:#7ed321">
         <div class="kpi-icon">🥇</div>
         <div class="kpi-val" id="kpiCoordV">–</div>
@@ -194,17 +188,10 @@ th.sorted .sa{color:#84cc16;}
         <div class="kpi-sub" id="kpiCoordN">–</div>
         <div class="kpi-udn" id="kpiCoordU"></div>
       </div>
-      <div class="kpi" style="--kc:#FBAE40">
-        <div class="kpi-icon">📊</div>
-        <div class="kpi-val" id="kpiPromV">–</div>
-        <div class="kpi-lbl">Promedio General</div>
-        <div class="kpi-sub" id="kpiPromN">Score TOTAL</div>
-        <div class="kpi-udn" id="kpiPromU"></div>
-      </div>
       <div class="kpi" style="--kc:#ef4444">
         <div class="kpi-icon">⚠️</div>
         <div class="kpi-val" id="kpiWorstV">–</div>
-        <div class="kpi-lbl">Menor Score</div>
+        <div class="kpi-lbl">Peor Coordinador</div>
         <div class="kpi-sub" id="kpiWorstN">–</div>
         <div class="kpi-udn" id="kpiWorstU"></div>
       </div>
@@ -364,59 +351,44 @@ function fillSel(id,vals,ph){
 }
 
 function buildSelects(){
-  fillSel('f-udn',  uniq(DATA.map(r=>r[C.udn])),                      'Todas');
-  fillSel('f-jef',  uniq(DATA.map(r=>r[C.jef])),                      'Todos');
-  fillSel('f-coord',uniq(DATA.map(r=>r[C.coord]||'').filter(Boolean)), 'Todos');
-  fillSel('f-ope',  uniq(DATA.map(r=>r[C.ope])),                      'Todos');
-  fillSel('f-mes',  uniq(DATA.map(r=>r[C.mes])),                      'Todos');
-  fillSel('f-sem',  uniq(DATA.map(r=>r[C.sem])),                      'Todas');
+  fillSel('f-udn', uniq(DATA.map(r=>r[C.udn])), 'Todas');
+  fillSel('f-mes', uniq(DATA.map(r=>r[C.mes])), 'Todos');
+  fillSel('f-sem', uniq(DATA.map(r=>r[C.sem])), 'Todas');
 }
 
 function getFiltered(){
   const v=id=>document.getElementById(id).value;
-  const udn=v('f-udn'),jef=v('f-jef'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
+  const udn=v('f-udn'),mes=v('f-mes'),sem=v('f-sem');
   return DATA.filter(r=>{
-    if(udn  &&r[C.udn]  !==udn)  return false;
-    if(jef  &&r[C.jef]  !==jef)  return false;
-    if(coord&&r[C.coord]!==coord) return false;
-    if(ope  &&r[C.ope]  !==ope)  return false;
-    if(mes  &&r[C.mes]  !==mes)  return false;
-    if(sem  &&r[C.sem]  !==sem)  return false;
+    if(udn&&r[C.udn]!==udn) return false;
+    if(mes&&r[C.mes]!==mes) return false;
+    if(sem&&r[C.sem]!==sem) return false;
     return true;
   });
 }
 
 function cascadeSelects(){
   const v=id=>document.getElementById(id).value;
-  const udn=v('f-udn'),jef=v('f-jef'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
+  const udn=v('f-udn'),mes=v('f-mes'),sem=v('f-sem');
   function sub(...ex){
     return DATA.filter(r=>{
-      if(!ex.includes('udn')  &&udn  &&r[C.udn]  !==udn)  return false;
-      if(!ex.includes('jef')  &&jef  &&r[C.jef]  !==jef)  return false;
-      if(!ex.includes('coord')&&coord&&r[C.coord]!==coord) return false;
-      if(!ex.includes('ope')  &&ope  &&r[C.ope]  !==ope)  return false;
-      if(!ex.includes('mes')  &&mes  &&r[C.mes]  !==mes)  return false;
-      if(!ex.includes('sem')  &&sem  &&r[C.sem]  !==sem)  return false;
+      if(!ex.includes('udn')&&udn&&r[C.udn]!==udn) return false;
+      if(!ex.includes('mes')&&mes&&r[C.mes]!==mes) return false;
+      if(!ex.includes('sem')&&sem&&r[C.sem]!==sem) return false;
       return true;
     });
   }
-  fillSel('f-udn',  uniq(sub('udn').map(r=>r[C.udn])),                       'Todas');
-  fillSel('f-jef',  uniq(sub('jef').map(r=>r[C.jef])),                       'Todos');
-  fillSel('f-coord',uniq(sub('coord').map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
-  fillSel('f-ope',  uniq(sub('ope').map(r=>r[C.ope])),                       'Todos');
-  fillSel('f-mes',  uniq(sub('mes').map(r=>r[C.mes])),                       'Todos');
-  fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),                       'Todas');
-  if(udn)   document.getElementById('f-udn').value=udn;
-  if(jef)   document.getElementById('f-jef').value=jef;
-  if(coord) document.getElementById('f-coord').value=coord;
-  if(ope)   document.getElementById('f-ope').value=ope;
-  if(mes)   document.getElementById('f-mes').value=mes;
-  if(sem)   document.getElementById('f-sem').value=sem;
+  fillSel('f-udn', uniq(sub('udn').map(r=>r[C.udn])), 'Todas');
+  fillSel('f-mes', uniq(sub('mes').map(r=>r[C.mes])), 'Todos');
+  fillSel('f-sem', uniq(sub('sem').map(r=>r[C.sem])), 'Todas');
+  if(udn) document.getElementById('f-udn').value=udn;
+  if(mes) document.getElementById('f-mes').value=mes;
+  if(sem) document.getElementById('f-sem').value=sem;
 }
 
 function onFilter(){cascadeSelects();render();}
 function resetFilters(){
-  ['f-udn','f-jef','f-coord','f-ope','f-mes','f-sem'].forEach(id=>document.getElementById(id).value='');
+  ['f-udn','f-mes','f-sem'].forEach(id=>document.getElementById(id).value='');
   buildSelects();render();
 }
 function toggleFilters(){
@@ -471,16 +443,9 @@ function renderKPIs(rC){
   const sorted=[...rC].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
   const tC=sorted[0]||null;
   const worst=sorted[sorted.length-1]||null;
-  const prom=sorted.length?sorted.reduce((s,r)=>s+r.tot,0)/sorted.length:null;
-  // Mejor coordinador
   document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiCoordN').textContent=tC?tC.key:'–';
   document.getElementById('kpiCoordU').textContent=tC&&tC.udn?tC.udn:'';
-  // Promedio general
-  document.getElementById('kpiPromV').textContent=prom!==null?prom.toFixed(1)+'%':'–';
-  document.getElementById('kpiPromN').textContent='Score TOTAL';
-  document.getElementById('kpiPromU').textContent=sorted.length?sorted.length+' coordinadores':'';
-  // Menor score
   document.getElementById('kpiWorstV').textContent=worst?worst.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiWorstN').textContent=worst?worst.key:'–';
   document.getElementById('kpiWorstU').textContent=worst&&worst.udn?worst.udn:'';
