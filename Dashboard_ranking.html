@@ -120,6 +120,15 @@ th.sorted .sa{color:#84cc16;}
   <main class="main">
     <div class="err-bar" id="errBar"></div>
 
+    <!-- SEMANA BANNER -->
+    <div class="sem-banner" id="semBanner" style="display:none">
+      <div>
+        <div class="sem-label">Período seleccionado</div>
+        <div class="sem-val" id="semVal">–</div>
+      </div>
+      <div class="sem-sub" id="semSub"></div>
+    </div>
+
     <div class="kpi-grid">
       <div class="kpi" style="--kc:#7ed321">
         <div class="kpi-icon">🗂️</div>
@@ -139,15 +148,6 @@ th.sorted .sa{color:#84cc16;}
         <div class="kpi-lbl">Mejor Operador</div>
         <div class="kpi-sub" id="kpiOpeN">–</div>
       </div>
-    </div>
-
-    <!-- SEMANA BANNER -->
-    <div class="sem-banner" id="semBanner" style="display:none">
-      <div>
-        <div class="sem-label">Período seleccionado</div>
-        <div class="sem-val" id="semVal">–</div>
-      </div>
-      <div class="sem-sub" id="semSub"></div>
     </div>
 
     <!-- GRÁFICA POR UDN -->
@@ -378,10 +378,9 @@ function renderChart(filtered){
     const rows=aggregateBy(filtered,C.udn).filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
     labels=rows.map(r=>r.key);
     values=rows.map(r=>+r.tot.toFixed(1));
-    colors=values.map(v=>sColor(v));
+    colors=values.map(()=>'#6b7a99');
     document.querySelector('.chart-wrap').style.height='260px';
   } else {
-    // Vertical bars by Semana (evolution)
     function semNum(s){const n=parseInt(String(s).replace(/\D/g,''));return isNaN(n)?0:n;}
     const semMap={};
     filtered.forEach(r=>{
@@ -394,7 +393,7 @@ function renderChart(filtered){
     values=semKeys.map(k=>{
       const vs=semMap[k]; return vs.length?+( vs.reduce((a,b)=>a+b,0)/vs.length ).toFixed(1):null;
     });
-    colors=values.map(v=>v!==null?sColor(v):'#9ca3af');
+    colors=values.map(()=>'#6b7a99');
     document.querySelector('.chart-wrap').style.height='260px';
   }
 
