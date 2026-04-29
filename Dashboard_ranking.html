@@ -159,8 +159,6 @@ th.sorted .sa{color:#84cc16;}
     <div class="sidebar-filters collapsed" id="sidebarFilters">
       <div class="fg"><label>Unidad de Negocio</label>
         <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
-      <div class="fg"><label>Jefe</label>
-        <select id="f-jef" onchange="onFilter()"><option value="">Todos</option></select></div>
       <div class="fg"><label>Coordinador</label>
         <select id="f-coord" onchange="onFilter()"><option value="">Todos</option></select></div>
       <div class="fg"><label>Operador</label>
@@ -497,7 +495,6 @@ function fillSel(id,vals,ph){
 
 function buildSelects(){
   fillSel('f-udn',  uniq(DATA.map(r=>r[C.udn])),                      'Todas');
-  fillSel('f-jef',  uniq(DATA.map(r=>r[C.jef])),                      'Todos');
   fillSel('f-coord',uniq(DATA.map(r=>r[C.coord]||'').filter(Boolean)), 'Todos');
   fillSel('f-ope',  uniq(DATA.map(r=>r[C.ope])),                      'Todos');
   fillSel('f-mes',  uniq(DATA.map(r=>r[C.mes])),                      'Todos');
@@ -506,10 +503,9 @@ function buildSelects(){
 
 function getFiltered(){
   const v=id=>document.getElementById(id).value;
-  const udn=v('f-udn'),jef=v('f-jef'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
+  const udn=v('f-udn'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
   return DATA.filter(r=>{
     if(udn  &&r[C.udn]  !==udn)  return false;
-    if(jef  &&r[C.jef]  !==jef)  return false;
     if(coord&&r[C.coord]!==coord) return false;
     if(ope  &&r[C.ope]  !==ope)  return false;
     if(mes  &&r[C.mes]  !==mes)  return false;
@@ -520,11 +516,10 @@ function getFiltered(){
 
 function cascadeSelects(){
   const v=id=>document.getElementById(id).value;
-  const udn=v('f-udn'),jef=v('f-jef'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
+  const udn=v('f-udn'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
   function sub(...ex){
     return DATA.filter(r=>{
       if(!ex.includes('udn')  &&udn  &&r[C.udn]  !==udn)  return false;
-      if(!ex.includes('jef')  &&jef  &&r[C.jef]  !==jef)  return false;
       if(!ex.includes('coord')&&coord&&r[C.coord]!==coord) return false;
       if(!ex.includes('ope')  &&ope  &&r[C.ope]  !==ope)  return false;
       if(!ex.includes('mes')  &&mes  &&r[C.mes]  !==mes)  return false;
@@ -533,13 +528,11 @@ function cascadeSelects(){
     });
   }
   fillSel('f-udn',  uniq(sub('udn').map(r=>r[C.udn])),                       'Todas');
-  fillSel('f-jef',  uniq(sub('jef').map(r=>r[C.jef])),                       'Todos');
   fillSel('f-coord',uniq(sub('coord').map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
   fillSel('f-ope',  uniq(sub('ope').map(r=>r[C.ope])),                       'Todos');
   fillSel('f-mes',  uniq(sub('mes').map(r=>r[C.mes])),                       'Todos');
   fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),                       'Todas');
   if(udn)   document.getElementById('f-udn').value=udn;
-  if(jef)   document.getElementById('f-jef').value=jef;
   if(coord) document.getElementById('f-coord').value=coord;
   if(ope)   document.getElementById('f-ope').value=ope;
   if(mes)   document.getElementById('f-mes').value=mes;
@@ -548,7 +541,7 @@ function cascadeSelects(){
 
 function onFilter(){cascadeSelects();render();}
 function resetFilters(){
-  ['f-udn','f-jef','f-coord','f-ope','f-mes','f-sem'].forEach(id=>document.getElementById(id).value='');
+  ['f-udn','f-coord','f-ope','f-mes','f-sem'].forEach(id=>document.getElementById(id).value='');
   buildSelects();render();
 }
 function toggleFilters(){
