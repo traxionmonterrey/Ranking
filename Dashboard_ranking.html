@@ -5,76 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ranking | Traxión</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="favicon-traxion.svg">
 <style>
-:root{
-  --navy:#1a2236;--navy2:#222d42;--navy3:#2c3a55;
-  --green:#7ed321;
-  --white:#fff;--bg:#f0f2f7;--border:#dde3f0;
-  --text:#1a2236;--muted:#6b7a99;--red:#e53e3e;
-}
+:root{--navy:#1a2236;--navy2:#222d42;--navy3:#2c3a55;--green:#7ed321;--white:#fff;--bg:#f0f2f7;--border:#dde3f0;--text:#1a2236;--muted:#6b7a99;--red:#e53e3e;}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:var(--bg);color:var(--text);font-family:"Inter",sans-serif;min-height:100vh;}
-
-/* NAV */
-nav{background:var(--navy);padding:14px 28px;display:flex;gap:18px;align-items:center;
-    box-shadow:0 2px 8px rgba(0,0,0,.3);position:sticky;top:0;z-index:300;flex-wrap:wrap;}
-nav a{color:#e5e7eb;text-decoration:none;font-weight:600;padding:7px 14px;border-radius:8px;
-      transition:all .3s;white-space:nowrap;font-size:14px;}
+nav{background:var(--navy);padding:14px 28px;display:flex;gap:18px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3);position:sticky;top:0;z-index:300;flex-wrap:wrap;}
+nav a{color:#e5e7eb;text-decoration:none;font-weight:600;padding:7px 14px;border-radius:8px;transition:all .3s;white-space:nowrap;font-size:14px;}
 nav a.brand{color:#84cc16;font-weight:800;font-size:18px;}
 nav a:hover{background:#374151;}
-nav a.active{background:#84cc16;color:var(--navy);}
-
-/* LAYOUT */
 .layout{display:flex;align-items:flex-start;min-height:calc(100vh - 54px);}
-
-/* SIDEBAR */
-.sidebar{width:168px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);
-         padding:.65rem .6rem;display:flex;flex-direction:column;gap:.42rem;
-         position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;}
-.sb-title{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-          color:var(--muted);padding-bottom:.38rem;border-bottom:1px solid var(--border);
-          display:flex;align-items:center;justify-content:space-between;}
+.sidebar{width:168px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:.65rem .6rem;display:flex;flex-direction:column;gap:.42rem;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;}
+.sb-title{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:.38rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .sb-reset{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.92rem;line-height:1;transition:color .15s;}
 .sb-reset:hover{color:var(--red);}
 .fg{display:flex;flex-direction:column;gap:.13rem;}
 .fg label{font-size:.59rem;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;}
-.fg select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;
-           color:var(--text);padding:.27rem .38rem;font-size:.71rem;font-family:"Inter",sans-serif;
-           appearance:none;cursor:pointer;outline:none;transition:border-color .15s;}
+.fg select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:.27rem .38rem;font-size:.71rem;font-family:"Inter",sans-serif;appearance:none;cursor:pointer;outline:none;transition:border-color .15s;}
 .fg select:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(126,211,33,.15);}
-
-/* MAIN */
 .main{flex:1;padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:1.1rem;min-width:0;}
-
-/* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;}
-.kpi{background:var(--white);border-radius:12px;padding:.95rem 1.05rem;position:relative;
-     overflow:hidden;box-shadow:0 2px 10px rgba(26,34,54,.07);border-top:4px solid var(--kc,var(--green));}
-.kpi::after{content:"";position:absolute;bottom:-14px;right:-14px;width:66px;height:66px;
-            border-radius:50%;background:var(--kc,var(--green));opacity:.06;}
+.kpi{background:var(--white);border-radius:12px;padding:.95rem 1.05rem;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(26,34,54,.07);border-top:4px solid var(--kc,var(--green));}
+.kpi::after{content:"";position:absolute;bottom:-14px;right:-14px;width:66px;height:66px;border-radius:50%;background:var(--kc,var(--green));opacity:.06;}
 .kpi-icon{font-size:1rem;margin-bottom:.28rem;}
 .kpi-val{font-size:1.65rem;font-weight:700;color:var(--kc,var(--green));line-height:1;letter-spacing:-.02em;}
 .kpi-lbl{font-size:.63rem;font-weight:600;color:var(--muted);margin-top:.22rem;text-transform:uppercase;letter-spacing:.05em;line-height:1.4;}
 .kpi-sub{font-size:.7rem;font-weight:600;color:var(--text);margin-top:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-
-/* TABLE CARD */
 .table-card{background:var(--white);border-radius:12px;box-shadow:0 2px 10px rgba(26,34,54,.07);overflow:hidden;}
 .table-hdr{display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.1rem;border-bottom:1px solid var(--border);}
 .th-left .ttl{font-size:.88rem;font-weight:700;color:var(--text);}
 .th-left .sub{font-size:.66rem;color:var(--muted);margin-top:.1rem;}
 .th-right{display:flex;align-items:center;gap:.55rem;}
 .badge{font-size:.7rem;color:var(--muted);background:var(--bg);border-radius:20px;padding:.17rem .55rem;}
-.btn-exp{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:.28rem .7rem;
-         font-size:.7rem;font-family:"Inter",sans-serif;font-weight:600;cursor:pointer;transition:background .15s;}
+.btn-exp{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:.28rem .7rem;font-size:.7rem;font-family:"Inter",sans-serif;font-weight:600;cursor:pointer;transition:background .15s;}
 .btn-exp:hover{background:var(--navy3);}
-
-/* DATA TABLE */
 .data-table{width:100%;border-collapse:collapse;}
-.data-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.59rem;font-weight:600;
-                     letter-spacing:.03em;text-transform:uppercase;padding:.38rem .58rem;text-align:left;
-                     white-space:nowrap;cursor:pointer;user-select:none;transition:background .15s;}
+.data-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.59rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:.38rem .58rem;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;transition:background .15s;}
 .data-table thead th:hover{background:var(--navy3);}
 .data-table thead th.r{text-align:right;}
 .data-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
@@ -82,45 +50,34 @@ nav a.active{background:#84cc16;color:var(--navy);}
 .data-table tbody tr:hover{background:#f7f9ff;}
 .data-table tbody td{padding:.3rem .58rem;font-size:.73rem;color:var(--text);white-space:nowrap;}
 .data-table tbody td.r{text-align:right;}
-
-/* Rank */
 .medal{font-size:1.05rem;}
-.rank-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
-        border-radius:50%;font-size:.6rem;font-weight:700;background:#e5e7eb;color:#374151;}
-
-/* Score cell */
-.sc-cell{display:flex;align-items:center;justify-content:flex-end;gap:.38rem;}
-.sc-bar-w{width:44px;height:4px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0;}
-.sc-bar{height:100%;border-radius:3px;}
-.sc-val{font-weight:700;font-size:.73rem;min-width:38px;text-align:right;}
+.rank-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.6rem;font-weight:700;background:#e5e7eb;color:#374151;}
 .sc-null{color:var(--muted);}
-
-/* Sort arrow */
 .sa{font-size:.6rem;margin-left:.2rem;color:rgba(255,255,255,.35);}
 th.sorted .sa{color:#84cc16;}
-
-/* Loading */
-.ld-overlay{position:fixed;inset:0;background:rgba(240,242,247,.97);z-index:9999;
-            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;
-            transition:opacity .4s;}
+.ld-overlay{position:fixed;inset:0;background:rgba(240,242,247,.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;transition:opacity .4s;}
 .ld-overlay.hidden{opacity:0;pointer-events:none;}
 .ld-logo{font-size:1.9rem;font-weight:900;color:#7ed321;letter-spacing:4px;}
-.ld-spin{width:34px;height:34px;border:3px solid var(--border);border-top-color:#7ed321;
-         border-radius:50%;animation:spin .7s linear infinite;}
+.ld-spin{width:34px;height:34px;border:3px solid var(--border);border-top-color:#7ed321;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .ld-msg{font-size:.82rem;color:var(--muted);}
-
-/* Error */
-.err-bar{background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:.7rem 1rem;
-         font-size:.78rem;color:#991b1b;display:none;margin-bottom:.3rem;}
-
-/* Empty */
+.err-bar{background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:.7rem 1rem;font-size:.78rem;color:#991b1b;display:none;margin-bottom:.3rem;}
 .tbl-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;}
-
+/* Semana banner */
+.sem-banner{background:var(--navy);color:#fff;border-radius:10px;padding:.7rem 1.1rem;
+            display:flex;align-items:center;gap:.75rem;}
+.sem-banner .sem-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;}
+.sem-banner .sem-val{font-size:1.1rem;font-weight:800;color:#84cc16;letter-spacing:.02em;}
+.sem-banner .sem-sub{font-size:.68rem;color:#9ca3af;margin-left:auto;}
+/* Chart card */
+.chart-card{background:var(--white);border-radius:12px;box-shadow:0 2px 10px rgba(26,34,54,.07);padding:1rem 1.2rem;}
+.chart-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;}
+.chart-card-title{font-size:.88rem;font-weight:700;color:var(--text);}
+.chart-card-sub{font-size:.66rem;color:var(--muted);margin-top:.1rem;}
+.chart-wrap{position:relative;height:240px;}
 @media(max-width:768px){
   .layout{flex-direction:column;}
-  .sidebar{width:100%;height:auto;position:relative;top:0;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;
-           border-right:none;border-bottom:1px solid var(--border);}
+  .sidebar{width:100%;height:auto;position:relative;top:0;display:grid;grid-template-columns:1fr 1fr;gap:.4rem;border-right:none;border-bottom:1px solid var(--border);}
   .sidebar .sb-title{grid-column:1/-1;}
   .kpi-grid{grid-template-columns:1fr 1fr;}
 }
@@ -130,7 +87,6 @@ th.sorted .sa{color:#84cc16;}
 
 <nav>
   <a href="index.html" class="brand">TRAXIÓN</a>
-
 </nav>
 
 <div class="ld-overlay" id="ldOverlay">
@@ -140,12 +96,8 @@ th.sorted .sa{color:#84cc16;}
 </div>
 
 <div class="layout">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sb-title">Filtros
-      <button class="sb-reset" onclick="resetFilters()" title="Limpiar">↺</button>
-    </div>
+    <div class="sb-title">Filtros <button class="sb-reset" onclick="resetFilters()" title="Limpiar">↺</button></div>
     <div class="fg"><label>Unidad de Negocio</label>
       <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
     <div class="fg"><label>Jefe</label>
@@ -160,11 +112,9 @@ th.sorted .sa{color:#84cc16;}
       <select id="f-sem" onchange="onFilter()"><option value="">Todas</option></select></div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
     <div class="err-bar" id="errBar"></div>
 
-    <!-- KPI Cards -->
     <div class="kpi-grid">
       <div class="kpi" style="--kc:#7ed321">
         <div class="kpi-icon">🗂️</div>
@@ -186,97 +136,90 @@ th.sorted .sa{color:#84cc16;}
       </div>
     </div>
 
+    <!-- SEMANA BANNER -->
+    <div class="sem-banner" id="semBanner" style="display:none">
+      <div>
+        <div class="sem-label">Período seleccionado</div>
+        <div class="sem-val" id="semVal">–</div>
+      </div>
+      <div class="sem-sub" id="semSub"></div>
+    </div>
+
+    <!-- GRÁFICA POR UDN -->
+    <div class="chart-card">
+      <div class="chart-card-hdr">
+        <div>
+          <div class="chart-card-title">📊 Score TOTAL por Unidad de Negocio</div>
+          <div class="chart-card-sub">Promedio ponderado del período filtrado · semáforo: 🟢 ≥90% · 🟡 75–89% · 🔴 &lt;75%</div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="chartUDN"></canvas></div>
+    </div>
+
     <!-- TABLA JEFE -->
     <div class="table-card">
       <div class="table-hdr">
-        <div class="th-left">
-          <div class="ttl">🗂️ Ranking por Jefe</div>
-          <div class="sub">Promedio del equipo por período filtrado</div>
-        </div>
-        <div class="th-right">
-          <span class="badge" id="cntJef">– jefes</span>
-          <button class="btn-exp" onclick="exportTable('jef')">⬇ Excel</button>
-        </div>
+        <div class="th-left"><div class="ttl">🗂️ Ranking por Jefe</div><div class="sub">Promedio del equipo por período filtrado</div></div>
+        <div class="th-right"><span class="badge" id="cntJef">– jefes</span><button class="btn-exp" onclick="exportTable('jef')">⬇ Excel</button></div>
       </div>
       <div style="overflow-x:auto">
-        <table class="data-table" id="tblJef">
-          <thead><tr>
-            <th style="width:36px" data-col="rank" data-tbl="jef">#<span class="sa">↓</span></th>
-            <th data-col="key" data-tbl="jef">Jefe<span class="sa">↕</span></th>
-            <th class="r" data-col="n" data-tbl="jef">Operadores<span class="sa">↕</span></th>
-            <th class="r" data-col="ini" data-tbl="jef">% NS Inicio<span class="sa">↕</span></th>
-            <th class="r" data-col="lle" data-tbl="jef">% NS Llegada<span class="sa">↕</span></th>
-            <th class="r" data-col="cal" data-tbl="jef">Calidad Ruta<span class="sa">↕</span></th>
-            <th class="r" data-col="seg" data-tbl="jef">Score Seg.<span class="sa">↕</span></th>
-            <th class="r" data-col="ren" data-tbl="jef">Rendimiento<span class="sa">↕</span></th>
-            <th class="r" data-col="tot" data-tbl="jef">TOTAL<span class="sa">↕</span></th>
-          </tr></thead>
-          <tbody id="bodyJef"><tr><td colspan="9" class="tbl-empty">Cargando…</td></tr></tbody>
-        </table>
+        <table class="data-table" id="tblJef"><thead><tr>
+          <th style="width:36px" data-col="rank" data-tbl="jef">#<span class="sa">↓</span></th>
+          <th data-col="key" data-tbl="jef">Jefe<span class="sa">↕</span></th>
+          <th class="r" data-col="n" data-tbl="jef">Operadores<span class="sa">↕</span></th>
+          <th class="r" data-col="ini" data-tbl="jef">% NS Inicio<span class="sa">↕</span></th>
+          <th class="r" data-col="lle" data-tbl="jef">% NS Llegada<span class="sa">↕</span></th>
+          <th class="r" data-col="cal" data-tbl="jef">Calidad Ruta<span class="sa">↕</span></th>
+          <th class="r" data-col="seg" data-tbl="jef">Score Seg.<span class="sa">↕</span></th>
+          <th class="r" data-col="ren" data-tbl="jef">Rendimiento<span class="sa">↕</span></th>
+          <th class="r" data-col="tot" data-tbl="jef">TOTAL<span class="sa">↕</span></th>
+        </tr></thead><tbody id="bodyJef"><tr><td colspan="9" class="tbl-empty">Cargando…</td></tr></tbody></table>
       </div>
     </div>
 
     <!-- TABLA COORDINADOR -->
     <div class="table-card">
       <div class="table-hdr">
-        <div class="th-left">
-          <div class="ttl">🧑‍💼 Ranking por Coordinador</div>
-          <div class="sub">Promedio del equipo por período filtrado</div>
-        </div>
-        <div class="th-right">
-          <span class="badge" id="cntCoord">– coordinadores</span>
-          <button class="btn-exp" onclick="exportTable('coord')">⬇ Excel</button>
-        </div>
+        <div class="th-left"><div class="ttl">🧑‍💼 Ranking por Coordinador</div><div class="sub">Promedio del equipo por período filtrado</div></div>
+        <div class="th-right"><span class="badge" id="cntCoord">– coordinadores</span><button class="btn-exp" onclick="exportTable('coord')">⬇ Excel</button></div>
       </div>
       <div style="overflow-x:auto">
-        <table class="data-table" id="tblCoord">
-          <thead><tr>
-            <th style="width:36px" data-col="rank" data-tbl="coord">#<span class="sa">↓</span></th>
-            <th data-col="key" data-tbl="coord">Coordinador<span class="sa">↕</span></th>
-            <th data-col="jef" data-tbl="coord">Jefe<span class="sa">↕</span></th>
-            <th data-col="udn" data-tbl="coord">UDN<span class="sa">↕</span></th>
-            <th class="r" data-col="n" data-tbl="coord">Operadores<span class="sa">↕</span></th>
-            <th class="r" data-col="ini" data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
-            <th class="r" data-col="lle" data-tbl="coord">% NS Llegada<span class="sa">↕</span></th>
-            <th class="r" data-col="cal" data-tbl="coord">Calidad Ruta<span class="sa">↕</span></th>
-            <th class="r" data-col="seg" data-tbl="coord">Score Seg.<span class="sa">↕</span></th>
-            <th class="r" data-col="ren" data-tbl="coord">Rendimiento<span class="sa">↕</span></th>
-            <th class="r" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
-          </tr></thead>
-          <tbody id="bodyCoord"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody>
-        </table>
+        <table class="data-table" id="tblCoord"><thead><tr>
+          <th style="width:36px" data-col="rank" data-tbl="coord">#<span class="sa">↓</span></th>
+          <th data-col="key" data-tbl="coord">Coordinador<span class="sa">↕</span></th>
+          <th data-col="jef" data-tbl="coord">Jefe<span class="sa">↕</span></th>
+          <th data-col="udn" data-tbl="coord">UDN<span class="sa">↕</span></th>
+          <th class="r" data-col="n" data-tbl="coord">Operadores<span class="sa">↕</span></th>
+          <th class="r" data-col="ini" data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
+          <th class="r" data-col="lle" data-tbl="coord">% NS Llegada<span class="sa">↕</span></th>
+          <th class="r" data-col="cal" data-tbl="coord">Calidad Ruta<span class="sa">↕</span></th>
+          <th class="r" data-col="seg" data-tbl="coord">Score Seg.<span class="sa">↕</span></th>
+          <th class="r" data-col="ren" data-tbl="coord">Rendimiento<span class="sa">↕</span></th>
+          <th class="r" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
+        </tr></thead><tbody id="bodyCoord"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody></table>
       </div>
     </div>
 
     <!-- TABLA OPERADOR -->
     <div class="table-card" style="margin-bottom:1.5rem">
       <div class="table-hdr">
-        <div class="th-left">
-          <div class="ttl">🏆 Ranking por Operador</div>
-          <div class="sub">Promedio del período filtrado</div>
-        </div>
-        <div class="th-right">
-          <span class="badge" id="cntOpe">– operadores</span>
-          <button class="btn-exp" onclick="exportTable('ope')">⬇ Excel</button>
-        </div>
+        <div class="th-left"><div class="ttl">🏆 Ranking por Operador</div><div class="sub">Promedio del período filtrado</div></div>
+        <div class="th-right"><span class="badge" id="cntOpe">– operadores</span><button class="btn-exp" onclick="exportTable('ope')">⬇ Excel</button></div>
       </div>
       <div style="overflow-x:auto">
-        <table class="data-table" id="tblOpe">
-          <thead><tr>
-            <th style="width:36px" data-col="rank" data-tbl="ope">#<span class="sa">↓</span></th>
-            <th data-col="key" data-tbl="ope">Operador<span class="sa">↕</span></th>
-            <th data-col="nom" data-tbl="ope">Nómina<span class="sa">↕</span></th>
-            <th data-col="jef" data-tbl="ope">Jefe<span class="sa">↕</span></th>
-            <th data-col="udn" data-tbl="ope">UDN<span class="sa">↕</span></th>
-            <th class="r" data-col="ini" data-tbl="ope">% NS Inicio<span class="sa">↕</span></th>
-            <th class="r" data-col="lle" data-tbl="ope">% NS Llegada<span class="sa">↕</span></th>
-            <th class="r" data-col="cal" data-tbl="ope">Calidad Ruta<span class="sa">↕</span></th>
-            <th class="r" data-col="seg" data-tbl="ope">Score Seg.<span class="sa">↕</span></th>
-            <th class="r" data-col="ren" data-tbl="ope">Rendimiento<span class="sa">↕</span></th>
-            <th class="r" data-col="tot" data-tbl="ope">TOTAL<span class="sa">↕</span></th>
-          </tr></thead>
-          <tbody id="bodyOpe"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody>
-        </table>
+        <table class="data-table" id="tblOpe"><thead><tr>
+          <th style="width:36px" data-col="rank" data-tbl="ope">#<span class="sa">↓</span></th>
+          <th data-col="key" data-tbl="ope">Operador<span class="sa">↕</span></th>
+          <th data-col="nom" data-tbl="ope">Nómina<span class="sa">↕</span></th>
+          <th data-col="jef" data-tbl="ope">Jefe<span class="sa">↕</span></th>
+          <th data-col="udn" data-tbl="ope">UDN<span class="sa">↕</span></th>
+          <th class="r" data-col="ini" data-tbl="ope">% NS Inicio<span class="sa">↕</span></th>
+          <th class="r" data-col="lle" data-tbl="ope">% NS Llegada<span class="sa">↕</span></th>
+          <th class="r" data-col="cal" data-tbl="ope">Calidad Ruta<span class="sa">↕</span></th>
+          <th class="r" data-col="seg" data-tbl="ope">Score Seg.<span class="sa">↕</span></th>
+          <th class="r" data-col="ren" data-tbl="ope">Rendimiento<span class="sa">↕</span></th>
+          <th class="r" data-col="tot" data-tbl="ope">TOTAL<span class="sa">↕</span></th>
+        </tr></thead><tbody id="bodyOpe"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody></table>
       </div>
     </div>
 
@@ -284,24 +227,12 @@ th.sorted .sa{color:#84cc16;}
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
 const SHEET_ID = '122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
+let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',udn:'Unidad de Negocio',coord:'Coordinador',ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',seg:'Score Seguridad',ren:'Rendimiento',tot:'TOTAL'};
+let DATA=[];
+let chartInst=null;
+const SORT={jef:{col:'tot',dir:'desc'},coord:{col:'tot',dir:'desc'},ope:{col:'tot',dir:'desc'}};
 
-let C = {
-  mes:'Mes', sem:'Semana', jef:'Jefe', nom:'Nomina',
-  ope:'Operador', udn:'Unidad de Negocio', coord:'Coordinador',
-  ini:'% NS Inicio', lle:'% NS Llegada', cal:'Calidad de ruta',
-  seg:'Score Seguridad', ren:'Rendimiento', tot:'TOTAL'
-};
-
-let DATA = [];
-const SORT = {
-  jef:  { col:'tot', dir:'desc' },
-  coord:{ col:'tot', dir:'desc' },
-  ope:  { col:'tot', dir:'desc' }
-};
-
-// ── CSV ──────────────────────────────────────────────────────────────────────
 function parseLine(line){
   const cols=[];let cur='',inQ=false;
   for(let i=0;i<line.length;i++){
@@ -310,19 +241,16 @@ function parseLine(line){
     else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
     else cur+=ch;
   }
-  cols.push(cur.trim());
-  return cols;
+  cols.push(cur.trim());return cols;
 }
 
 function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);
   if(lines.length<2) return [];
   const hdrs=parseLine(lines[0]);
-
-  // Fuzzy-resolve truncated column names
-  function fuzzy(key,...patterns){
+  function fuzzy(key,...p){
     if(hdrs.includes(C[key])) return;
-    const f=hdrs.find(h=>patterns.some(p=>h.toLowerCase().includes(p)));
+    const f=hdrs.find(h=>p.some(x=>h.toLowerCase().includes(x)));
     if(f) C[key]=f;
   }
   fuzzy('seg','segur','score seg','score s');
@@ -332,19 +260,17 @@ function parseCSV(text){
   fuzzy('lle','ns lle','llegada','% ns l');
   fuzzy('udn','unidad','negocio','udn');
   fuzzy('coord','coordinador','coord');
-
   const rows=[];
   for(let i=1;i<lines.length;i++){
     if(!lines[i].trim()) continue;
     const cols=parseLine(lines[i]);
     const obj={};
-    hdrs.forEach((h,idx)=>{ obj[h]=cols[idx]!==undefined?cols[idx].trim():''; });
+    hdrs.forEach((h,idx)=>{obj[h]=cols[idx]!==undefined?cols[idx].trim():'';});
     if(hdrs.some(h=>obj[h]&&obj[h]!=='')) rows.push(obj);
   }
   return rows;
 }
 
-// ── UTILS ────────────────────────────────────────────────────────────────────
 function pct(v){
   if(v===undefined||v===null||String(v).trim()==='') return null;
   const n=parseFloat(String(v).replace('%','').replace(',','.'));
@@ -359,20 +285,14 @@ function sColor(v){
   return '#ef4444';
 }
 
+// Solo porcentaje con color, sin barra
 function scCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
-  const c=sColor(v);
-  const w=Math.min(100,Math.max(0,v));
-  return `<div class="sc-cell">
-    <div class="sc-bar-w"><div class="sc-bar" style="width:${w}%;background:${c}"></div></div>
-    <span class="sc-val" style="color:${c}">${v.toFixed(1)}%</span>
-  </div>`;
+  return `<span style="font-weight:700;font-size:.73rem;color:${sColor(v)}">${v.toFixed(1)}%</span>`;
 }
-
 function totCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
-  const c=sColor(v);
-  return `<span style="font-weight:800;font-size:.8rem;color:${c}">${v.toFixed(1)}%</span>`;
+  return `<span style="font-weight:800;font-size:.8rem;color:${sColor(v)}">${v.toFixed(1)}%</span>`;
 }
 
 function rankBadge(i){
@@ -382,74 +302,131 @@ function rankBadge(i){
   return `<span class="rank-n">${i+1}</span>`;
 }
 
-function uniq(arr){ return [...new Set(arr.filter(Boolean))].sort(); }
-
-// ── LOAD DATA ────────────────────────────────────────────────────────────────
-async function loadData(){
-  const ov=document.getElementById('ldOverlay');
-  const msg=document.getElementById('ldMsg');
-  const err=document.getElementById('errBar');
-  try{
-    msg.textContent='Conectando con Google Sheets…';
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-    const res=await fetch(url);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text=await res.text();
-    DATA=parseCSV(text);
-    if(!DATA.length) throw new Error('Sheet vacío o sin datos');
-    console.log('[Ranking] filas:',DATA.length,'| cols detectadas:',Object.values(C).join(', '));
-    ov.classList.add('hidden');
-    setTimeout(()=>ov.style.display='none',450);
-    buildSelects();
-    autoMes();
-    render();
-  }catch(e){
-    console.error(e);
-    ov.classList.add('hidden');
-    setTimeout(()=>ov.style.display='none',450);
-    err.style.display='block';
-    err.textContent='⚠️ No se pudo cargar el Sheet. Asegúrate de que esté compartido como público (Cualquier persona con el enlace puede ver). Error: '+e.message;
-  }
-}
+function uniq(arr){return[...new Set(arr.filter(Boolean))].sort();}
 
 function autoMes(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const act=meses[new Date().getMonth()];
   const sel=document.getElementById('f-mes');
+  for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===act){sel.value=act;break;}}
+}
+
+function autoLatestWeek(){
+  // Parse semana values numerically to find the most recent
+  const sems=uniq(DATA.map(r=>r[C.sem]));
+  if(!sems.length) return;
+  function semNum(s){
+    const n=parseInt(String(s).replace(/\D/g,''));
+    return isNaN(n)?0:n;
+  }
+  const latest=sems.sort((a,b)=>semNum(b)-semNum(a))[0];
+  const sel=document.getElementById('f-sem');
   for(let i=0;i<sel.options.length;i++){
-    if(sel.options[i].value===act){sel.value=act;break;}
+    if(sel.options[i].value===latest){sel.value=latest;break;}
+  }
+  cascadeSelects();
+}
+
+function updateSemBanner(){
+  const sem=document.getElementById('f-sem').value;
+  const mes=document.getElementById('f-mes').value;
+  const banner=document.getElementById('semBanner');
+  const val=document.getElementById('semVal');
+  const sub=document.getElementById('semSub');
+  if(sem){
+    banner.style.display='flex';
+    val.textContent='Semana '+sem;
+    sub.textContent=mes?'Mes: '+mes:'';
+  } else if(mes){
+    banner.style.display='flex';
+    val.textContent=mes;
+    sub.textContent='Todas las semanas';
+  } else {
+    banner.style.display='none';
   }
 }
 
-// ── SELECTS ──────────────────────────────────────────────────────────────────
+function renderChart(filtered){
+  const udnRows=aggregateBy(filtered,C.udn).filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
+  const labels=udnRows.map(r=>r.key);
+  const values=udnRows.map(r=>+r.tot.toFixed(1));
+  const colors=values.map(v=>sColor(v));
+
+  const ctx=document.getElementById('chartUDN').getContext('2d');
+  if(chartInst) chartInst.destroy();
+
+  // Dynamic height based on # of UDNs
+  const minH=180, rowH=38;
+  const h=Math.max(minH, labels.length*rowH);
+  document.querySelector('.chart-wrap').style.height=h+'px';
+
+  chartInst=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Score TOTAL %',
+        data:values,
+        backgroundColor:colors.map(c=>c+'cc'),
+        borderColor:colors,
+        borderWidth:1.5,
+        borderRadius:5,
+        borderSkipped:false
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:ctx=>' '+ctx.parsed.x.toFixed(1)+'%'
+          }
+        }
+      },
+      scales:{
+        x:{
+          min:0,max:100,
+          grid:{color:'rgba(0,0,0,.05)'},
+          ticks:{font:{size:10},callback:v=>v+'%'}
+        },
+        y:{
+          grid:{display:false},
+          ticks:{font:{size:11,weight:'600'}}
+        }
+      }
+    }
+  });
+}
+
 function fillSel(id,vals,ph){
-  const s=document.getElementById(id);
-  const cur=s.value;
+  const s=document.getElementById(id),cur=s.value;
   s.innerHTML=`<option value="">${ph}</option>`;
   vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
   if(vals.includes(cur)) s.value=cur;
 }
 
 function buildSelects(){
-  fillSel('f-udn', uniq(DATA.map(r=>r[C.udn])), 'Todas');
-  fillSel('f-jef', uniq(DATA.map(r=>r[C.jef])), 'Todos');
-  fillSel('f-coord', uniq(DATA.map(r=>r[C.coord]||'').filter(Boolean)), 'Todos');
-  fillSel('f-ope', uniq(DATA.map(r=>r[C.ope])), 'Todos');
-  fillSel('f-mes', uniq(DATA.map(r=>r[C.mes])), 'Todos');
-  fillSel('f-sem', uniq(DATA.map(r=>r[C.sem])), 'Todas');
+  fillSel('f-udn',  uniq(DATA.map(r=>r[C.udn])),                      'Todas');
+  fillSel('f-jef',  uniq(DATA.map(r=>r[C.jef])),                      'Todos');
+  fillSel('f-coord',uniq(DATA.map(r=>r[C.coord]||'').filter(Boolean)), 'Todos');
+  fillSel('f-ope',  uniq(DATA.map(r=>r[C.ope])),                      'Todos');
+  fillSel('f-mes',  uniq(DATA.map(r=>r[C.mes])),                      'Todos');
+  fillSel('f-sem',  uniq(DATA.map(r=>r[C.sem])),                      'Todas');
 }
 
-// ── FILTER ───────────────────────────────────────────────────────────────────
 function getFiltered(){
   const v=id=>document.getElementById(id).value;
   const udn=v('f-udn'),jef=v('f-jef'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
   return DATA.filter(r=>{
-    if(udn   && r[C.udn]  !==udn)   return false;
-    if(jef   && r[C.jef]  !==jef)   return false;
-    if(coord && r[C.coord]!==coord)  return false;
-    if(ope   && r[C.ope]  !==ope)   return false;
-    if(mes   && r[C.mes]  !==mes)   return false;
-    if(sem   && r[C.sem]  !==sem)   return false;
+    if(udn  &&r[C.udn]  !==udn)  return false;
+    if(jef  &&r[C.jef]  !==jef)  return false;
+    if(coord&&r[C.coord]!==coord) return false;
+    if(ope  &&r[C.ope]  !==ope)  return false;
+    if(mes  &&r[C.mes]  !==mes)  return false;
+    if(sem  &&r[C.sem]  !==sem)  return false;
     return true;
   });
 }
@@ -457,26 +434,23 @@ function getFiltered(){
 function cascadeSelects(){
   const v=id=>document.getElementById(id).value;
   const udn=v('f-udn'),jef=v('f-jef'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
-
-  function sub(...exclude){
+  function sub(...ex){
     return DATA.filter(r=>{
-      if(!exclude.includes('udn')   &&udn  &&r[C.udn]  !==udn)   return false;
-      if(!exclude.includes('jef')   &&jef  &&r[C.jef]  !==jef)   return false;
-      if(!exclude.includes('coord') &&coord&&r[C.coord]!==coord)  return false;
-      if(!exclude.includes('ope')   &&ope  &&r[C.ope]  !==ope)   return false;
-      if(!exclude.includes('mes')   &&mes  &&r[C.mes]  !==mes)   return false;
-      if(!exclude.includes('sem')   &&sem  &&r[C.sem]  !==sem)   return false;
+      if(!ex.includes('udn')  &&udn  &&r[C.udn]  !==udn)  return false;
+      if(!ex.includes('jef')  &&jef  &&r[C.jef]  !==jef)  return false;
+      if(!ex.includes('coord')&&coord&&r[C.coord]!==coord) return false;
+      if(!ex.includes('ope')  &&ope  &&r[C.ope]  !==ope)  return false;
+      if(!ex.includes('mes')  &&mes  &&r[C.mes]  !==mes)  return false;
+      if(!ex.includes('sem')  &&sem  &&r[C.sem]  !==sem)  return false;
       return true;
     });
   }
-
-  fillSel('f-udn',   uniq(sub('udn').map(r=>r[C.udn])),                      'Todas');
-  fillSel('f-jef',   uniq(sub('jef').map(r=>r[C.jef])),                      'Todos');
-  fillSel('f-coord', uniq(sub('coord').map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
-  fillSel('f-ope',   uniq(sub('ope').map(r=>r[C.ope])),                      'Todos');
-  fillSel('f-mes',   uniq(sub('mes').map(r=>r[C.mes])),                      'Todos');
-  fillSel('f-sem',   uniq(sub('sem').map(r=>r[C.sem])),                      'Todas');
-
+  fillSel('f-udn',  uniq(sub('udn').map(r=>r[C.udn])),                       'Todas');
+  fillSel('f-jef',  uniq(sub('jef').map(r=>r[C.jef])),                       'Todos');
+  fillSel('f-coord',uniq(sub('coord').map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
+  fillSel('f-ope',  uniq(sub('ope').map(r=>r[C.ope])),                       'Todos');
+  fillSel('f-mes',  uniq(sub('mes').map(r=>r[C.mes])),                       'Todos');
+  fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),                       'Todas');
   if(udn)   document.getElementById('f-udn').value=udn;
   if(jef)   document.getElementById('f-jef').value=jef;
   if(coord) document.getElementById('f-coord').value=coord;
@@ -485,199 +459,126 @@ function cascadeSelects(){
   if(sem)   document.getElementById('f-sem').value=sem;
 }
 
-function onFilter(){ cascadeSelects(); render(); }
-
+function onFilter(){cascadeSelects();render();}
 function resetFilters(){
   ['f-udn','f-jef','f-coord','f-ope','f-mes','f-sem'].forEach(id=>document.getElementById(id).value='');
-  buildSelects();
-  render();
+  buildSelects();render();
 }
 
-// ── AGGREGATE ────────────────────────────────────────────────────────────────
-function aggregateBy(rows, groupKey){
+function aggregateBy(rows,groupKey){
   const map={};
   rows.forEach(r=>{
-    const k=(r[groupKey]||'').trim();
-    if(!k) return;
-    if(!map[k]) map[k]={key:k, jef:r[C.jef]||'', udn:r[C.udn]||'', nom:r[C.nom]||'', opeSet:new Set(), rows:[]};
+    const k=(r[groupKey]||'').trim();if(!k) return;
+    if(!map[k]) map[k]={key:k,jef:r[C.jef]||'',udn:r[C.udn]||'',nom:r[C.nom]||'',opeSet:new Set(),rows:[]};
     map[k].opeSet.add((r[C.ope]||'').trim());
     map[k].rows.push(r);
   });
   return Object.values(map).map(g=>{
-    function avg(col){
-      const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);
-      return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;
-    }
-    return {
-      key:g.key, jef:g.jef, udn:g.udn, nom:g.nom, n:g.opeSet.size,
-      ini:avg(C.ini), lle:avg(C.lle), cal:avg(C.cal),
-      seg:avg(C.seg), ren:avg(C.ren), tot:avg(C.tot)
-    };
+    function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
+    return{key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,n:g.opeSet.size,ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),seg:avg(C.seg),ren:avg(C.ren),tot:avg(C.tot)};
   });
 }
 
-// ── SORT ─────────────────────────────────────────────────────────────────────
-function sortRows(rows, tbl){
-  const {col,dir}=SORT[tbl];
-  return [...rows].sort((a,b)=>{
+function sortRows(rows,tbl){
+  const{col,dir}=SORT[tbl];
+  return[...rows].sort((a,b)=>{
     let va=a[col],vb=b[col];
-    const nullVal=dir==='asc'?Infinity:-Infinity;
-    if(va===null||va===undefined) va=nullVal;
-    if(vb===null||vb===undefined) vb=nullVal;
-    if(typeof va==='string') va=va.toLowerCase();
-    if(typeof vb==='string') vb=vb.toLowerCase();
-    if(va<vb) return dir==='asc'?-1:1;
-    if(va>vb) return dir==='asc'?1:-1;
-    return 0;
+    const nv=dir==='asc'?Infinity:-Infinity;
+    if(va===null||va===undefined) va=nv;if(vb===null||vb===undefined) vb=nv;
+    if(typeof va==='string') va=va.toLowerCase();if(typeof vb==='string') vb=vb.toLowerCase();
+    if(va<vb) return dir==='asc'?-1:1;if(va>vb) return dir==='asc'?1:-1;return 0;
   });
 }
 
 function onSort(th){
-  const col=th.dataset.col, tbl=th.dataset.tbl;
-  if(!col||!tbl) return;
-  // Columna # = ordenar por TOTAL descendente (ranking natural)
-  if(col==='rank'){ SORT[tbl].col='tot'; SORT[tbl].dir='desc'; renderTable(tbl); return; }
+  const col=th.dataset.col,tbl=th.dataset.tbl;if(!col||!tbl) return;
+  if(col==='rank'){SORT[tbl].col='tot';SORT[tbl].dir='desc';renderTable(tbl);return;}
   if(SORT[tbl].col===col) SORT[tbl].dir=SORT[tbl].dir==='asc'?'desc':'asc';
-  else{ SORT[tbl].col=col; SORT[tbl].dir=(col==='key'||col==='nom'||col==='jef'||col==='udn')?'asc':'desc'; }
+  else{SORT[tbl].col=col;SORT[tbl].dir=(col==='key'||col==='nom'||col==='jef'||col==='udn')?'asc':'desc';}
   renderTable(tbl);
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
 function render(){
   const f=getFiltered();
-  const rJef=aggregateBy(f,C.jef);
-  const rCoord=aggregateBy(f,C.coord);
-  const rOpe=aggregateBy(f,C.ope);
-  renderKPIs(rOpe,rJef,rCoord);
-  renderTable('jef',rJef);
-  renderTable('coord',rCoord);
-  renderTable('ope',rOpe);
+  const rJ=aggregateBy(f,C.jef),rC=aggregateBy(f,C.coord),rO=aggregateBy(f,C.ope);
+  updateSemBanner();
+  renderKPIs(rO,rJ,rC);
+  renderChart(f);
+  renderTable('jef',rJ);renderTable('coord',rC);renderTable('ope',rO);
 }
 
-function renderKPIs(rowsOpe, rowsJef, rowsCoord){
-  // Mejor Jefe
-  const topJef=[...rowsJef].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot)[0]||null;
-  document.getElementById('kpiJefV').textContent=topJef?topJef.tot.toFixed(1)+'%':'–';
-  document.getElementById('kpiJefN').textContent=topJef?topJef.key:'–';
-  // Mejor Coordinador
-  const coordRows=rowsCoord||aggregateBy(getFiltered(),C.coord);
-  const topCoord=[...coordRows].filter(r=>r.tot!==null&&r.key).sort((a,b)=>b.tot-a.tot)[0]||null;
-  document.getElementById('kpiCoordV').textContent=topCoord?topCoord.tot.toFixed(1)+'%':'–';
-  document.getElementById('kpiCoordN').textContent=topCoord?topCoord.key:'–';
-  // Mejor Operador
-  const topOpe=[...rowsOpe].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot)[0]||null;
-  document.getElementById('kpiOpeV').textContent=topOpe?topOpe.tot.toFixed(1)+'%':'–';
-  document.getElementById('kpiOpeN').textContent=topOpe?topOpe.key:'–';
+function renderKPIs(rO,rJ,rC){
+  const top=arr=>[...arr].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot)[0]||null;
+  const tJ=top(rJ),tC=top(rC),tO=top(rO);
+  document.getElementById('kpiJefV').textContent=tJ?tJ.tot.toFixed(1)+'%':'–';
+  document.getElementById('kpiJefN').textContent=tJ?tJ.key:'–';
+  document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(1)+'%':'–';
+  document.getElementById('kpiCoordN').textContent=tC?tC.key:'–';
+  document.getElementById('kpiOpeV').textContent=tO?tO.tot.toFixed(1)+'%':'–';
+  document.getElementById('kpiOpeN').textContent=tO?tO.key:'–';
 }
 
-function renderTable(tbl, rowsInput){
-  const isJef  = tbl==='jef';
-  const isCoord= tbl==='coord';
-  const bodyId = isJef?'bodyJef':isCoord?'bodyCoord':'bodyOpe';
-  const cntId  = isJef?'cntJef' :isCoord?'cntCoord' :'cntOpe';
-  const tblEl  = document.getElementById(isJef?'tblJef':isCoord?'tblCoord':'tblOpe');
-  const body   = document.getElementById(bodyId);
-
+function renderTable(tbl,rowsInput){
+  const isJ=tbl==='jef',isC=tbl==='coord';
+  const body=document.getElementById(isJ?'bodyJef':isC?'bodyCoord':'bodyOpe');
+  const tblEl=document.getElementById(isJ?'tblJef':isC?'tblCoord':'tblOpe');
   let rows=rowsInput;
-  if(!rows){ const f=getFiltered(); rows=aggregateBy(f,isJef?C.jef:isCoord?C.coord:C.ope); }
+  if(!rows){const f=getFiltered();rows=aggregateBy(f,isJ?C.jef:isC?C.coord:C.ope);}
   rows=sortRows(rows,tbl);
-
-  // Update sort arrows
-  tblEl.querySelectorAll('thead th').forEach(th=>{
-    th.classList.remove('sorted');
-    const sa=th.querySelector('.sa');
-    if(sa) sa.textContent='↕';
-  });
+  tblEl.querySelectorAll('thead th').forEach(th=>{th.classList.remove('sorted');const sa=th.querySelector('.sa');if(sa) sa.textContent='↕';});
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT[tbl].col}"]`);
-  if(sTh){ sTh.classList.add('sorted'); const sa=sTh.querySelector('.sa'); if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓'; }
-
-  const colSpan = isJef?9:11;
-  document.getElementById(cntId).textContent=rows.length+(isJef?' jefes':isCoord?' coordinadores':' operadores');
-
-  if(!rows.length){
-    body.innerHTML=`<tr><td colspan="${colSpan}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;
-    return;
-  }
-
+  if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓';}
+  document.getElementById(isJ?'cntJef':isC?'cntCoord':'cntOpe').textContent=rows.length+(isJ?' jefes':isC?' coordinadores':' operadores');
+  if(!rows.length){body.innerHTML=`<tr><td colspan="${isJ?9:11}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>{
-    const badge=rankBadge(i);
-    if(isJef){
-      return `<tr>
-        <td style="text-align:center">${badge}</td>
-        <td style="font-weight:600">${r.key||'–'}</td>
-        <td class="r" style="color:var(--muted)">${r.n}</td>
-        <td>${scCell(r.ini)}</td>
-        <td>${scCell(r.lle)}</td>
-        <td>${scCell(r.cal)}</td>
-        <td>${scCell(r.seg)}</td>
-        <td>${scCell(r.ren)}</td>
-        <td class="r">${totCell(r.tot)}</td>
-      </tr>`;
-    } else if(isCoord){
-      return `<tr>
-        <td style="text-align:center">${badge}</td>
-        <td style="font-weight:600">${r.key||'–'}</td>
-        <td style="color:var(--muted)">${r.jef||'–'}</td>
-        <td style="color:var(--muted)">${r.udn||'–'}</td>
-        <td class="r" style="color:var(--muted)">${r.n}</td>
-        <td>${scCell(r.ini)}</td>
-        <td>${scCell(r.lle)}</td>
-        <td>${scCell(r.cal)}</td>
-        <td>${scCell(r.seg)}</td>
-        <td>${scCell(r.ren)}</td>
-        <td class="r">${totCell(r.tot)}</td>
-      </tr>`;
-    } else {
-      return `<tr>
-        <td style="text-align:center">${badge}</td>
-        <td style="font-weight:600">${r.key||'–'}</td>
-        <td style="color:var(--muted)">${r.nom||'–'}</td>
-        <td style="color:var(--muted)">${r.jef||'–'}</td>
-        <td style="color:var(--muted)">${r.udn||'–'}</td>
-        <td>${scCell(r.ini)}</td>
-        <td>${scCell(r.lle)}</td>
-        <td>${scCell(r.cal)}</td>
-        <td>${scCell(r.seg)}</td>
-        <td>${scCell(r.ren)}</td>
-        <td class="r">${totCell(r.tot)}</td>
-      </tr>`;
-    }
+    const b=rankBadge(i);
+    if(isJ) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
+    if(isC) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
+    return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.nom||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
   }).join('');
 }
 
-// ── EXPORT ───────────────────────────────────────────────────────────────────
 function exportTable(tbl){
-  const isJef  =tbl==='jef';
-  const isCoord=tbl==='coord';
-  const f=getFiltered();
-  const groupKey=isJef?C.jef:isCoord?C.coord:C.ope;
-  const rows=sortRows(aggregateBy(f,groupKey),tbl);
+  const isJ=tbl==='jef',isC=tbl==='coord';
+  const rows=sortRows(aggregateBy(getFiltered(),isJ?C.jef:isC?C.coord:C.ope),tbl);
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const hdrs=isJef
-    ?['#','Jefe','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
-    :isCoord
-    ?['#','Coordinador','Jefe','UDN','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
+  const hdrs=isJ?['#','Jefe','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
+    :isC?['#','Coordinador','Jefe','UDN','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
     :['#','Operador','Nómina','Jefe','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
-  const data=rows.map((r,i)=>isJef
-    ?[i+1,r.key,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
-    :isCoord
-    ?[i+1,r.key,r.jef,r.udn,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
-    :[i+1,r.key,r.nom,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
-  );
+  const data=rows.map((r,i)=>isJ?[i+1,r.key,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
+    :isC?[i+1,r.key,r.jef,r.udn,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
+    :[i+1,r.key,r.nom,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,isJef?'Ranking Jefes':isCoord?'Ranking Coordinadores':'Ranking Operadores');
-  XLSX.writeFile(wb,`ranking_${isJef?'jefes':isCoord?'coordinadores':'operadores'}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.utils.book_append_sheet(wb,ws,isJ?'Ranking Jefes':isC?'Ranking Coordinadores':'Ranking Operadores');
+  XLSX.writeFile(wb,`ranking_${isJ?'jefes':isC?'coordinadores':'operadores'}_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
-  // Attach sort on all header cells
-  document.querySelectorAll('.data-table thead th[data-col]').forEach(th=>{
-    th.addEventListener('click',()=>onSort(th));
-  });
+  document.querySelectorAll('.data-table thead th[data-col]').forEach(th=>{th.addEventListener('click',()=>onSort(th));});
   loadData();
 });
+
+async function loadData(){
+  const ov=document.getElementById('ldOverlay'),msg=document.getElementById('ldMsg'),err=document.getElementById('errBar');
+  try{
+    msg.textContent='Conectando con Google Sheets…';
+    const res=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text=await res.text();
+    DATA=parseCSV(text);
+    if(!DATA.length) throw new Error('Sheet vacío');
+    ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
+    buildSelects();
+    autoMes();
+    autoLatestWeek();
+    render();
+  }catch(e){
+    ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
+    err.style.display='block';
+    err.textContent='⚠️ No se pudo cargar el Sheet. Verifica que sea público. Error: '+e.message;
+  }
+}
 </script>
 </body>
 </html>
