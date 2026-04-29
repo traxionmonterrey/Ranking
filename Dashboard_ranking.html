@@ -33,6 +33,7 @@ nav a:hover{background:#374151;}
 .kpi-val{font-size:1.65rem;font-weight:700;color:var(--kc,var(--green));line-height:1;letter-spacing:-.02em;}
 .kpi-lbl{font-size:.63rem;font-weight:600;color:var(--muted);margin-top:.22rem;text-transform:uppercase;letter-spacing:.05em;line-height:1.4;}
 .kpi-sub{font-size:.7rem;font-weight:600;color:var(--text);margin-top:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi-udn{font-size:.62rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .table-card{background:var(--white);border-radius:12px;box-shadow:0 2px 10px rgba(26,34,54,.07);overflow:hidden;}
 .table-hdr{display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.1rem;border-bottom:1px solid var(--border);}
 .th-left .ttl{font-size:.88rem;font-weight:700;color:var(--text);}
@@ -192,18 +193,21 @@ th.sorted .sa{color:#84cc16;}
         <div class="kpi-val" id="kpiJefV">–</div>
         <div class="kpi-lbl">Mejor Jefe</div>
         <div class="kpi-sub" id="kpiJefN">–</div>
+        <div class="kpi-udn" id="kpiJefU"></div>
       </div>
       <div class="kpi" style="--kc:#7ed321">
         <div class="kpi-icon">🧑‍💼</div>
         <div class="kpi-val" id="kpiCoordV">–</div>
         <div class="kpi-lbl">Mejor Coordinador</div>
         <div class="kpi-sub" id="kpiCoordN">–</div>
+        <div class="kpi-udn" id="kpiCoordU"></div>
       </div>
       <div class="kpi" style="--kc:#7ed321">
         <div class="kpi-icon">🏆</div>
         <div class="kpi-val" id="kpiOpeV">–</div>
         <div class="kpi-lbl">Mejor Operador</div>
         <div class="kpi-sub" id="kpiOpeN">–</div>
+        <div class="kpi-udn" id="kpiOpeU"></div>
       </div>
     </div>
 
@@ -602,10 +606,13 @@ function renderKPIs(rO,rJ,rC){
   const tJ=top(rJ),tC=top(rC),tO=top(rO);
   document.getElementById('kpiJefV').textContent=tJ?tJ.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiJefN').textContent=tJ?tJ.key:'–';
+  document.getElementById('kpiJefU').textContent=tJ&&tJ.udn?tJ.udn:'';
   document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiCoordN').textContent=tC?tC.key:'–';
+  document.getElementById('kpiCoordU').textContent=tC&&tC.udn?tC.udn:'';
   document.getElementById('kpiOpeV').textContent=tO?tO.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiOpeN').textContent=tO?tO.key:'–';
+  document.getElementById('kpiOpeU').textContent=tO&&tO.udn?tO.udn:'';
 }
 
 function renderTable(tbl,rowsInput){
