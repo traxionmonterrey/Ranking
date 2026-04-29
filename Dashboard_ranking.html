@@ -355,7 +355,9 @@ function updateSemBanner(){
   }
 }
 
-let chartMode='udn'; // 'udn' | 'sem'
+let chartMode='udn';
+
+const PALETTE=['#6b7a99','#84cc16','#374151','#9ca3af','#4b5563','#a3e635','#475569','#bef264','#1f2937','#d9f99d'];
 
 function setChartMode(mode){
   chartMode=mode;
@@ -363,7 +365,7 @@ function setChartMode(mode){
   document.getElementById('btnSem').classList.toggle('active', mode==='sem');
   document.getElementById('chartTitle').textContent = mode==='udn'
     ? '📊 Score TOTAL por Unidad de Negocio'
-    : '📈 Evolución del Score TOTAL por Semana';
+    : '📈 Tendencia por Semana — Score TOTAL';
   renderChart(getFiltered());
 }
 
@@ -371,69 +373,117 @@ function renderChart(filtered){
   const ctx=document.getElementById('chartMain').getContext('2d');
   if(chartInst){chartInst.destroy();chartInst=null;}
 
-  let labels=[], values=[], colors=[];
+  function semNum(s){const n=parseInt(String(s).replace(/\D/g,''));return isNaN(n)?0:n;}
 
   if(chartMode==='udn'){
-    // Vertical bars by UDN
+    // Barras verticales por UDN
     const rows=aggregateBy(filtered,C.udn).filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
-    labels=rows.map(r=>r.key);
-    values=rows.map(r=>+r.tot.toFixed(1));
-    colors=values.map(()=>'#6b7a99');
+    if(!rows.length) return;
     document.querySelector('.chart-wrap').style.height='260px';
-  } else {
-    function semNum(s){const n=parseInt(String(s).replace(/\D/g,''));return isNaN(n)?0:n;}
-    const semMap={};
-    filtered.forEach(r=>{
-      const k=(r[C.sem]||'').trim(); if(!k) return;
-      if(!semMap[k]) semMap[k]=[];
-      const v=pct(r[C.tot]); if(v!==null) semMap[k].push(v);
-    });
-    const semKeys=Object.keys(semMap).sort((a,b)=>semNum(a)-semNum(b));
-    labels=semKeys.map(s=>'Sem '+s);
-    values=semKeys.map(k=>{
-      const vs=semMap[k]; return vs.length?+( vs.reduce((a,b)=>a+b,0)/vs.length ).toFixed(1):null;
-    });
-    colors=values.map(()=>'#6b7a99');
-    document.querySelector('.chart-wrap').style.height='260px';
-  }
-
-  if(!labels.length){ return; }
-
-  chartInst=new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels,
-      datasets:[{
-        label:'Score TOTAL %',
-        data:values,
-        backgroundColor:colors.map(c=>c+'bb'),
-        borderColor:colors,
-        borderWidth:1.5,
-        borderRadius:6,
-        borderSkipped:false
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1)+'%' : '–'}`}}
+    chartInst=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:rows.map(r=>r.key),
+        datasets:[{
+          label:'Score TOTAL %',
+          data:rows.map(r=>+r.tot.toFixed(1)),
+          backgroundColor:'#6b7a99bb',
+          borderColor:'#6b7a99',
+          borderWidth:1.5,
+          borderRadius:6,
+          borderSkipped:false
+        }]
       },
-      scales:{
-        x:{
-          grid:{display:false},
-          ticks:{font:{size:10,weight:'600'}}
-        },
-        y:{
-          min:0,max:100,
-          grid:{color:'rgba(0,0,0,.05)'},
-          ticks:{font:{size:10},callback:v=>v+'%'},
-          border:{display:false}
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y.toFixed(1)}%`}}},
+        scales:{
+          x:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}},
+          y:{min:0,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},callback:v=>v+'%'},border:{display:false}}
         }
       }
-    }
-  });
+    });
+
+  } else {
+    // Líneas por UDN a lo largo de semanas
+    // Obtener semanas únicas ordenadas
+    const allSems=[...new Set(filtered.map(r=>(r[C.sem]||'').trim()).filter(Boolean))]
+      .sort((a,b)=>semNum(a)-semNum(b));
+
+    // Obtener UDNs únicas (si hay filtro de UDN, solo esa)
+    const allUDNs=[...new Set(filtered.map(r=>(r[C.udn]||'').trim()).filter(Boolean))].sort();
+
+    if(!allSems.length||!allUDNs.length) return;
+
+    // Construir mapa: udn → semana → [valores]
+    const udnSemMap={};
+    filtered.forEach(r=>{
+      const udn=(r[C.udn]||'').trim();
+      const sem=(r[C.sem]||'').trim();
+      const v=pct(r[C.tot]);
+      if(!udn||!sem||v===null) return;
+      if(!udnSemMap[udn]) udnSemMap[udn]={};
+      if(!udnSemMap[udn][sem]) udnSemMap[udn][sem]=[];
+      udnSemMap[udn][sem].push(v);
+    });
+
+    const datasets=allUDNs.map((udn,i)=>{
+      const color=PALETTE[i%PALETTE.length];
+      const data=allSems.map(sem=>{
+        const vs=udnSemMap[udn]&&udnSemMap[udn][sem];
+        return vs&&vs.length?+( vs.reduce((a,b)=>a+b,0)/vs.length ).toFixed(1):null;
+      });
+      return{
+        label:udn,
+        data,
+        borderColor:color,
+        backgroundColor:color+'33',
+        borderWidth:2.5,
+        pointRadius:4,
+        pointHoverRadius:6,
+        pointBackgroundColor:color,
+        tension:.35,
+        spanGaps:true
+      };
+    });
+
+    // Altura dinámica: más UDNs → un poco más alto para leyenda
+    const h=allUDNs.length>4?320:260;
+    document.querySelector('.chart-wrap').style.height=h+'px';
+
+    chartInst=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:allSems.map(s=>'Sem '+s),
+        datasets
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{
+            display:allUDNs.length>1,
+            position:'bottom',
+            labels:{font:{size:10},boxWidth:12,padding:10}
+          },
+          tooltip:{
+            callbacks:{
+              label:c=>` ${c.dataset.label}: ${c.parsed.y!==null?c.parsed.y.toFixed(1)+'%':'–'}`
+            }
+          }
+        },
+        scales:{
+          x:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}},
+          y:{
+            min:0,max:100,
+            grid:{color:'rgba(0,0,0,.05)'},
+            ticks:{font:{size:10},callback:v=>v+'%'},
+            border:{display:false}
+          }
+        }
+      }
+    });
+  }
 }
 
 function fillSel(id,vals,ph){
