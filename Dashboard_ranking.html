@@ -166,7 +166,7 @@ th.sorted .sa{color:#84cc16;}
       <div class="fg"><label>Mes</label>
         <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
       <div class="fg"><label>Semana</label>
-        <select id="f-sem" onchange="onFilter()"><option value="">Todas</option></select></div>
+        <select id="f-sem" onchange="onFilter()"></select></div>
       <div class="fg" style="grid-column:1/-1">
         <button style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:.3rem;font-size:.72rem;font-family:'Inter',sans-serif;cursor:pointer;" onclick="resetFilters()">↺ Limpiar filtros</button>
       </div>
@@ -488,7 +488,7 @@ function renderChart(filtered){
 
 function fillSel(id,vals,ph){
   const s=document.getElementById(id),cur=s.value;
-  s.innerHTML=`<option value="">${ph}</option>`;
+  s.innerHTML = ph!==null ? `<option value="">${ph}</option>` : '';
   vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
   if(vals.includes(cur)) s.value=cur;
 }
@@ -498,7 +498,7 @@ function buildSelects(){
   fillSel('f-coord',uniq(DATA.map(r=>r[C.coord]||'').filter(Boolean)), 'Todos');
   fillSel('f-ope',  uniq(DATA.map(r=>r[C.ope])),                      'Todos');
   fillSel('f-mes',  uniq(DATA.map(r=>r[C.mes])),                      'Todos');
-  fillSel('f-sem',  uniq(DATA.map(r=>r[C.sem])),                      'Todas');
+  fillSel('f-sem',  uniq(DATA.map(r=>r[C.sem])),                      null);
 }
 
 function getFiltered(){
@@ -531,7 +531,7 @@ function cascadeSelects(){
   fillSel('f-coord',uniq(sub('coord').map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
   fillSel('f-ope',  uniq(sub('ope').map(r=>r[C.ope])),                       'Todos');
   fillSel('f-mes',  uniq(sub('mes').map(r=>r[C.mes])),                       'Todos');
-  fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),                       'Todas');
+  fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),                       null);
   if(udn)   document.getElementById('f-udn').value=udn;
   if(coord) document.getElementById('f-coord').value=coord;
   if(ope)   document.getElementById('f-ope').value=ope;
@@ -541,8 +541,8 @@ function cascadeSelects(){
 
 function onFilter(){cascadeSelects();render();}
 function resetFilters(){
-  ['f-udn','f-coord','f-ope','f-mes','f-sem'].forEach(id=>document.getElementById(id).value='');
-  buildSelects();render();
+  ['f-udn','f-coord','f-ope','f-mes'].forEach(id=>document.getElementById(id).value='');
+  buildSelects();autoLatestWeek();render();
 }
 function toggleFilters(){
   const panel=document.getElementById('sidebarFilters');
