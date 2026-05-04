@@ -158,6 +158,8 @@ th.sorted .sa{color:#84cc16;}
     <div class="sidebar-filters collapsed" id="sidebarFilters">
       <div class="fg"><label>Unidad de Negocio</label>
         <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
+      <div class="fg"><label>Planta</label>
+        <select id="f-plt" onchange="onFilter()"><option value="">Todas</option></select></div>
       <div class="fg"><label>Mes</label>
         <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
       <div class="fg"><label>Semana</label>
@@ -225,7 +227,7 @@ th.sorted .sa{color:#84cc16;}
 
 <script>
 const SHEET_ID = '122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
-let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',udn:'Unidad de Negocio',coord:'Coordinador',ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',seg:'Score Seguridad',ren:'Rendimiento',tot:'TOTAL'};
+let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',udn:'Unidad de Negocio',plt:'Planta',coord:'Coordinador',ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',seg:'Score Seguridad',ren:'Rendimiento',tot:'TOTAL'};
 let DATA=[];
 const SORT={jef:{col:'tot',dir:'desc'},coord:{col:'tot',dir:'desc'},ope:{col:'tot',dir:'desc'},udn:{col:'tot',dir:'desc'}};
 
@@ -351,16 +353,18 @@ function fillSel(id,vals,ph){
 }
 
 function buildSelects(){
-  fillSel('f-udn', uniq(DATA.map(r=>r[C.udn])), 'Todas');
-  fillSel('f-mes', uniq(DATA.map(r=>r[C.mes])), 'Todos');
-  fillSel('f-sem', uniq(DATA.map(r=>r[C.sem])), null);
+  fillSel('f-udn', uniq(DATA.map(r=>r[C.udn])),                     'Todas');
+  fillSel('f-plt', uniq(DATA.map(r=>r[C.plt]||'').filter(Boolean)), 'Todas');
+  fillSel('f-mes', uniq(DATA.map(r=>r[C.mes])),                     'Todos');
+  fillSel('f-sem', uniq(DATA.map(r=>r[C.sem])),                     null);
 }
 
 function getFiltered(){
   const v=id=>document.getElementById(id).value;
-  const udn=v('f-udn'),mes=v('f-mes'),sem=v('f-sem');
+  const udn=v('f-udn'),plt=v('f-plt'),mes=v('f-mes'),sem=v('f-sem');
   return DATA.filter(r=>{
     if(udn&&r[C.udn]!==udn) return false;
+    if(plt&&r[C.plt]!==plt) return false;
     if(mes&&r[C.mes]!==mes) return false;
     if(sem&&r[C.sem]!==sem) return false;
     return true;
@@ -369,26 +373,29 @@ function getFiltered(){
 
 function cascadeSelects(){
   const v=id=>document.getElementById(id).value;
-  const udn=v('f-udn'),mes=v('f-mes'),sem=v('f-sem');
+  const udn=v('f-udn'),plt=v('f-plt'),mes=v('f-mes'),sem=v('f-sem');
   function sub(...ex){
     return DATA.filter(r=>{
       if(!ex.includes('udn')&&udn&&r[C.udn]!==udn) return false;
+      if(!ex.includes('plt')&&plt&&r[C.plt]!==plt) return false;
       if(!ex.includes('mes')&&mes&&r[C.mes]!==mes) return false;
       if(!ex.includes('sem')&&sem&&r[C.sem]!==sem) return false;
       return true;
     });
   }
-  fillSel('f-udn', uniq(sub('udn').map(r=>r[C.udn])), 'Todas');
-  fillSel('f-mes', uniq(sub('mes').map(r=>r[C.mes])), 'Todos');
-  fillSel('f-sem', uniq(sub('sem').map(r=>r[C.sem])), null);
+  fillSel('f-udn', uniq(sub('udn').map(r=>r[C.udn])),                     'Todas');
+  fillSel('f-plt', uniq(sub('plt').map(r=>r[C.plt]||'').filter(Boolean)), 'Todas');
+  fillSel('f-mes', uniq(sub('mes').map(r=>r[C.mes])),                     'Todos');
+  fillSel('f-sem', uniq(sub('sem').map(r=>r[C.sem])),                     null);
   if(udn) document.getElementById('f-udn').value=udn;
+  if(plt) document.getElementById('f-plt').value=plt;
   if(mes) document.getElementById('f-mes').value=mes;
   if(sem) document.getElementById('f-sem').value=sem;
 }
 
 function onFilter(){cascadeSelects();render();}
 function resetFilters(){
-  ['f-udn','f-mes'].forEach(id=>document.getElementById(id).value='');
+  ['f-udn','f-plt','f-mes'].forEach(id=>document.getElementById(id).value='');
   buildSelects();autoLatestWeek();render();
 }
 function toggleFilters(){
