@@ -161,7 +161,7 @@ th.sorted .sa{color:#84cc16;}
       <div class="fg"><label>Mes</label>
         <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
       <div class="fg"><label>Semana</label>
-        <select id="f-sem" onchange="onFilter()"><option value="">Todas</option></select></div>
+        <select id="f-sem" onchange="onFilter()"></select></div>
       <div class="fg" style="grid-column:1/-1">
         <button style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:.3rem;font-size:.72rem;font-family:'Inter',sans-serif;cursor:pointer;" onclick="resetFilters()">↺ Limpiar filtros</button>
       </div>
@@ -345,7 +345,7 @@ function updateSemBanner(){
 
 function fillSel(id,vals,ph){
   const s=document.getElementById(id),cur=s.value;
-  s.innerHTML=`<option value="">${ph}</option>`;
+  s.innerHTML = ph!==null ? `<option value="">${ph}</option>` : '';
   vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
   if(vals.includes(cur)) s.value=cur;
 }
@@ -353,7 +353,7 @@ function fillSel(id,vals,ph){
 function buildSelects(){
   fillSel('f-udn', uniq(DATA.map(r=>r[C.udn])), 'Todas');
   fillSel('f-mes', uniq(DATA.map(r=>r[C.mes])), 'Todos');
-  fillSel('f-sem', uniq(DATA.map(r=>r[C.sem])), 'Todas');
+  fillSel('f-sem', uniq(DATA.map(r=>r[C.sem])), null);
 }
 
 function getFiltered(){
@@ -380,7 +380,7 @@ function cascadeSelects(){
   }
   fillSel('f-udn', uniq(sub('udn').map(r=>r[C.udn])), 'Todas');
   fillSel('f-mes', uniq(sub('mes').map(r=>r[C.mes])), 'Todos');
-  fillSel('f-sem', uniq(sub('sem').map(r=>r[C.sem])), 'Todas');
+  fillSel('f-sem', uniq(sub('sem').map(r=>r[C.sem])), null);
   if(udn) document.getElementById('f-udn').value=udn;
   if(mes) document.getElementById('f-mes').value=mes;
   if(sem) document.getElementById('f-sem').value=sem;
@@ -388,8 +388,8 @@ function cascadeSelects(){
 
 function onFilter(){cascadeSelects();render();}
 function resetFilters(){
-  ['f-udn','f-mes','f-sem'].forEach(id=>document.getElementById(id).value='');
-  buildSelects();render();
+  ['f-udn','f-mes'].forEach(id=>document.getElementById(id).value='');
+  buildSelects();autoLatestWeek();render();
 }
 function toggleFilters(){
   const panel=document.getElementById('sidebarFilters');
