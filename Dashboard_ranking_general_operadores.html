@@ -207,7 +207,7 @@ table.gtbl tbody td.c{text-align:center;}
         <span><span class="leg-dot" style="background:#cd7f32"></span>3° lugar</span>
         <span><span class="leg-dot" style="background:var(--bg);border:1px solid #ccc"></span>Posición media</span>
         <span><span class="leg-dot" style="background:var(--red)"></span>Último tercio</span>
-        <span style="margin-left:.5rem;color:var(--text);font-weight:600">Formato celda: <strong>#pos</strong> <small>(pts)</small></span>
+        <span style="margin-left:.5rem;color:var(--text);font-weight:600">Formato celda: <strong>#pos</strong> <small>(pts)</small> · <strong>=</strong> empate</span>
       </div>
     </div>
 
@@ -335,15 +335,34 @@ function buildMatrix(filtered){
   sems.forEach(sem=>{
     const conDato=opes.filter(o=>map[o][sem]&&map[o][sem].length>0);
     const N=conDato.length;
-    const ranked=[...conDato].sort((a,b)=>{
-      const sa=map[a][sem].reduce((x,y)=>x+y,0)/map[a][sem].length;
-      const sb=map[b][sem].reduce((x,y)=>x+y,0)/map[b][sem].length;
-      return sb-sa;
+    // Calcular score de cada operador
+    const scores={};
+    conDato.forEach(o=>{
+      scores[o]=map[o][sem].reduce((x,y)=>x+y,0)/map[o][sem].length;
     });
-    ranked.forEach((ope,i)=>{
-      const score=map[ope][sem].reduce((x,y)=>x+y,0)/map[ope][sem].length;
-      puntos[ope][sem]={pos:i+1,pts:N-i,score:+score.toFixed(1),n:N};
-    });
+    // Ordenar desc
+    const ranked=[...conDato].sort((a,b)=>scores[b]-scores[a]);
+    // Asignar posición y puntos con manejo de empates (standard ranking)
+    // Empate → misma posición y mismos puntos (promedio de los puntos del grupo)
+    let i=0;
+    while(i<ranked.length){
+      const score=scores[ranked[i]];
+      // Encontrar todos los empatados con este score
+      let j=i;
+      while(j<ranked.length && Math.abs(scores[ranked[j]]-score)<0.001) j++;
+      // Grupo empatado: ranked[i..j-1]
+      const pos=i+1; // posición del grupo (la más alta del rango)
+      // Puntos: promedio de los puntos que corresponderían al rango i..j-1
+      // Ej: rango 2-3 de N=10 → pts disponibles: (10-1)+(10-2)=9+8=17 → avg=8.5
+      let ptsSum=0;
+      for(let k=i;k<j;k++) ptsSum+=(N-k);
+      const pts=+(ptsSum/(j-i)).toFixed(1); // decimal exacto, sin redondeo
+      for(let k=i;k<j;k++){
+        const ope=ranked[k];
+        puntos[ope][sem]={pos,pts,score:+scores[ope].toFixed(1),n:N,tied:j-i>1};
+      }
+      i=j;
+    }
     opes.filter(o=>!map[o][sem]||!map[o][sem].length).forEach(o=>{
       puntos[o][sem]=null;
     });
@@ -376,7 +395,8 @@ function posClass(pos,n){
 function cellHTML(entry){
   if(!entry) return`<span style="color:#ddd;font-size:.65rem">–</span>`;
   const cls=posClass(entry.pos,entry.n);
-  return`<div class="sc ${cls}"><span class="sc-pos">#${entry.pos}</span><span class="sc-pts">${entry.pts}pts</span></div>`;
+  const tie=entry.tied?`<span style="font-size:.5rem;color:var(--muted);line-height:1">=</span>`:'';
+  return`<div class="sc ${cls}">${tie}<span class="sc-pos">#${entry.pos}</span><span class="sc-pts">${entry.pts}pts</span></div>`;
 }
 function rankBadge(i){
   if(i===0) return`<span class="rb r1">1</span>`;
