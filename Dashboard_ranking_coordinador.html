@@ -408,7 +408,7 @@ function toggleFilters(){
 function aggregateBy(rows,groupKey){
   const map={};
   rows.forEach(r=>{
-    const k=(r[groupKey]||'').trim();if(!k) return;
+    const k=(r[groupKey]||'').trim();if(!k||k.toLowerCase()==='pendiente') return;
     if(!map[k]) map[k]={key:k,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),rows:[]};
     map[k].opeSet.add((r[C.ope]||'').trim());
     map[k].rows.push(r);
