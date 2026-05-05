@@ -222,6 +222,7 @@ th.sorted .sa{color:#84cc16;}
           <th style="width:36px" data-col="rank" data-tbl="ope">#<span class="sa">↓</span></th>
           <th data-col="key" data-tbl="ope">Operador<span class="sa">↕</span></th>
           <th data-col="nom" data-tbl="ope">Nómina<span class="sa">↕</span></th>
+          <th data-col="plt" data-tbl="ope">Planta<span class="sa">↕</span></th>
           <th data-col="jef" data-tbl="ope">Jefe<span class="sa">↕</span></th>
           <th data-col="udn" data-tbl="ope">UDN<span class="sa">↕</span></th>
           <th class="r" data-col="ini" data-tbl="ope">% NS Inicio<span class="sa">↕</span></th>
@@ -562,13 +563,13 @@ function aggregateBy(rows,groupKey){
   const map={};
   rows.forEach(r=>{
     const k=(r[groupKey]||'').trim();if(!k) return;
-    if(!map[k]) map[k]={key:k,jef:r[C.jef]||'',udn:r[C.udn]||'',nom:r[C.nom]||'',opeSet:new Set(),rows:[]};
+    if(!map[k]) map[k]={key:k,jef:r[C.jef]||'',udn:r[C.udn]||'',nom:r[C.nom]||'',plt:r[C.plt]||'',opeSet:new Set(),rows:[]};
     map[k].opeSet.add((r[C.ope]||'').trim());
     map[k].rows.push(r);
   });
   return Object.values(map).map(g=>{
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
-    return{key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,n:g.opeSet.size,ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),seg:avg(C.seg),ren:avg(C.ren),tot:avg(C.tot)};
+    return{key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,n:g.opeSet.size,ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),seg:avg(C.seg),ren:avg(C.ren),tot:avg(C.tot)};
   });
 }
 
@@ -587,7 +588,7 @@ function onSort(th){
   const col=th.dataset.col,tbl=th.dataset.tbl;if(!col||!tbl) return;
   if(col==='rank'){SORT[tbl].col='tot';SORT[tbl].dir='desc';renderTable(tbl);return;}
   if(SORT[tbl].col===col) SORT[tbl].dir=SORT[tbl].dir==='asc'?'desc':'asc';
-  else{SORT[tbl].col=col;SORT[tbl].dir=(col==='key'||col==='nom'||col==='jef'||col==='udn')?'asc':'desc';}
+  else{SORT[tbl].col=col;SORT[tbl].dir=(col==='key'||col==='nom'||col==='plt'||col==='jef'||col==='udn')?'asc':'desc';}
   renderTable(tbl);
 }
 
@@ -629,12 +630,12 @@ function renderTable(tbl,rowsInput){
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT[tbl].col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓';}
   document.getElementById(cntId).textContent=rows.length+(isU?' UDNs':isJ?' jefes':isC?' coordinadores':' operadores');
-  if(!rows.length){body.innerHTML=`<tr><td colspan="${isC?11:9}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="${isC?11:isJ||isU?9:12}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>{
     const b=rankBadge(i);
     if(isU||isJ) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
     if(isC) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
-    return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.nom||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
+    return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.nom||'–'}</td><td style="color:var(--muted)">${r.plt||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
   }).join('');
 }
 
@@ -644,10 +645,10 @@ function exportTable(tbl){
   const fmt=v=>v===null?'':+v.toFixed(2);
   const hdrs=isJ?['#','Jefe','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
     :isC?['#','Coordinador','Jefe','UDN','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
-    :['#','Operador','Nómina','Jefe','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
+    :['#','Operador','Nómina','Planta','Jefe','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
   const data=rows.map((r,i)=>isJ?[i+1,r.key,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
     :isC?[i+1,r.key,r.jef,r.udn,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
-    :[i+1,r.key,r.nom,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]);
+    :[i+1,r.key,r.nom,r.plt,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,isJ?'Ranking Jefes':isC?'Ranking Coordinadores':'Ranking Operadores');
