@@ -211,14 +211,14 @@ th.sorted .sa{color:#84cc16;}
           <th data-col="key" data-tbl="coord">Coordinador<span class="sa">↕</span></th>
           <th data-col="plt" data-tbl="coord">Planta<span class="sa">↕</span></th>
           <th data-col="udn" data-tbl="coord">UDN<span class="sa">↕</span></th>
-          <th class="r" data-col="n" data-tbl="coord">Operadores<span class="sa">↕</span></th>
+
           <th class="r" data-col="ini" data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
           <th class="r" data-col="lle" data-tbl="coord">% NS Llegada<span class="sa">↕</span></th>
           <th class="r" data-col="cal" data-tbl="coord">Calidad Ruta<span class="sa">↕</span></th>
           <th class="r" data-col="seg" data-tbl="coord">Score Seg.<span class="sa">↕</span></th>
           <th class="r" data-col="ren" data-tbl="coord">Rendimiento<span class="sa">↕</span></th>
           <th class="r" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
-        </tr></thead><tbody id="bodyCoord"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody></table>
+        </tr></thead><tbody id="bodyCoord"><tr><td colspan="10" class="tbl-empty">Cargando…</td></tr></tbody></table>
       </div>
     </div>
 
@@ -471,7 +471,7 @@ function renderTable(tbl,rowsInput){
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT[tbl].col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓';}
   document.getElementById(cntId).textContent=rows.length+(isU?' UDNs':isJ?' jefes':isC?' coordinadores':' operadores');
-  if(!rows.length){body.innerHTML=`<tr><td colspan="11" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="10" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>{
     const b=rankBadge(i);
     // Tabla coordinador: #, Coordinador, Jefe, UDN, Operadores, 5 KPIs, TOTAL
@@ -480,7 +480,6 @@ function renderTable(tbl,rowsInput){
       <td style="font-weight:600">${r.key||'–'}</td>
       <td style="color:var(--muted)">${r.plt||'–'}</td>
       <td style="color:var(--muted)">${r.udn||'–'}</td>
-      <td class="r" style="color:var(--muted)">${r.n}</td>
       <td class="r">${scCell(r.ini)}</td>
       <td class="r">${scCell(r.lle)}</td>
       <td class="r">${scCell(r.cal)}</td>
@@ -494,8 +493,8 @@ function renderTable(tbl,rowsInput){
 function exportTable(tbl){
   const rows=sortRows(aggregateBy(getFiltered(),C.coord),'coord');
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const hdrs=['#','Coordinador','Planta','UDN','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
-  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]);
+  const hdrs=['#','Coordinador','Planta','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
+  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Ranking Coordinadores');
