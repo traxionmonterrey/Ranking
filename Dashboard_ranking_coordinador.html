@@ -209,7 +209,7 @@ th.sorted .sa{color:#84cc16;}
         <table class="data-table" id="tblCoord"><thead><tr>
           <th style="width:36px" data-col="rank" data-tbl="coord">#<span class="sa">↓</span></th>
           <th data-col="key" data-tbl="coord">Coordinador<span class="sa">↕</span></th>
-          <th data-col="jef" data-tbl="coord">Jefe<span class="sa">↕</span></th>
+          <th data-col="plt" data-tbl="coord">Planta<span class="sa">↕</span></th>
           <th data-col="udn" data-tbl="coord">UDN<span class="sa">↕</span></th>
           <th class="r" data-col="n" data-tbl="coord">Operadores<span class="sa">↕</span></th>
           <th class="r" data-col="ini" data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
@@ -409,13 +409,13 @@ function aggregateBy(rows,groupKey){
   const map={};
   rows.forEach(r=>{
     const k=(r[groupKey]||'').trim();if(!k) return;
-    if(!map[k]) map[k]={key:k,jef:r[C.jef]||'',udn:r[C.udn]||'',nom:r[C.nom]||'',opeSet:new Set(),rows:[]};
+    if(!map[k]) map[k]={key:k,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),rows:[]};
     map[k].opeSet.add((r[C.ope]||'').trim());
     map[k].rows.push(r);
   });
   return Object.values(map).map(g=>{
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
-    return{key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,n:g.opeSet.size,ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),seg:avg(C.seg),ren:avg(C.ren),tot:avg(C.tot)};
+    return{key:g.key,udn:g.udn,plt:g.plt,n:g.opeSet.size,ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),seg:avg(C.seg),ren:avg(C.ren),tot:avg(C.tot)};
   });
 }
 
@@ -478,7 +478,7 @@ function renderTable(tbl,rowsInput){
     return `<tr>
       <td style="text-align:center">${b}</td>
       <td style="font-weight:600">${r.key||'–'}</td>
-      <td style="color:var(--muted)">${r.jef||'–'}</td>
+      <td style="color:var(--muted)">${r.plt||'–'}</td>
       <td style="color:var(--muted)">${r.udn||'–'}</td>
       <td class="r" style="color:var(--muted)">${r.n}</td>
       <td class="r">${scCell(r.ini)}</td>
@@ -494,8 +494,8 @@ function renderTable(tbl,rowsInput){
 function exportTable(tbl){
   const rows=sortRows(aggregateBy(getFiltered(),C.coord),'coord');
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const hdrs=['#','Coordinador','Jefe','UDN','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
-  const data=rows.map((r,i)=>[i+1,r.key,r.jef,r.udn,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]);
+  const hdrs=['#','Coordinador','Planta','UDN','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
+  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Ranking Coordinadores');
