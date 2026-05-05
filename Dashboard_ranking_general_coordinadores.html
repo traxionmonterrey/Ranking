@@ -88,7 +88,24 @@ nav a:hover{background:#374151;}
   padding:.32rem .7rem;font-size:.68rem;font-weight:600;cursor:pointer;transition:background .2s;}
 .btn-exp:hover{background:var(--navy3);}
 
-/* TABLA PRINCIPAL */
+/* SELECTOR DE SEMANAS */
+.sem-selector{background:var(--white);border-radius:12px;padding:.8rem 1rem;
+  box-shadow:0 2px 10px rgba(26,34,54,.07);}
+.sem-selector-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem;}
+.sem-selector-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.sem-selector-actions{display:flex;gap:.35rem;}
+.sem-act-btn{background:none;border:1px solid var(--border);border-radius:5px;
+  padding:.2rem .5rem;font-size:.65rem;font-weight:600;color:var(--muted);cursor:pointer;
+  font-family:"Inter",sans-serif;transition:all .15s;}
+.sem-act-btn:hover{border-color:var(--green);color:var(--green);}
+.sem-chips{display:flex;flex-wrap:wrap;gap:.35rem;}
+.sem-chip{padding:.28rem .6rem;border-radius:6px;font-size:.68rem;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--border);background:var(--bg);color:var(--muted);
+  transition:all .15s;user-select:none;}
+.sem-chip:hover{border-color:var(--green);color:var(--green);}
+.sem-chip.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.sem-chip.active:hover{background:var(--navy3);border-color:var(--navy3);}
+
 .tbl-wrap{overflow-x:auto;max-width:100%;}
 table.gtbl{border-collapse:collapse;width:100%;font-size:.72rem;}
 table.gtbl thead tr{background:var(--navy);color:#fff;}
@@ -173,6 +190,20 @@ table.gtbl tbody td.c{text-align:center;}
       <span style="font-size:.75rem;color:var(--muted)" id="semRango">–</span>
     </div>
 
+    <!-- SELECTOR DE SEMANAS -->
+    <div class="sem-selector">
+      <div class="sem-selector-hdr">
+        <span class="sem-selector-title">📅 Semanas incluidas en el ranking</span>
+        <div class="sem-selector-actions">
+          <button class="sem-act-btn" onclick="selAllSems()">Todas</button>
+          <button class="sem-act-btn" onclick="selLastN(4)">Últimas 4</button>
+          <button class="sem-act-btn" onclick="selLastN(8)">Últimas 8</button>
+          <button class="sem-act-btn" onclick="selNoneSems()">Ninguna</button>
+        </div>
+      </div>
+      <div class="sem-chips" id="semChips"></div>
+    </div>
+
     <!-- EXPLICACION -->
     <div class="explain-card">
       <div>
@@ -252,6 +283,8 @@ const C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',
   ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',
   seg:'Score Seguridad',ren:'Rendimiento',tot:'TOTAL'};
 let DATA=[];
+let selectedSems=new Set(); // semanas activas seleccionadas por el usuario
+let allSems=[];             // todas las semanas disponibles
 
 /* ── CSV PARSE ─────────────────────────────────────────── */
 function parseLine(line){
@@ -301,13 +334,29 @@ function fillSel(id,vals,ph){
 }
 function buildSelects(){
   fillSel('f-udn',uniq(DATA.map(r=>r.udn)),'Todas');
+  // Construir chips de semana
+  allSems=uniq(DATA.map(r=>(r.sem||'').trim())).sort((a,b)=>semNum(a)-semNum(b));
+  selectedSems=new Set(allSems); // por defecto todas activas
+  renderChips();
 }
-function getFiltered(){
-  const udn=document.getElementById('f-udn').value;
-  return DATA.filter(r=>{
-    if(udn&&r.udn!==udn) return false;
-    return true;
-  });
+function renderChips(){
+  const container=document.getElementById('semChips');
+  container.innerHTML=allSems.map(s=>`
+    <span class="sem-chip${selectedSems.has(s)?' active':''}" onclick="toggleSem('${s}')" title="Semana ${s}">S${s.replace(/\D/g,'')}</span>
+  `).join('');
+}
+function toggleSem(s){
+  if(selectedSems.has(s)) selectedSems.delete(s);
+  else selectedSems.add(s);
+  renderChips();
+  render();
+}
+function selAllSems(){selectedSems=new Set(allSems);renderChips();render();}
+function selNoneSems(){selectedSems=new Set();renderChips();render();}
+function selLastN(n){
+  const last=allSems.slice(-n);
+  selectedSems=new Set(last);
+  renderChips();render();
 }
 function cascadeSelects(){
   const udn=document.getElementById('f-udn').value;
@@ -317,13 +366,23 @@ function cascadeSelects(){
 function onFilter(){cascadeSelects();render();}
 function resetFilters(){
   document.getElementById('f-udn').value='';
+  selectedSems=new Set(allSems);
+  renderChips();
   buildSelects();render();
 }
 
 /* ── LÓGICA CENTRAL ────────────────────────────────────── */
+function getFiltered(){
+  const udn=document.getElementById('f-udn').value;
+  return DATA.filter(r=>{
+    if(udn&&r.udn!==udn) return false;
+    return true;
+  });
+}
+
 function buildMatrix(filtered){
-  // Semanas únicas ordenadas
-  const sems=uniq(filtered.map(r=>(r.sem||'').trim())).sort((a,b)=>semNum(a)-semNum(b));
+  // Solo semanas seleccionadas por el usuario, ordenadas
+  const sems=allSems.filter(s=>selectedSems.has(s));
 
   // Agrupar por coord+semana → avg TOTAL
   const map={};// coord → {sem → avg}
@@ -416,8 +475,9 @@ function render(){
   const{rows,sems}=buildMatrix(filtered);
 
   // Rango semanas
+  const selCount=selectedSems.size;
   document.getElementById('semRango').textContent=
-    sems.length?`Semanas: ${sems[0]} → ${sems[sems.length-1]}`:'';
+    sems.length?`${selCount} semana${selCount!==1?'s':''} seleccionada${selCount!==1?'s':''} · ${sems[0]} → ${sems[sems.length-1]}`:'Sin semanas seleccionadas';
 
   // KPIs
   const lider=rows[0]||null;
