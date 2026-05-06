@@ -432,10 +432,10 @@ function buildMatrix(filtered){
     return{ope,meta:opeMeta[ope],totalPts,semCount,rachaMax,puntos:puntos[ope]};
   }).sort((a,b)=>b.totalPts-a.totalPts);
 
-  // Asignar rank con empates (dense ranking: 1,1,2,3,3,4...)
+  // Dense ranking: 1,1,1,2,3,3,4... (sin saltarse números)
   let rank=1;
   rows.forEach((row,i)=>{
-    if(i>0&&row.totalPts<rows[i-1].totalPts) rank=i+1;
+    if(i>0&&row.totalPts<rows[i-1].totalPts) rank++;
     row.rank=rank;
   });
 
