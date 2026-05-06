@@ -439,6 +439,13 @@ function buildMatrix(filtered){
     return{coord,meta:coordMeta[coord],totalPts,semCount,rachaMax,puntos:puntos[coord]};
   }).sort((a,b)=>b.totalPts-a.totalPts);
 
+  // Dense ranking: 1,1,1,2,3,3,4... (sin saltarse números)
+  let rank=1;
+  rows.forEach((row,i)=>{
+    if(i>0&&row.totalPts<rows[i-1].totalPts) rank++;
+    row.rank=rank;
+  });
+
   return{rows,sems};
 }
 
@@ -463,11 +470,11 @@ function cellHTML(entry){
   </div>`;
 }
 
-function rankBadge(i){
-  if(i===0) return`<span class="rb r1">1</span>`;
-  if(i===1) return`<span class="rb r2">2</span>`;
-  if(i===2) return`<span class="rb r3">3</span>`;
-  return`<span class="rb rn">${i+1}</span>`;
+function rankBadge(rank){
+  if(rank===1) return`<span class="rb r1">1</span>`;
+  if(rank===2) return`<span class="rb r2">2</span>`;
+  if(rank===3) return`<span class="rb r3">3</span>`;
+  return`<span class="rb rn">${rank}</span>`;
 }
 
 function render(){
@@ -501,6 +508,7 @@ function render(){
   head.innerHTML=`<tr>
     <th style="width:32px;text-align:center">#</th>
     <th>Coordinador</th>
+    <th>Planta</th>
     <th>UDN</th>
     ${sems.map(s=>`<th class="sem-h c" title="Semana ${s}">S${s.replace(/\D/g,'')}</th>`).join('')}
     <th class="r" style="min-width:80px">Pts Totales</th>
@@ -510,16 +518,17 @@ function render(){
   // BODY
   const body=document.getElementById('gtblBody');
   if(!rows.length){
-    body.innerHTML=`<tr><td class="tbl-empty" colspan="${4+sems.length}">Sin datos para los filtros seleccionados</td></tr>`;
+    body.innerHTML=`<tr><td class="tbl-empty" colspan="${5+sems.length}">Sin datos para los filtros seleccionados</td></tr>`;
     return;
   }
 
   body.innerHTML=rows.map((row,i)=>{
     const barW=maxPts>0?Math.round((row.totalPts/maxPts)*54):0;
     const semCells=sems.map(s=>`<td class="c">${cellHTML(row.puntos[s])}</td>`).join('');
-    return`<tr class="${i===0?'top1':''}">
-      <td class="c">${rankBadge(i)}</td>
+    return`<tr class="${row.rank===1?'top1':''}">
+      <td class="c">${rankBadge(row.rank)}</td>
       <td style="font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis" title="${row.coord}">${row.coord}</td>
+      <td style="color:var(--muted);font-size:.68rem;max-width:110px;overflow:hidden;text-overflow:ellipsis" title="${row.meta.plt}">${row.meta.plt||'–'}</td>
       <td style="color:var(--muted);font-size:.68rem">${row.meta.udn||'–'}</td>
       ${semCells}
       <td class="r">
