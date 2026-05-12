@@ -242,6 +242,7 @@ th.sorted .sa{color:#84cc16;}
 const SHEET_ID = '122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
 let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',udn:'Unidad de Negocio',plt:'Planta',coord:'Coordinador',ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',seg:'Score Seguridad',ren:'Rendimiento',tot:'TOTAL'};
 let DATA=[];
+let DATA_COORD=[];
 let chartInst=null;
 const SORT={jef:{col:'tot',dir:'desc'},coord:{col:'tot',dir:'desc'},ope:{col:'tot',dir:'desc'},udn:{col:'tot',dir:'desc'}};
 
@@ -604,10 +605,15 @@ function render(){
 
 function renderKPIs(rO,rJ,rC){
   const top=arr=>[...arr].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot)[0]||null;
-  const tJ=top(rJ),tC=top(rC),tO=top(rO);
+  const tJ=top(rJ),tO=top(rO);
   document.getElementById('kpiJefV').textContent=tJ?tJ.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiJefN').textContent=tJ?tJ.key:'–';
   document.getElementById('kpiJefU').textContent=tJ&&tJ.udn?tJ.udn:'';
+  // Mejor coordinador: jalar desde DATA_COORD filtrado por la semana activa
+  const sem=document.getElementById('f-sem').value;
+  const coordFilt=DATA_COORD.filter(r=>!sem||( (r[C.sem]||'').trim()===sem ));
+  const coordRows=aggregateBy(coordFilt,C.coord);
+  const tC=top(coordRows);
   document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiCoordN').textContent=tC?tC.key:'–';
   document.getElementById('kpiCoordU').textContent=tC&&tC.udn?tC.udn:'';
@@ -668,10 +674,15 @@ async function loadData(){
   const ov=document.getElementById('ldOverlay'),msg=document.getElementById('ldMsg'),err=document.getElementById('errBar');
   try{
     msg.textContent='Conectando con Google Sheets…';
-    const res=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`);
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text=await res.text();
-    DATA=parseCSV(text);
+    const baseUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+    const [resOpe, resCoord] = await Promise.all([
+      fetch(baseUrl),
+      fetch(`${baseUrl}&sheet=${encodeURIComponent('Ranking Coordinador')}`)
+    ]);
+    if(!resOpe.ok) throw new Error(`HTTP ${resOpe.status}`);
+    const [textOpe, textCoord] = await Promise.all([resOpe.text(), resCoord.text()]);
+    DATA=parseCSV(textOpe);
+    DATA_COORD=resCoord.ok?parseCSV(textCoord):[];
     if(!DATA.length) throw new Error('Sheet vacío');
     ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
     buildSelects();
