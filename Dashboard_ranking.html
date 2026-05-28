@@ -405,14 +405,18 @@ function aggregateBy(rows,groupKey){
   });
   return Object.values(map).map(g=>{
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
-    return{
+    const row={
       key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,n:g.opeSet.size,
       ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
       seg:avg(C.seg),pseg:avg(C.pseg),
       ren:avg(C.ren),sren:avg(C.sren),
       tot:avg(C.tot)
     };
-  });
+    // Excluir si cualquier score es null
+    const scores=[row.ini,row.lle,row.cal,row.seg,row.pseg,row.ren,row.sren,row.tot];
+    if(scores.some(v=>v===null)) return null;
+    return row;
+  }).filter(Boolean);
 }
 
 function sortRows(rows,tbl){
@@ -449,9 +453,16 @@ function renderKPIs(rO,rJ){
   document.getElementById('kpiJefV').textContent=tJ?tJ.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiJefN').textContent=tJ?tJ.key:'–';
   document.getElementById('kpiJefU').textContent=tJ&&tJ.udn?tJ.udn:'';
-  // Mejor coordinador desde DATA_COORD
+  // Mejor coordinador desde DATA_COORD filtrado por semana, UDN y planta
   const sem=document.getElementById('f-sem').value;
-  const coordFilt=DATA_COORD.filter(r=>!sem||((r[C.sem]||'').trim()===sem));
+  const udn=document.getElementById('f-udn').value;
+  const plt=document.getElementById('f-plt').value;
+  const coordFilt=DATA_COORD.filter(r=>{
+    if(sem&&(r[C.sem]||'').trim()!==sem) return false;
+    if(udn&&(r[C.udn]||'').trim()!==udn) return false;
+    if(plt&&(r[C.plt]||'').trim()!==plt) return false;
+    return true;
+  });
   const coordRows=aggregateBy(coordFilt,C.coord);
   const tC=top(coordRows);
   document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(1)+'%':'–';
