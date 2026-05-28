@@ -182,15 +182,17 @@ th.sorted .sa{color:#84cc16;}
           <th data-col="key"  data-tbl="coord">Coordinador<span class="sa">↕</span></th>
           <th data-col="plt"  data-tbl="coord">Planta<span class="sa">↕</span></th>
           <th data-col="udn"  data-tbl="coord">UDN<span class="sa">↕</span></th>
-          <th class="r" data-col="ini" data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
-          <th class="r" data-col="lle" data-tbl="coord">% NS Llegada<span class="sa">↕</span></th>
-          <th class="r" data-col="cal" data-tbl="coord">Calidad Ruta<span class="sa">↕</span></th>
-          <th class="r" data-col="seg" data-tbl="coord">Score Seg.<span class="sa">↕</span></th>
-          <th class="r" data-col="ren" data-tbl="coord">Rendimiento<span class="sa">↕</span></th>
-          <th class="r" data-col="kmv" data-tbl="coord">KMV<span class="sa">↕</span></th>
-          <th class="r" data-col="hd"  data-tbl="coord">HD<span class="sa">↕</span></th>
-          <th class="r" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
-        </tr></thead><tbody id="bodyCoord"><tr><td colspan="12" class="tbl-empty">Cargando…</td></tr></tbody></table>
+          <th class="r" data-col="ini"  data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
+          <th class="r" data-col="lle"  data-tbl="coord">% NS Llegada<span class="sa">↕</span></th>
+          <th class="r" data-col="cal"  data-tbl="coord">Calidad Ruta<span class="sa">↕</span></th>
+          <th class="r" data-col="seg"  data-tbl="coord">Score Seg.<span class="sa">↕</span></th>
+          <th class="r" data-col="pseg" data-tbl="coord">% Score Seg.<span class="sa">↕</span></th>
+          <th class="r" data-col="ren"  data-tbl="coord">Rendimiento<span class="sa">↕</span></th>
+          <th class="r" data-col="sren" data-tbl="coord">Score Rend.<span class="sa">↕</span></th>
+          <th class="r" data-col="kmv"  data-tbl="coord">KMV<span class="sa">↕</span></th>
+          <th class="r" data-col="hd"   data-tbl="coord">HD<span class="sa">↕</span></th>
+          <th class="r" data-col="tot"  data-tbl="coord">TOTAL<span class="sa">↕</span></th>
+        </tr></thead><tbody id="bodyCoord"><tr><td colspan="14" class="tbl-empty">Cargando…</td></tr></tbody></table>
       </div>
     </div>
 
@@ -202,7 +204,9 @@ const SHEET_ID = '122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
 let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',
        udn:'Unidad de Negocio',plt:'Planta',coord:'Coordinador',
        ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',
-       seg:'Score Seguridad',ren:'Rendimiento',kmv:'KMV',hd:'HD',tot:'TOTAL'};
+       seg:'Score Seguridad',pseg:'% Score Seguridad',
+       ren:'Rendimiento',sren:'Score Rendimiento',
+       kmv:'KMV',hd:'HD',tot:'TOTAL'};
 let DATA=[];
 const SORT={jef:{col:'tot',dir:'desc'},coord:{col:'tot',dir:'desc'},ope:{col:'tot',dir:'desc'},udn:{col:'tot',dir:'desc'}};
 
@@ -226,9 +230,11 @@ function parseCSV(text){
     const f=hdrs.find(h=>p.some(x=>h.toLowerCase().includes(x)));
     if(f) C[key]=f;
   }
-  fuzzy('seg','segur','score seg','score s');
+  fuzzy('seg','score seguridad');
+  fuzzy('pseg','% score seguridad','% score seg');
   fuzzy('cal','calidad');
-  fuzzy('ren','rendim');
+  fuzzy('ren','rendimiento');
+  fuzzy('sren','score rendimiento','score rend');
   fuzzy('ini','ns ini','inicio','% ns i');
   fuzzy('lle','ns lle','llegada','% ns l');
   fuzzy('udn','unidad','negocio','udn');
@@ -263,6 +269,10 @@ function sColor(v){
 function scCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
   return `<span style="font-weight:700;font-size:.73rem;color:${sColor(v)}">${v.toFixed(1)}%</span>`;
+}
+function numCell(v){
+  if(v===null) return '<span class="sc-null">–</span>';
+  return `<span style="font-weight:700;font-size:.73rem;color:var(--text)">${v.toFixed(2)}</span>`;
 }
 function totCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
@@ -384,7 +394,9 @@ function aggregateBy(rows,groupKey){
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
     return{key:g.key,udn:g.udn,plt:g.plt,n:g.opeSet.size,
            ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
-           seg:avg(C.seg),ren:avg(C.ren),kmv:avg(C.kmv),hd:avg(C.hd),tot:avg(C.tot)};
+           seg:avg(C.seg),pseg:avg(C.pseg),
+           ren:avg(C.ren),sren:avg(C.sren),
+           kmv:avg(C.kmv),hd:avg(C.hd),tot:avg(C.tot)};
   });
 }
 
@@ -438,7 +450,7 @@ function renderTable(tbl,rowsInput){
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT[tbl].col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓';}
   document.getElementById('cntCoord').textContent=rows.length+' coordinadores';
-  if(!rows.length){body.innerHTML=`<tr><td colspan="12" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="14" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
     <td style="font-weight:600">${r.key||'–'}</td>
@@ -447,8 +459,10 @@ function renderTable(tbl,rowsInput){
     <td class="r">${scCell(r.ini)}</td>
     <td class="r">${scCell(r.lle)}</td>
     <td class="r">${scCell(r.cal)}</td>
-    <td class="r">${scCell(r.seg)}</td>
-    <td class="r">${scCell(r.ren)}</td>
+    <td class="r">${numCell(r.seg)}</td>
+    <td class="r">${scCell(r.pseg)}</td>
+    <td class="r">${numCell(r.ren)}</td>
+    <td class="r">${scCell(r.sren)}</td>
     <td class="r">${scCell(r.kmv)}</td>
     <td class="r">${scCell(r.hd)}</td>
     <td class="r">${totCell(r.tot)}</td>
@@ -458,8 +472,8 @@ function renderTable(tbl,rowsInput){
 function exportTable(tbl){
   const rows=sortRows(aggregateBy(getFiltered(),C.coord),'coord');
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const hdrs=['#','Coordinador','Planta','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','KMV','HD','TOTAL'];
-  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.kmv),fmt(r.hd),fmt(r.tot)]);
+  const hdrs=['#','Coordinador','Planta','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rendimiento','Score Rendimiento','KMV','HD','TOTAL'];
+  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.ren),fmt(r.sren),fmt(r.kmv),fmt(r.hd),fmt(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Ranking Coordinadores');
