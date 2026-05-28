@@ -64,50 +64,26 @@ th.sorted .sa{color:#84cc16;}
 .ld-msg{font-size:.82rem;color:var(--muted);}
 .err-bar{background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:.7rem 1rem;font-size:.78rem;color:#991b1b;display:none;margin-bottom:.3rem;}
 .tbl-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;}
-/* Semana banner */
-.sem-banner{background:var(--navy);color:#fff;border-radius:10px;padding:.7rem 1.1rem;
-            display:flex;align-items:center;gap:.75rem;}
+.sem-banner{background:var(--navy);color:#fff;border-radius:10px;padding:.7rem 1.1rem;display:flex;align-items:center;gap:.75rem;}
 .sem-banner .sem-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;}
 .sem-banner .sem-val{font-size:1.1rem;font-weight:800;color:#84cc16;letter-spacing:.02em;}
 .sem-banner .sem-sub{font-size:.68rem;color:#9ca3af;margin-left:auto;}
-
-/* ── FILTER TOGGLE (mobile only) ── */
-.filter-toggle{display:none;width:100%;background:var(--navy);color:#e5e7eb;border:none;
-               border-radius:8px;padding:.55rem .85rem;font-size:.78rem;font-family:"Inter",sans-serif;
-               font-weight:600;cursor:pointer;text-align:left;gap:.5rem;align-items:center;}
+.filter-toggle{display:none;width:100%;background:var(--navy);color:#e5e7eb;border:none;border-radius:8px;padding:.55rem .85rem;font-size:.78rem;font-family:"Inter",sans-serif;font-weight:600;cursor:pointer;text-align:left;gap:.5rem;align-items:center;}
 .filter-toggle svg{width:14px;height:14px;stroke:#84cc16;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;}
 .filter-toggle .ft-arrow{margin-left:auto;font-size:.65rem;transition:transform .25s;}
 .filter-toggle.open .ft-arrow{transform:rotate(180deg);}
-
 @media(max-width:768px){
-  /* NAV */
-  nav{padding:10px 16px;gap:10px;}
-  nav a.brand{font-size:16px;}
-
-  /* LAYOUT */
+  nav{padding:10px 16px;gap:10px;}nav a.brand{font-size:16px;}
   .layout{flex-direction:column;}
-
-  /* SIDEBAR → collapsible panel */
-  .sidebar{
-    width:100%;height:auto;position:relative;top:0;
-    border-right:none;border-bottom:1px solid var(--border);
-    padding:.6rem .75rem;gap:.5rem;overflow:visible;
-  }
+  .sidebar{width:100%;height:auto;position:relative;top:0;border-right:none;border-bottom:1px solid var(--border);padding:.6rem .75rem;gap:.5rem;overflow:visible;}
   .filter-toggle{display:flex;}
   .sidebar-filters{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;padding-top:.45rem;}
   .sidebar-filters.collapsed{display:none;}
   .sidebar-filters .fg:last-child{grid-column:1/-1;}
-  .sb-title{display:none;} /* replaced by toggle button */
-
-  /* MAIN */
+  .sb-title{display:none;}
   .main{padding:.75rem .65rem;gap:.75rem;}
-
-  /* BANNER */
   .sem-banner{padding:.55rem .85rem;border-radius:8px;}
   .sem-banner .sem-val{font-size:.95rem;}
-  .sem-banner .sem-sub{font-size:.62rem;}
-
-  /* KPIs: 3 en una fila compactos */
   .kpi-grid{grid-template-columns:repeat(3,1fr);gap:.45rem;}
   .kpi{padding:.65rem .6rem;border-top-width:3px;}
   .kpi::after{display:none;}
@@ -115,19 +91,14 @@ th.sorted .sa{color:#84cc16;}
   .kpi-val{font-size:1.15rem;}
   .kpi-lbl{font-size:.55rem;margin-top:.15rem;}
   .kpi-sub{font-size:.62rem;margin-top:.1rem;}
-
-  /* TABLE CARD */
   .table-hdr{padding:.6rem .75rem;flex-wrap:wrap;gap:.4rem;}
   .th-left .ttl{font-size:.8rem;}
   .th-left .sub{display:none;}
   .table-card{border-radius:8px;}
-
-  /* TABLE SCROLL */
-  .data-table{table-layout:auto;min-width:620px;}
+  .data-table{table-layout:auto;min-width:900px;}
   .data-table thead th{font-size:.55rem;padding:.35rem .45rem;}
   .data-table tbody td{font-size:.68rem;padding:.28rem .45rem;}
 }
-
 @media(max-width:400px){
   .kpi-grid{grid-template-columns:repeat(3,1fr);gap:.3rem;}
   .kpi-val{font-size:1rem;}
@@ -137,23 +108,19 @@ th.sorted .sa{color:#84cc16;}
 </style>
 </head>
 <body>
-
 <nav>
   <a href="index.html" class="brand">TRAXIÓN</a>
 </nav>
-
 <div class="ld-overlay" id="ldOverlay">
   <div class="ld-logo">TRAXIÓN</div>
   <div class="ld-spin"></div>
   <div class="ld-msg" id="ldMsg">Conectando con Google Sheets…</div>
 </div>
-
 <div class="layout">
   <aside class="sidebar">
     <button class="filter-toggle" id="filterToggle" onclick="toggleFilters()">
       <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-      Filtros
-      <span class="ft-arrow">▼</span>
+      Filtros <span class="ft-arrow">▼</span>
     </button>
     <div class="sb-title">Filtros <button class="sb-reset" onclick="resetFilters()" title="Limpiar">↺</button></div>
     <div class="sidebar-filters collapsed" id="sidebarFilters">
@@ -174,11 +141,8 @@ th.sorted .sa{color:#84cc16;}
       </div>
     </div>
   </aside>
-
   <main class="main">
     <div class="err-bar" id="errBar"></div>
-
-    <!-- SEMANA BANNER -->
     <div class="sem-banner" id="semBanner" style="display:none">
       <div>
         <div class="sem-label">Período seleccionado</div>
@@ -186,7 +150,6 @@ th.sorted .sa{color:#84cc16;}
       </div>
       <div class="sem-sub" id="semSub"></div>
     </div>
-
     <div class="kpi-grid">
       <div class="kpi" style="--kc:#7ed321">
         <div class="kpi-icon">🗂️</div>
@@ -220,30 +183,36 @@ th.sorted .sa{color:#84cc16;}
       <div style="overflow-x:auto">
         <table class="data-table" id="tblOpe"><thead><tr>
           <th style="width:36px" data-col="rank" data-tbl="ope">#<span class="sa">↓</span></th>
-          <th data-col="key" data-tbl="ope">Operador<span class="sa">↕</span></th>
-          <th data-col="nom" data-tbl="ope">Nómina<span class="sa">↕</span></th>
-          <th data-col="plt" data-tbl="ope">Planta<span class="sa">↕</span></th>
-          <th data-col="jef" data-tbl="ope">Jefe<span class="sa">↕</span></th>
-          <th data-col="udn" data-tbl="ope">UDN<span class="sa">↕</span></th>
-          <th class="r" data-col="ini" data-tbl="ope">% NS Inicio<span class="sa">↕</span></th>
-          <th class="r" data-col="lle" data-tbl="ope">% NS Llegada<span class="sa">↕</span></th>
-          <th class="r" data-col="cal" data-tbl="ope">Calidad Ruta<span class="sa">↕</span></th>
-          <th class="r" data-col="seg" data-tbl="ope">Score Seg.<span class="sa">↕</span></th>
-          <th class="r" data-col="ren" data-tbl="ope">Rendimiento<span class="sa">↕</span></th>
-          <th class="r" data-col="tot" data-tbl="ope">TOTAL<span class="sa">↕</span></th>
-        </tr></thead><tbody id="bodyOpe"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody></table>
+          <th data-col="key"  data-tbl="ope">Operador<span class="sa">↕</span></th>
+          <th data-col="nom"  data-tbl="ope">Nómina<span class="sa">↕</span></th>
+          <th data-col="plt"  data-tbl="ope">Planta<span class="sa">↕</span></th>
+          <th data-col="jef"  data-tbl="ope">Jefe<span class="sa">↕</span></th>
+          <th data-col="udn"  data-tbl="ope">UDN<span class="sa">↕</span></th>
+          <th class="r" data-col="ini"  data-tbl="ope">% NS Inicio<span class="sa">↕</span></th>
+          <th class="r" data-col="lle"  data-tbl="ope">% NS Llegada<span class="sa">↕</span></th>
+          <th class="r" data-col="cal"  data-tbl="ope">Calidad Ruta<span class="sa">↕</span></th>
+          <th class="r" data-col="seg"  data-tbl="ope">Score Seg.<span class="sa">↕</span></th>
+          <th class="r" data-col="pseg" data-tbl="ope">% Score Seg.<span class="sa">↕</span></th>
+          <th class="r" data-col="ren"  data-tbl="ope">Rendimiento<span class="sa">↕</span></th>
+          <th class="r" data-col="sren" data-tbl="ope">Score Rend.<span class="sa">↕</span></th>
+          <th class="r" data-col="tot"  data-tbl="ope">TOTAL<span class="sa">↕</span></th>
+        </tr></thead><tbody id="bodyOpe"><tr><td colspan="14" class="tbl-empty">Cargando…</td></tr></tbody></table>
       </div>
     </div>
-
   </main>
 </div>
 
 <script>
-const SHEET_ID = '122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
-let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',udn:'Unidad de Negocio',plt:'Planta',coord:'Coordinador',ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',seg:'Score Seguridad',ren:'Rendimiento',tot:'TOTAL'};
+const SHEET_ID='122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
+let C={
+  mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',
+  udn:'Unidad de Negocio',plt:'Planta',coord:'Coordinador',
+  ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',
+  seg:'Score Seguridad',pseg:'% Score Seguridad',
+  ren:'Rendimiento',sren:'Score Rendimiento',tot:'TOTAL'
+};
 let DATA=[];
 let DATA_COORD=[];
-let chartInst=null;
 const SORT={jef:{col:'tot',dir:'desc'},coord:{col:'tot',dir:'desc'},ope:{col:'tot',dir:'desc'},udn:{col:'tot',dir:'desc'}};
 
 function parseLine(line){
@@ -259,20 +228,22 @@ function parseLine(line){
 
 function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);
-  if(lines.length<2) return [];
+  if(lines.length<2) return[];
   const hdrs=parseLine(lines[0]);
   function fuzzy(key,...p){
     if(hdrs.includes(C[key])) return;
     const f=hdrs.find(h=>p.some(x=>h.toLowerCase().includes(x)));
     if(f) C[key]=f;
   }
-  fuzzy('seg','segur','score seg','score s');
+  fuzzy('seg','score seguridad');
+  fuzzy('pseg','% score seguridad','% score seg');
   fuzzy('cal','calidad');
-  fuzzy('ren','rendim');
+  fuzzy('ren','rendimiento');
+  fuzzy('sren','score rendimiento','score rend');
   fuzzy('ini','ns ini','inicio','% ns i');
   fuzzy('lle','ns lle','llegada','% ns l');
-  fuzzy('udn','unidad','negocio','udn');
-  fuzzy('coord','coordinador','coord');
+  fuzzy('udn','unidad','negocio');
+  fuzzy('coord','coordinador');
   const rows=[];
   for(let i=1;i<lines.length;i++){
     if(!lines[i].trim()) continue;
@@ -298,10 +269,13 @@ function sColor(v){
   return '#ef4444';
 }
 
-// Solo porcentaje con color, sin barra
 function scCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
   return `<span style="font-weight:700;font-size:.73rem;color:${sColor(v)}">${v.toFixed(1)}%</span>`;
+}
+function numCell(v){
+  if(v===null) return '<span class="sc-null">–</span>';
+  return `<span style="font-weight:700;font-size:.73rem;color:var(--text)">${v.toFixed(2)}</span>`;
 }
 function totCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
@@ -325,18 +299,12 @@ function autoMes(){
 }
 
 function autoLatestWeek(){
-  // Parse semana values numerically to find the most recent
   const sems=uniq(DATA.map(r=>r[C.sem]));
   if(!sems.length) return;
-  function semNum(s){
-    const n=parseInt(String(s).replace(/\D/g,''));
-    return isNaN(n)?0:n;
-  }
+  function semNum(s){const n=parseInt(String(s).replace(/\D/g,''));return isNaN(n)?0:n;}
   const latest=sems.sort((a,b)=>semNum(b)-semNum(a))[0];
   const sel=document.getElementById('f-sem');
-  for(let i=0;i<sel.options.length;i++){
-    if(sel.options[i].value===latest){sel.value=latest;break;}
-  }
+  for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===latest){sel.value=latest;break;}}
   cascadeSelects();
 }
 
@@ -344,178 +312,45 @@ function updateSemBanner(){
   const sem=document.getElementById('f-sem').value;
   const mes=document.getElementById('f-mes').value;
   const banner=document.getElementById('semBanner');
-  const val=document.getElementById('semVal');
-  const sub=document.getElementById('semSub');
   if(sem){
     banner.style.display='flex';
-    val.textContent='Semana '+sem;
-    sub.textContent=mes?'Mes: '+mes:'';
+    document.getElementById('semVal').textContent='Semana '+sem;
+    document.getElementById('semSub').textContent=mes?'Mes: '+mes:'';
   } else if(mes){
     banner.style.display='flex';
-    val.textContent=mes;
-    sub.textContent='Todas las semanas';
+    document.getElementById('semVal').textContent=mes;
+    document.getElementById('semSub').textContent='Todas las semanas';
   } else {
     banner.style.display='none';
   }
 }
 
-let chartMode='udn';
-
-const PALETTE=['#6b7a99','#84cc16','#374151','#9ca3af','#4b5563','#a3e635','#475569','#bef264','#1f2937','#d9f99d'];
-
-function setChartMode(mode){
-  chartMode=mode;
-  document.getElementById('btnUDN').classList.toggle('active', mode==='udn');
-  document.getElementById('btnSem').classList.toggle('active', mode==='sem');
-  document.getElementById('chartTitle').textContent = mode==='udn'
-    ? '📊 Score TOTAL por Unidad de Negocio'
-    : '📈 Tendencia por Semana — Score TOTAL';
-  renderChart(getFiltered());
-}
-
-function renderChart(filtered){
-  const ctx=document.getElementById('chartMain').getContext('2d');
-  if(chartInst){chartInst.destroy();chartInst=null;}
-
-  function semNum(s){const n=parseInt(String(s).replace(/\D/g,''));return isNaN(n)?0:n;}
-
-  if(chartMode==='udn'){
-    // Barras verticales por UDN
-    const rows=aggregateBy(filtered,C.udn).filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
-    if(!rows.length) return;
-    document.querySelector('.chart-wrap').style.height='260px';
-    chartInst=new Chart(ctx,{
-      type:'bar',
-      data:{
-        labels:rows.map(r=>r.key),
-        datasets:[{
-          label:'Score TOTAL %',
-          data:rows.map(r=>+r.tot.toFixed(1)),
-          backgroundColor:'#6b7a99bb',
-          borderColor:'#6b7a99',
-          borderWidth:1.5,
-          borderRadius:6,
-          borderSkipped:false
-        }]
-      },
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y.toFixed(1)}%`}}},
-        scales:{
-          x:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}},
-          y:{min:0,max:100,grid:{color:'rgba(0,0,0,.05)'},ticks:{font:{size:10},callback:v=>v+'%'},border:{display:false}}
-        }
-      }
-    });
-
-  } else {
-    // Líneas por UDN a lo largo de semanas
-    // Obtener semanas únicas ordenadas
-    const allSems=[...new Set(filtered.map(r=>(r[C.sem]||'').trim()).filter(Boolean))]
-      .sort((a,b)=>semNum(a)-semNum(b));
-
-    // Obtener UDNs únicas (si hay filtro de UDN, solo esa)
-    const allUDNs=[...new Set(filtered.map(r=>(r[C.udn]||'').trim()).filter(Boolean))].sort();
-
-    if(!allSems.length||!allUDNs.length) return;
-
-    // Construir mapa: udn → semana → [valores]
-    const udnSemMap={};
-    filtered.forEach(r=>{
-      const udn=(r[C.udn]||'').trim();
-      const sem=(r[C.sem]||'').trim();
-      const v=pct(r[C.tot]);
-      if(!udn||!sem||v===null) return;
-      if(!udnSemMap[udn]) udnSemMap[udn]={};
-      if(!udnSemMap[udn][sem]) udnSemMap[udn][sem]=[];
-      udnSemMap[udn][sem].push(v);
-    });
-
-    const datasets=allUDNs.map((udn,i)=>{
-      const color=PALETTE[i%PALETTE.length];
-      const data=allSems.map(sem=>{
-        const vs=udnSemMap[udn]&&udnSemMap[udn][sem];
-        return vs&&vs.length?+( vs.reduce((a,b)=>a+b,0)/vs.length ).toFixed(1):null;
-      });
-      return{
-        label:udn,
-        data,
-        borderColor:color,
-        backgroundColor:color+'33',
-        borderWidth:2.5,
-        pointRadius:4,
-        pointHoverRadius:6,
-        pointBackgroundColor:color,
-        tension:.35,
-        spanGaps:true
-      };
-    });
-
-    // Altura dinámica: más UDNs → un poco más alto para leyenda
-    const h=allUDNs.length>4?320:260;
-    document.querySelector('.chart-wrap').style.height=h+'px';
-
-    chartInst=new Chart(ctx,{
-      type:'line',
-      data:{
-        labels:allSems.map(s=>'Sem '+s),
-        datasets
-      },
-      options:{
-        responsive:true,maintainAspectRatio:false,
-        interaction:{mode:'index',intersect:false},
-        plugins:{
-          legend:{
-            display:allUDNs.length>1,
-            position:'bottom',
-            labels:{font:{size:10},boxWidth:12,padding:10}
-          },
-          tooltip:{
-            callbacks:{
-              label:c=>` ${c.dataset.label}: ${c.parsed.y!==null?c.parsed.y.toFixed(1)+'%':'–'}`
-            }
-          }
-        },
-        scales:{
-          x:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}},
-          y:{
-            min:0,max:100,
-            grid:{color:'rgba(0,0,0,.05)'},
-            ticks:{font:{size:10},callback:v=>v+'%'},
-            border:{display:false}
-          }
-        }
-      }
-    });
-  }
-}
-
 function fillSel(id,vals,ph){
   const s=document.getElementById(id),cur=s.value;
-  s.innerHTML = ph!==null ? `<option value="">${ph}</option>` : '';
+  s.innerHTML=ph!==null?`<option value="">${ph}</option>`:'';
   vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
   if(vals.includes(cur)) s.value=cur;
 }
 
 function buildSelects(){
-  fillSel('f-udn',  uniq(DATA.map(r=>r[C.udn])),                      'Todas');
-  fillSel('f-plt',  uniq(DATA.map(r=>r[C.plt]||'').filter(Boolean)),  'Todas');
-  fillSel('f-coord',uniq(DATA.map(r=>r[C.coord]||'').filter(Boolean)), 'Todos');
-  fillSel('f-ope',  uniq(DATA.map(r=>r[C.ope])),                      'Todos');
-  fillSel('f-mes',  uniq(DATA.map(r=>r[C.mes])),                      'Todos');
-  fillSel('f-sem',  uniq(DATA.map(r=>r[C.sem])),                      null);
+  fillSel('f-udn',  uniq(DATA.map(r=>r[C.udn])),                     'Todas');
+  fillSel('f-plt',  uniq(DATA.map(r=>r[C.plt]||'').filter(Boolean)), 'Todas');
+  fillSel('f-coord',uniq(DATA.map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
+  fillSel('f-ope',  uniq(DATA.map(r=>r[C.ope])),                     'Todos');
+  fillSel('f-mes',  uniq(DATA.map(r=>r[C.mes])),                     'Todos');
+  fillSel('f-sem',  uniq(DATA.map(r=>r[C.sem])),                     null);
 }
 
 function getFiltered(){
   const v=id=>document.getElementById(id).value;
   const udn=v('f-udn'),plt=v('f-plt'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
   return DATA.filter(r=>{
-    if(udn  &&r[C.udn]  !==udn)  return false;
-    if(plt  &&r[C.plt]  !==plt)  return false;
+    if(udn  &&r[C.udn]  !==udn)   return false;
+    if(plt  &&r[C.plt]  !==plt)   return false;
     if(coord&&r[C.coord]!==coord) return false;
-    if(ope  &&r[C.ope]  !==ope)  return false;
-    if(mes  &&r[C.mes]  !==mes)  return false;
-    if(sem  &&r[C.sem]  !==sem)  return false;
+    if(ope  &&r[C.ope]  !==ope)   return false;
+    if(mes  &&r[C.mes]  !==mes)   return false;
+    if(sem  &&r[C.sem]  !==sem)   return false;
     return true;
   });
 }
@@ -525,21 +360,21 @@ function cascadeSelects(){
   const udn=v('f-udn'),plt=v('f-plt'),coord=v('f-coord'),ope=v('f-ope'),mes=v('f-mes'),sem=v('f-sem');
   function sub(...ex){
     return DATA.filter(r=>{
-      if(!ex.includes('udn')  &&udn  &&r[C.udn]  !==udn)  return false;
-      if(!ex.includes('plt')  &&plt  &&r[C.plt]  !==plt)  return false;
+      if(!ex.includes('udn')  &&udn  &&r[C.udn]  !==udn)   return false;
+      if(!ex.includes('plt')  &&plt  &&r[C.plt]  !==plt)   return false;
       if(!ex.includes('coord')&&coord&&r[C.coord]!==coord) return false;
-      if(!ex.includes('ope')  &&ope  &&r[C.ope]  !==ope)  return false;
-      if(!ex.includes('mes')  &&mes  &&r[C.mes]  !==mes)  return false;
-      if(!ex.includes('sem')  &&sem  &&r[C.sem]  !==sem)  return false;
+      if(!ex.includes('ope')  &&ope  &&r[C.ope]  !==ope)   return false;
+      if(!ex.includes('mes')  &&mes  &&r[C.mes]  !==mes)   return false;
+      if(!ex.includes('sem')  &&sem  &&r[C.sem]  !==sem)   return false;
       return true;
     });
   }
-  fillSel('f-udn',  uniq(sub('udn').map(r=>r[C.udn])),                       'Todas');
-  fillSel('f-plt',  uniq(sub('plt').map(r=>r[C.plt]||'').filter(Boolean)),   'Todas');
+  fillSel('f-udn',  uniq(sub('udn').map(r=>r[C.udn])),                      'Todas');
+  fillSel('f-plt',  uniq(sub('plt').map(r=>r[C.plt]||'').filter(Boolean)),  'Todas');
   fillSel('f-coord',uniq(sub('coord').map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
-  fillSel('f-ope',  uniq(sub('ope').map(r=>r[C.ope])),                       'Todos');
-  fillSel('f-mes',  uniq(sub('mes').map(r=>r[C.mes])),                       'Todos');
-  fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),                       null);
+  fillSel('f-ope',  uniq(sub('ope').map(r=>r[C.ope])),                      'Todos');
+  fillSel('f-mes',  uniq(sub('mes').map(r=>r[C.mes])),                      'Todos');
+  fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),                      null);
   if(udn)   document.getElementById('f-udn').value=udn;
   if(plt)   document.getElementById('f-plt').value=plt;
   if(coord) document.getElementById('f-coord').value=coord;
@@ -570,7 +405,13 @@ function aggregateBy(rows,groupKey){
   });
   return Object.values(map).map(g=>{
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
-    return{key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,n:g.opeSet.size,ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),seg:avg(C.seg),ren:avg(C.ren),tot:avg(C.tot)};
+    return{
+      key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,n:g.opeSet.size,
+      ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
+      seg:avg(C.seg),pseg:avg(C.pseg),
+      ren:avg(C.ren),sren:avg(C.sren),
+      tot:avg(C.tot)
+    };
   });
 }
 
@@ -597,21 +438,20 @@ function render(){
   const f=getFiltered();
   const rO=aggregateBy(f,C.ope);
   const rJ=aggregateBy(f,C.jef);
-  const rC=aggregateBy(f,C.coord);
   updateSemBanner();
-  renderKPIs(rO,rJ,rC);
+  renderKPIs(rO,rJ);
   renderTable('ope',rO);
 }
 
-function renderKPIs(rO,rJ,rC){
+function renderKPIs(rO,rJ){
   const top=arr=>[...arr].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot)[0]||null;
   const tJ=top(rJ),tO=top(rO);
   document.getElementById('kpiJefV').textContent=tJ?tJ.tot.toFixed(1)+'%':'–';
   document.getElementById('kpiJefN').textContent=tJ?tJ.key:'–';
   document.getElementById('kpiJefU').textContent=tJ&&tJ.udn?tJ.udn:'';
-  // Mejor coordinador: jalar desde DATA_COORD filtrado por la semana activa
+  // Mejor coordinador desde DATA_COORD
   const sem=document.getElementById('f-sem').value;
-  const coordFilt=DATA_COORD.filter(r=>!sem||( (r[C.sem]||'').trim()===sem ));
+  const coordFilt=DATA_COORD.filter(r=>!sem||((r[C.sem]||'').trim()===sem));
   const coordRows=aggregateBy(coordFilt,C.coord);
   const tC=top(coordRows);
   document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(1)+'%':'–';
@@ -623,49 +463,55 @@ function renderKPIs(rO,rJ,rC){
 }
 
 function renderTable(tbl,rowsInput){
-  const isU=tbl==='udn',isJ=tbl==='jef',isC=tbl==='coord';
-  const bodyId=isU?'bodyUDN':isJ?'bodyJef':isC?'bodyCoord':'bodyOpe';
-  const cntId =isU?'cntUDN' :isJ?'cntJef' :isC?'cntCoord':'cntOpe';
-  const tblId =isU?'tblUDN' :isJ?'tblJef' :isC?'tblCoord':'tblOpe';
-  const body=document.getElementById(bodyId);
-  const tblEl=document.getElementById(tblId);
+  const body=document.getElementById('bodyOpe');
+  const tblEl=document.getElementById('tblOpe');
   let rows=rowsInput;
-  if(!rows){const f=getFiltered();rows=aggregateBy(f,isU?C.udn:isJ?C.jef:isC?C.coord:C.ope);}
+  if(!rows){const f=getFiltered();rows=aggregateBy(f,C.ope);}
   rows=sortRows(rows,tbl);
   tblEl.querySelectorAll('thead th').forEach(th=>{th.classList.remove('sorted');const sa=th.querySelector('.sa');if(sa) sa.textContent='↕';});
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT[tbl].col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓';}
-  document.getElementById(cntId).textContent=rows.length+(isU?' UDNs':isJ?' jefes':isC?' coordinadores':' operadores');
-  if(!rows.length){body.innerHTML=`<tr><td colspan="${isC?11:isJ||isU?9:12}" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
-  body.innerHTML=rows.map((r,i)=>{
-    const b=rankBadge(i);
-    if(isU||isJ) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
-    if(isC) return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r" style="color:var(--muted)">${r.n}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
-    return `<tr><td style="text-align:center">${b}</td><td style="font-weight:600">${r.key||'–'}</td><td style="color:var(--muted)">${r.nom||'–'}</td><td style="color:var(--muted)">${r.plt||'–'}</td><td style="color:var(--muted)">${r.jef||'–'}</td><td style="color:var(--muted)">${r.udn||'–'}</td><td class="r">${scCell(r.ini)}</td><td class="r">${scCell(r.lle)}</td><td class="r">${scCell(r.cal)}</td><td class="r">${scCell(r.seg)}</td><td class="r">${scCell(r.ren)}</td><td class="r">${totCell(r.tot)}</td></tr>`;
-  }).join('');
+  document.getElementById('cntOpe').textContent=rows.length+' operadores';
+  if(!rows.length){body.innerHTML=`<tr><td colspan="14" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  body.innerHTML=rows.map((r,i)=>`<tr>
+    <td style="text-align:center">${rankBadge(i)}</td>
+    <td style="font-weight:600">${r.key||'–'}</td>
+    <td style="color:var(--muted)">${r.nom||'–'}</td>
+    <td style="color:var(--muted)">${r.plt||'–'}</td>
+    <td style="color:var(--muted)">${r.jef||'–'}</td>
+    <td style="color:var(--muted)">${r.udn||'–'}</td>
+    <td class="r">${scCell(r.ini)}</td>
+    <td class="r">${scCell(r.lle)}</td>
+    <td class="r">${scCell(r.cal)}</td>
+    <td class="r">${numCell(r.seg)}</td>
+    <td class="r">${scCell(r.pseg)}</td>
+    <td class="r">${numCell(r.ren)}</td>
+    <td class="r">${scCell(r.sren)}</td>
+    <td class="r">${scCell(r.tot)}</td>
+  </tr>`).join('');
 }
 
 function exportTable(tbl){
-  const isJ=tbl==='jef',isC=tbl==='coord';
-  const rows=sortRows(aggregateBy(getFiltered(),isJ?C.jef:isC?C.coord:C.ope),tbl);
+  const rows=sortRows(aggregateBy(getFiltered(),C.ope),'ope');
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const hdrs=isJ?['#','Jefe','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
-    :isC?['#','Coordinador','Jefe','UDN','Operadores','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL']
-    :['#','Operador','Nómina','Planta','Jefe','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','Rendimiento','TOTAL'];
-  const data=rows.map((r,i)=>isJ?[i+1,r.key,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
-    :isC?[i+1,r.key,r.jef,r.udn,r.n,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]
-    :[i+1,r.key,r.nom,r.plt,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.ren),fmt(r.tot)]);
+  const hdrs=['#','Operador','Nómina','Planta','Jefe','UDN',
+    '% NS Inicio','% NS Llegada','Calidad Ruta',
+    'Score Seguridad','% Score Seguridad',
+    'Rendimiento','Score Rendimiento','TOTAL'];
+  const data=rows.map((r,i)=>[
+    i+1,r.key,r.nom,r.plt,r.jef,r.udn,
+    fmt(r.ini),fmt(r.lle),fmt(r.cal),
+    fmt(r.seg),fmt(r.pseg),
+    fmt(r.ren),fmt(r.sren),fmt(r.tot)
+  ]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,isJ?'Ranking Jefes':isC?'Ranking Coordinadores':'Ranking Operadores');
-  XLSX.writeFile(wb,`ranking_${isJ?'jefes':isC?'coordinadores':'operadores'}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  XLSX.utils.book_append_sheet(wb,ws,'Ranking Operadores');
+  XLSX.writeFile(wb,`ranking_operadores_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 window.addEventListener('DOMContentLoaded',()=>{
-  // On desktop show filters, on mobile keep collapsed
-  if(window.innerWidth>768){
-    document.getElementById('sidebarFilters').classList.remove('collapsed');
-  }
+  if(window.innerWidth>768){document.getElementById('sidebarFilters').classList.remove('collapsed');}
   document.querySelectorAll('.data-table thead th[data-col]').forEach(th=>{th.addEventListener('click',()=>onSort(th));});
   loadData();
 });
@@ -675,20 +521,17 @@ async function loadData(){
   try{
     msg.textContent='Conectando con Google Sheets…';
     const baseUrl=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-    const [resOpe, resCoord] = await Promise.all([
+    const [resOpe,resCoord]=await Promise.all([
       fetch(baseUrl),
       fetch(`${baseUrl}&sheet=${encodeURIComponent('Ranking Coordinador')}`)
     ]);
     if(!resOpe.ok) throw new Error(`HTTP ${resOpe.status}`);
-    const [textOpe, textCoord] = await Promise.all([resOpe.text(), resCoord.text()]);
+    const [textOpe,textCoord]=await Promise.all([resOpe.text(),resCoord.text()]);
     DATA=parseCSV(textOpe);
     DATA_COORD=resCoord.ok?parseCSV(textCoord):[];
     if(!DATA.length) throw new Error('Sheet vacío');
     ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
-    buildSelects();
-    autoMes();
-    autoLatestWeek();
-    render();
+    buildSelects();autoMes();autoLatestWeek();render();
   }catch(e){
     ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
     err.style.display='block';
