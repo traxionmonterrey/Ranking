@@ -8,23 +8,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="favicon-traxion.svg">
 <style>
-:root{--navy:#1a2236;--navy2:#222d42;--navy3:#2c3a55;--green:#7ed321;--white:#fff;--bg:#f0f2f7;--border:#dde3f0;--text:#1a2236;--muted:#6b7a99;--red:#e53e3e;}
+:root{--navy:#1a2236;--navy2:#222d42;--navy3:#2c3a55;--green:#7ed321;--white:#fff;--bg:#f0f2f7;--border:#dde3f0;--text:#1a2236;--muted:#6b7a99;--red:#e53e3e;--gold:#FBAE40;}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:var(--bg);color:var(--text);font-family:"Inter",sans-serif;min-height:100vh;}
-nav{background:var(--navy);padding:14px 28px;display:flex;gap:18px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3);position:sticky;top:0;z-index:300;flex-wrap:wrap;}
+
+/* NAV */
+nav{background:var(--navy);padding:10px 20px;display:flex;gap:12px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3);position:sticky;top:0;z-index:300;flex-wrap:wrap;}
 nav a{color:#e5e7eb;text-decoration:none;font-weight:600;padding:7px 14px;border-radius:8px;transition:all .3s;white-space:nowrap;font-size:14px;}
 nav a.brand{color:#84cc16;font-weight:800;font-size:18px;}
 nav a:hover{background:#374151;}
-.layout{display:flex;align-items:flex-start;min-height:calc(100vh - 54px);}
-.sidebar{width:130px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:.55rem .5rem;display:flex;flex-direction:column;gap:.38rem;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;}
-.sb-title{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:.38rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.sb-reset{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.92rem;line-height:1;transition:color .15s;}
-.sb-reset:hover{color:var(--red);}
-.fg{display:flex;flex-direction:column;gap:.13rem;}
-.fg label{font-size:.59rem;font-weight:700;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;}
-.fg select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:.27rem .38rem;font-size:.71rem;font-family:"Inter",sans-serif;appearance:none;cursor:pointer;outline:none;transition:border-color .15s;}
-.fg select:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(126,211,33,.15);}
-.main{flex:1;padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:1.1rem;min-width:0;}
+
+/* FILTER BAR — top horizontal strip */
+.filter-bar{background:var(--white);border-bottom:1px solid var(--border);padding:.5rem 1.2rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;position:sticky;top:54px;z-index:200;box-shadow:0 1px 4px rgba(26,34,54,.05);}
+.filter-bar .fg{display:flex;align-items:center;gap:.3rem;}
+.filter-bar .fg label{font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
+.filter-bar .fg select{background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);padding:.22rem .5rem;font-size:.71rem;font-family:"Inter",sans-serif;appearance:none;cursor:pointer;outline:none;transition:border-color .15s;max-width:140px;}
+.filter-bar .fg select:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(126,211,33,.15);}
+.filter-bar .divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.filter-bar .btn-reset{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);padding:.22rem .6rem;font-size:.68rem;font-family:"Inter",sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.filter-bar .btn-reset:hover{border-color:var(--red);color:var(--red);}
+
+/* MAIN */
+.main{padding:1rem 1.2rem;display:flex;flex-direction:column;gap:1rem;}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;}
 .kpi{background:var(--white);border-radius:12px;padding:.95rem 1.05rem;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(26,34,54,.07);border-top:4px solid var(--kc,var(--green));}
 .kpi::after{content:"";position:absolute;bottom:-14px;right:-14px;width:66px;height:66px;border-radius:50%;background:var(--kc,var(--green));opacity:.06;}
@@ -33,6 +38,8 @@ nav a:hover{background:#374151;}
 .kpi-lbl{font-size:.63rem;font-weight:600;color:var(--muted);margin-top:.22rem;text-transform:uppercase;letter-spacing:.05em;line-height:1.4;}
 .kpi-sub{font-size:.7rem;font-weight:600;color:var(--text);margin-top:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .kpi-udn{font-size:.62rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* TABLE CARD */
 .table-card{background:var(--white);border-radius:12px;box-shadow:0 2px 10px rgba(26,34,54,.07);overflow:hidden;}
 .table-hdr{display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.1rem;border-bottom:1px solid var(--border);}
 .th-left .ttl{font-size:.88rem;font-weight:700;color:var(--text);}
@@ -41,20 +48,36 @@ nav a:hover{background:#374151;}
 .badge{font-size:.7rem;color:var(--muted);background:var(--bg);border-radius:20px;padding:.17rem .55rem;}
 .btn-exp{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:.28rem .7rem;font-size:.7rem;font-family:"Inter",sans-serif;font-weight:600;cursor:pointer;transition:background .15s;}
 .btn-exp:hover{background:var(--navy3);}
+
+/* TABLE */
+.tbl-scroll{overflow-x:auto;max-height:calc(100vh - 280px);overflow-y:auto;}
 .data-table{width:100%;border-collapse:collapse;}
-.data-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.59rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:.38rem .58rem;text-align:left;white-space:nowrap;cursor:pointer;user-select:none;transition:background .15s;}
-.data-table thead th:hover{background:var(--navy3);}
+/* Sticky header */
+.data-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.59rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:.38rem .58rem;text-align:left;white-space:nowrap;user-select:none;position:sticky;top:0;z-index:10;}
 .data-table thead th.r{text-align:right;}
+/* Sortable columns */
+.data-table thead th.sortable{cursor:pointer;transition:background .15s;}
+.data-table thead th.sortable:hover{background:var(--navy3);}
+/* Subtotal & Total highlight */
+.data-table thead th.col-sub{background:#2d2a1a;border-top:3px solid var(--gold);}
+.data-table thead th.col-tot{background:#1a2d1a;border-top:3px solid var(--green);}
+.data-table tbody td.col-sub{background:#fffbf0;}
+.data-table tbody td.col-tot{background:#f0fff4;}
 .data-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
 .data-table tbody tr:last-child{border-bottom:none;}
 .data-table tbody tr:hover{background:#f7f9ff;}
+.data-table tbody tr:hover td.col-sub{background:#fff8e0;}
+.data-table tbody tr:hover td.col-tot{background:#e6ffed;}
 .data-table tbody td{padding:.3rem .58rem;font-size:.73rem;color:var(--text);white-space:nowrap;}
 .data-table tbody td.r{text-align:right;}
+
 .medal{font-size:1.05rem;}
 .rank-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.6rem;font-weight:700;background:#e5e7eb;color:#374151;}
 .sc-null{color:var(--muted);}
 .sa{font-size:.6rem;margin-left:.2rem;color:rgba(255,255,255,.35);}
 th.sorted .sa{color:#84cc16;}
+
+/* LOADING */
 .ld-overlay{position:fixed;inset:0;background:rgba(240,242,247,.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;transition:opacity .4s;}
 .ld-overlay.hidden{opacity:0;pointer-events:none;}
 .ld-logo{font-size:1.9rem;font-weight:900;color:#7ed321;letter-spacing:4px;}
@@ -63,26 +86,18 @@ th.sorted .sa{color:#84cc16;}
 .ld-msg{font-size:.82rem;color:var(--muted);}
 .err-bar{background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:.7rem 1rem;font-size:.78rem;color:#991b1b;display:none;margin-bottom:.3rem;}
 .tbl-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;}
+
+/* SEM BANNER */
 .sem-banner{background:var(--navy);color:#fff;border-radius:10px;padding:.7rem 1.1rem;display:flex;align-items:center;gap:.75rem;}
 .sem-banner .sem-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;}
 .sem-banner .sem-val{font-size:1.1rem;font-weight:800;color:#84cc16;letter-spacing:.02em;}
 .sem-banner .sem-sub{font-size:.68rem;color:#9ca3af;margin-left:auto;}
-.filter-toggle{display:none;width:100%;background:var(--navy);color:#e5e7eb;border:none;border-radius:8px;padding:.55rem .85rem;font-size:.78rem;font-family:"Inter",sans-serif;font-weight:600;cursor:pointer;text-align:left;gap:.5rem;align-items:center;}
-.filter-toggle svg{width:14px;height:14px;stroke:#84cc16;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;}
-.filter-toggle .ft-arrow{margin-left:auto;font-size:.65rem;transition:transform .25s;}
-.filter-toggle.open .ft-arrow{transform:rotate(180deg);}
+
 @media(max-width:768px){
   nav{padding:10px 16px;gap:10px;}nav a.brand{font-size:16px;}
-  .layout{flex-direction:column;}
-  .sidebar{width:100%;height:auto;position:relative;top:0;border-right:none;border-bottom:1px solid var(--border);padding:.6rem .75rem;gap:.5rem;overflow:visible;}
-  .filter-toggle{display:flex;}
-  .sidebar-filters{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;padding-top:.45rem;}
-  .sidebar-filters.collapsed{display:none;}
-  .sidebar-filters .fg:last-child{grid-column:1/-1;}
-  .sb-title{display:none;}
+  .filter-bar{gap:.5rem;padding:.5rem .75rem;}
+  .filter-bar .fg select{max-width:100px;}
   .main{padding:.75rem .65rem;gap:.75rem;}
-  .sem-banner{padding:.55rem .85rem;border-radius:8px;}
-  .sem-banner .sem-val{font-size:.95rem;}
   .kpi-grid{grid-template-columns:repeat(2,1fr);gap:.45rem;}
   .kpi{padding:.65rem .6rem;border-top-width:3px;}
   .kpi::after{display:none;}
@@ -94,7 +109,8 @@ th.sorted .sa{color:#84cc16;}
   .th-left .ttl{font-size:.8rem;}
   .th-left .sub{display:none;}
   .table-card{border-radius:8px;}
-  .data-table{table-layout:auto;min-width:900px;}
+  .tbl-scroll{max-height:none;}
+  .data-table{min-width:900px;}
   .data-table thead th{font-size:.55rem;padding:.35rem .45rem;}
   .data-table tbody td{font-size:.68rem;padding:.28rem .45rem;}
 }
@@ -108,83 +124,80 @@ th.sorted .sa{color:#84cc16;}
 </head>
 <body>
 <nav><a href="index.html" class="brand">TRAXIÓN</a></nav>
+
 <div class="ld-overlay" id="ldOverlay">
   <div class="ld-logo">TRAXIÓN</div>
   <div class="ld-spin"></div>
   <div class="ld-msg" id="ldMsg">Conectando con Google Sheets…</div>
 </div>
-<div class="layout">
-  <aside class="sidebar">
-    <button class="filter-toggle" id="filterToggle" onclick="toggleFilters()">
-      <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-      Filtros <span class="ft-arrow">▼</span>
-    </button>
-    <div class="sb-title">Filtros <button class="sb-reset" onclick="resetFilters()" title="Limpiar">↺</button></div>
-    <div class="sidebar-filters collapsed" id="sidebarFilters">
-      <div class="fg"><label>Unidad de Negocio</label>
-        <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
-      <div class="fg"><label>Planta</label>
-        <select id="f-plt" onchange="onFilter()"><option value="">Todas</option></select></div>
-      <div class="fg"><label>Mes</label>
-        <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
-      <div class="fg"><label>Semana</label>
-        <select id="f-sem" onchange="onFilter()"></select></div>
-      <div class="fg" style="grid-column:1/-1">
-        <button style="background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:.3rem;font-size:.72rem;font-family:'Inter',sans-serif;cursor:pointer;" onclick="resetFilters()">↺ Limpiar filtros</button>
-      </div>
+
+<!-- FILTER BAR TOP -->
+<div class="filter-bar">
+  <div class="fg"><label>UDN</label>
+    <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
+  <div class="fg"><label>Planta</label>
+    <select id="f-plt" onchange="onFilter()"><option value="">Todas</option></select></div>
+  <div class="fg"><label>Mes</label>
+    <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Semana</label>
+    <select id="f-sem" onchange="onFilter()"></select></div>
+  <div class="divider"></div>
+  <button class="btn-reset" onclick="resetFilters()">↺ Limpiar</button>
+</div>
+
+<div class="main">
+  <div class="err-bar" id="errBar"></div>
+
+  <div class="sem-banner" id="semBanner" style="display:none">
+    <div>
+      <div class="sem-label">Período seleccionado</div>
+      <div class="sem-val" id="semVal">–</div>
     </div>
-  </aside>
-  <main class="main">
-    <div class="err-bar" id="errBar"></div>
-    <div class="sem-banner" id="semBanner" style="display:none">
-      <div>
-        <div class="sem-label">Período seleccionado</div>
-        <div class="sem-val" id="semVal">–</div>
-      </div>
-      <div class="sem-sub" id="semSub"></div>
+    <div class="sem-sub" id="semSub"></div>
+  </div>
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
+    <div class="kpi" style="--kc:#7ed321">
+      <div class="kpi-icon">🥇</div>
+      <div class="kpi-val" id="kpiCoordV">–</div>
+      <div class="kpi-lbl">Mejor Coordinador</div>
+      <div class="kpi-sub" id="kpiCoordN">–</div>
+      <div class="kpi-udn" id="kpiCoordU"></div>
     </div>
-    <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
-      <div class="kpi" style="--kc:#7ed321">
-        <div class="kpi-icon">🥇</div>
-        <div class="kpi-val" id="kpiCoordV">–</div>
-        <div class="kpi-lbl">Mejor Coordinador</div>
-        <div class="kpi-sub" id="kpiCoordN">–</div>
-        <div class="kpi-udn" id="kpiCoordU"></div>
-      </div>
-      <div class="kpi" style="--kc:#ef4444">
-        <div class="kpi-icon">⚠️</div>
-        <div class="kpi-val" id="kpiWorstV">–</div>
-        <div class="kpi-lbl">Peor Coordinador</div>
-        <div class="kpi-sub" id="kpiWorstN">–</div>
-        <div class="kpi-udn" id="kpiWorstU"></div>
-      </div>
+    <div class="kpi" style="--kc:#ef4444">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-val" id="kpiWorstV">–</div>
+      <div class="kpi-lbl">Peor Coordinador</div>
+      <div class="kpi-sub" id="kpiWorstN">–</div>
+      <div class="kpi-udn" id="kpiWorstU"></div>
     </div>
-    <div class="table-card" style="margin-bottom:1.5rem">
-      <div class="table-hdr">
-        <div class="th-left"><div class="ttl">🧑‍💼 Ranking por Coordinador</div><div class="sub">Promedio del período filtrado</div></div>
-        <div class="th-right"><span class="badge" id="cntCoord">– coordinadores</span><button class="btn-exp" onclick="exportTable('coord')">⬇ Excel</button></div>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="data-table" id="tblCoord"><thead><tr>
-          <th style="width:36px" data-col="rank" data-tbl="coord">#<span class="sa">↓</span></th>
-          <th data-col="key"  data-tbl="coord">Coordinador<span class="sa">↕</span></th>
-          <th data-col="plt"  data-tbl="coord" style="max-width:90px;overflow:hidden;text-overflow:ellipsis">Planta<span class="sa">↕</span></th>
-          <th data-col="udn"  data-tbl="coord">UDN<span class="sa">↕</span></th>
-          <th class="r" data-col="ini"  data-tbl="coord">% NS Inicio<span class="sa">↕</span></th>
-          <th class="r" data-col="lle"  data-tbl="coord">% NS Llegada<span class="sa">↕</span></th>
-          <th class="r" data-col="cal"  data-tbl="coord">Calidad Ruta<span class="sa">↕</span></th>
-          <th class="r" data-col="seg"  data-tbl="coord">Score Seg.<span class="sa">↕</span></th>
-          <th class="r" data-col="pseg" data-tbl="coord">% Score Seg.<span class="sa">↕</span></th>
-          <th class="r" data-col="ren"  data-tbl="coord">Rendimiento<span class="sa">↕</span></th>
-          <th class="r" data-col="sren" data-tbl="coord">Score Rend.<span class="sa">↕</span></th>
-          <th class="r" data-col="sub"  data-tbl="coord">Subtotal<span class="sa">↕</span></th>
-          <th class="r" data-col="kmv"  data-tbl="coord">KMV<span class="sa">↕</span></th>
-          <th class="r" data-col="hd"   data-tbl="coord">HD<span class="sa">↕</span></th>
-          <th class="r" data-col="tot"  data-tbl="coord">TOTAL<span class="sa">↕</span></th>
-        </tr></thead><tbody id="bodyCoord"><tr><td colspan="15" class="tbl-empty">Cargando…</td></tr></tbody></table>
-      </div>
+  </div>
+
+  <div class="table-card" style="margin-bottom:1.5rem">
+    <div class="table-hdr">
+      <div class="th-left"><div class="ttl">🧑‍💼 Ranking por Coordinador</div><div class="sub">Promedio del período filtrado</div></div>
+      <div class="th-right"><span class="badge" id="cntCoord">– coordinadores</span><button class="btn-exp" onclick="exportTable('coord')">⬇ Excel</button></div>
     </div>
-  </main>
+    <div class="tbl-scroll">
+      <table class="data-table" id="tblCoord"><thead><tr>
+        <th style="width:36px">#</th>
+        <th>Coordinador</th>
+        <th style="max-width:90px;overflow:hidden;text-overflow:ellipsis">Planta</th>
+        <th>UDN</th>
+        <th class="r">% NS Inicio</th>
+        <th class="r">% NS Llegada</th>
+        <th class="r">Calidad Ruta</th>
+        <th class="r">Score Seg.</th>
+        <th class="r">% Score Seg.</th>
+        <th class="r">Rendimiento</th>
+        <th class="r">Score Rend.</th>
+        <th class="r col-sub sortable" data-col="sub" data-tbl="coord">Subtotal<span class="sa">↕</span></th>
+        <th class="r">KMV</th>
+        <th class="r">HD</th>
+        <th class="r col-tot sortable" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
+      </tr></thead><tbody id="bodyCoord"><tr><td colspan="15" class="tbl-empty">Cargando…</td></tr></tbody></table>
+    </div>
+  </div>
 </div>
 <script>
 const SHEET_ID='122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
@@ -343,12 +356,10 @@ function resetFilters(){
   ['f-udn','f-plt','f-mes'].forEach(id=>document.getElementById(id).value='');
   buildSelects();autoLatestWeek();render();
 }
-function toggleFilters(){
-  const panel=document.getElementById('sidebarFilters');
-  const btn=document.getElementById('filterToggle');
-  const collapsed=panel.classList.toggle('collapsed');
-  btn.classList.toggle('open',!collapsed);
-}
+window.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.data-table thead th.sortable').forEach(th=>{th.addEventListener('click',()=>onSort(th));});
+  loadData();
+});
 function aggregateBy(rows,groupKey){
   const map={};
   rows.forEach(r=>{
@@ -378,10 +389,10 @@ function sortRows(rows,tbl){
   });
 }
 function onSort(th){
-  const col=th.dataset.col,tbl=th.dataset.tbl;if(!col||!tbl) return;
-  if(col==='rank'){SORT[tbl].col='tot';SORT[tbl].dir='desc';renderTable(tbl);return;}
+  const col=th.dataset.col,tbl=th.dataset.tbl;
+  if(!col||!tbl||!th.classList.contains('sortable')) return;
   if(SORT[tbl].col===col) SORT[tbl].dir=SORT[tbl].dir==='asc'?'desc':'asc';
-  else{SORT[tbl].col=col;SORT[tbl].dir=(col==='key'||col==='nom'||col==='plt'||col==='udn')?'asc':'desc';}
+  else{SORT[tbl].col=col;SORT[tbl].dir='desc';}
   renderTable(tbl);
 }
 function render(){
@@ -426,10 +437,10 @@ function renderTable(tbl,rowsInput){
     <td class="r">${scCell(r.pseg)}</td>
     <td class="r">${numCell(r.ren)}</td>
     <td class="r">${scCell(r.sren)}</td>
-    <td class="r">${scCell(r.sub)}</td>
+    <td class="r col-sub">${scCell(r.sub)}</td>
     <td class="r">${scCell(r.kmv)}</td>
     <td class="r">${scCell(r.hd)}</td>
-    <td class="r">${totCell(r.tot)}</td>
+    <td class="r col-tot">${totCell(r.tot)}</td>
   </tr>`).join('');
 }
 function exportTable(tbl){
@@ -443,8 +454,7 @@ function exportTable(tbl){
   XLSX.writeFile(wb,`ranking_coordinadores_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 window.addEventListener('DOMContentLoaded',()=>{
-  if(window.innerWidth>768){document.getElementById('sidebarFilters').classList.remove('collapsed');}
-  document.querySelectorAll('.data-table thead th[data-col]').forEach(th=>{th.addEventListener('click',()=>onSort(th));});
+  document.querySelectorAll('.data-table thead th.sortable').forEach(th=>{th.addEventListener('click',()=>onSort(th));});
   loadData();
 });
 async function loadData(){
