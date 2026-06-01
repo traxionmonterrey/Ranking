@@ -356,10 +356,6 @@ function resetFilters(){
   ['f-udn','f-plt','f-mes'].forEach(id=>document.getElementById(id).value='');
   buildSelects();autoLatestWeek();render();
 }
-window.addEventListener('DOMContentLoaded',()=>{
-  document.querySelectorAll('.data-table thead th.sortable').forEach(th=>{th.addEventListener('click',()=>onSort(th));});
-  loadData();
-});
 function aggregateBy(rows,groupKey){
   const map={};
   rows.forEach(r=>{
