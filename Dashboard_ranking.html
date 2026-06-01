@@ -17,7 +17,7 @@ nav a{color:#e5e7eb;text-decoration:none;font-weight:600;padding:7px 14px;border
 nav a.brand{color:#84cc16;font-weight:800;font-size:18px;}
 nav a:hover{background:#374151;}
 .layout{display:flex;align-items:flex-start;min-height:calc(100vh - 54px);}
-.sidebar{width:168px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:.65rem .6rem;display:flex;flex-direction:column;gap:.42rem;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;}
+.sidebar{width:130px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:.55rem .5rem;display:flex;flex-direction:column;gap:.38rem;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;}
 .sb-title{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:.38rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .sb-reset{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.92rem;line-height:1;transition:color .15s;}
 .sb-reset:hover{color:var(--red);}
@@ -185,7 +185,7 @@ th.sorted .sa{color:#84cc16;}
           <th style="width:36px" data-col="rank" data-tbl="ope">#<span class="sa">↓</span></th>
           <th data-col="key"  data-tbl="ope">Operador<span class="sa">↕</span></th>
           <th data-col="nom"  data-tbl="ope">Nómina<span class="sa">↕</span></th>
-          <th data-col="plt"  data-tbl="ope">Planta<span class="sa">↕</span></th>
+          <th data-col="plt"  data-tbl="ope" style="max-width:90px;overflow:hidden;text-overflow:ellipsis">Planta<span class="sa">↕</span></th>
           <th data-col="jef"  data-tbl="ope">Jefe<span class="sa">↕</span></th>
           <th data-col="udn"  data-tbl="ope">UDN<span class="sa">↕</span></th>
           <th class="r" data-col="ini"  data-tbl="ope">% NS Inicio<span class="sa">↕</span></th>
@@ -488,7 +488,7 @@ function renderTable(tbl,rowsInput){
     <td style="text-align:center">${rankBadge(i)}</td>
     <td style="font-weight:600">${r.key||'–'}</td>
     <td style="color:var(--muted)">${r.nom||'–'}</td>
-    <td style="color:var(--muted)">${r.plt||'–'}</td>
+    <td style="color:var(--muted);max-width:90px;overflow:hidden;text-overflow:ellipsis" title="${r.plt||''}">${r.plt||'–'}</td>
     <td style="color:var(--muted)">${r.jef||'–'}</td>
     <td style="color:var(--muted)">${r.udn||'–'}</td>
     <td class="r">${scCell(r.ini)}</td>
