@@ -383,10 +383,13 @@ function sortRows(rows,tbl){
   const dir=SORT[tbl].dir||'desc';
   return[...rows].sort((a,b)=>{
     let va=a[col],vb=b[col];
-    const nv=dir==='asc'?Infinity:-Infinity;
-    if(va===null||va===undefined) va=nv;if(vb===null||vb===undefined) vb=nv;
-    if(typeof va==='string') va=va.toLowerCase();if(typeof vb==='string') vb=vb.toLowerCase();
-    if(va<vb) return dir==='asc'?-1:1;if(va>vb) return dir==='asc'?1:-1;return 0;
+    if(va===null||va===undefined) return 1;
+    if(vb===null||vb===undefined) return -1;
+    if(typeof va==='string') va=va.toLowerCase();
+    if(typeof vb==='string') vb=vb.toLowerCase();
+    if(va===vb) return 0;
+    if(dir==='desc') return va>vb?-1:1;
+    return va<vb?-1:1;
   });
 }
 function onSort(th){
