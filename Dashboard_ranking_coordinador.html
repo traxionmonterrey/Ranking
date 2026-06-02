@@ -11,14 +11,10 @@
 :root{--navy:#1a2236;--navy2:#222d42;--navy3:#2c3a55;--green:#7ed321;--white:#fff;--bg:#f0f2f7;--border:#dde3f0;--text:#1a2236;--muted:#6b7a99;--red:#e53e3e;--gold:#FBAE40;}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:var(--bg);color:var(--text);font-family:"Inter",sans-serif;min-height:100vh;}
-
-/* NAV */
 nav{background:var(--navy);padding:10px 20px;display:flex;gap:12px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3);position:sticky;top:0;z-index:300;flex-wrap:wrap;}
 nav a{color:#e5e7eb;text-decoration:none;font-weight:600;padding:7px 14px;border-radius:8px;transition:all .3s;white-space:nowrap;font-size:14px;}
 nav a.brand{color:#84cc16;font-weight:800;font-size:18px;}
 nav a:hover{background:#374151;}
-
-/* FILTER BAR — top horizontal strip */
 .filter-bar{background:var(--white);border-bottom:1px solid var(--border);padding:.5rem 1.2rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;position:sticky;top:54px;z-index:200;box-shadow:0 1px 4px rgba(26,34,54,.05);}
 .filter-bar .fg{display:flex;align-items:center;gap:.3rem;}
 .filter-bar .fg label{font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
@@ -27,8 +23,6 @@ nav a:hover{background:#374151;}
 .filter-bar .divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
 .filter-bar .btn-reset{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);padding:.22rem .6rem;font-size:.68rem;font-family:"Inter",sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .filter-bar .btn-reset:hover{border-color:var(--red);color:var(--red);}
-
-/* MAIN */
 .main{padding:1rem 1.2rem;display:flex;flex-direction:column;gap:1rem;}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;}
 .kpi{background:var(--white);border-radius:12px;padding:.95rem 1.05rem;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(26,34,54,.07);border-top:4px solid var(--kc,var(--green));}
@@ -38,8 +32,6 @@ nav a:hover{background:#374151;}
 .kpi-lbl{font-size:.63rem;font-weight:600;color:var(--muted);margin-top:.22rem;text-transform:uppercase;letter-spacing:.05em;line-height:1.4;}
 .kpi-sub{font-size:.7rem;font-weight:600;color:var(--text);margin-top:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .kpi-udn{font-size:.62rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-
-/* TABLE CARD */
 .table-card{background:var(--white);border-radius:12px;box-shadow:0 2px 10px rgba(26,34,54,.07);overflow:hidden;}
 .table-hdr{display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.1rem;border-bottom:1px solid var(--border);}
 .th-left .ttl{font-size:.88rem;font-weight:700;color:var(--text);}
@@ -48,17 +40,12 @@ nav a:hover{background:#374151;}
 .badge{font-size:.7rem;color:var(--muted);background:var(--bg);border-radius:20px;padding:.17rem .55rem;}
 .btn-exp{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:.28rem .7rem;font-size:.7rem;font-family:"Inter",sans-serif;font-weight:600;cursor:pointer;transition:background .15s;}
 .btn-exp:hover{background:var(--navy3);}
-
-/* TABLE */
 .tbl-scroll{overflow-x:auto;max-height:calc(100vh - 280px);overflow-y:auto;}
 .data-table{width:100%;border-collapse:collapse;}
-/* Sticky header */
 .data-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.59rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:.38rem .58rem;text-align:left;white-space:nowrap;user-select:none;position:sticky;top:0;z-index:10;}
 .data-table thead th.r{text-align:right;}
-/* Sortable columns */
 .data-table thead th.sortable{cursor:pointer;transition:background .15s;}
 .data-table thead th.sortable:hover{background:var(--navy3);}
-/* Subtotal & Total highlight */
 .data-table thead th.col-sub{background:#2d2a1a;border-top:3px solid var(--gold);}
 .data-table thead th.col-tot{background:#1a2d1a;border-top:3px solid var(--green);}
 .data-table tbody td.col-sub{background:#fffbf0;}
@@ -70,14 +57,11 @@ nav a:hover{background:#374151;}
 .data-table tbody tr:hover td.col-tot{background:#e6ffed;}
 .data-table tbody td{padding:.3rem .58rem;font-size:.73rem;color:var(--text);white-space:nowrap;}
 .data-table tbody td.r{text-align:right;}
-
 .medal{font-size:1.05rem;}
 .rank-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.6rem;font-weight:700;background:#e5e7eb;color:#374151;}
 .sc-null{color:var(--muted);}
 .sa{font-size:.6rem;margin-left:.2rem;color:rgba(255,255,255,.35);}
 th.sorted .sa{color:#84cc16;}
-
-/* LOADING */
 .ld-overlay{position:fixed;inset:0;background:rgba(240,242,247,.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;transition:opacity .4s;}
 .ld-overlay.hidden{opacity:0;pointer-events:none;}
 .ld-logo{font-size:1.9rem;font-weight:900;color:#7ed321;letter-spacing:4px;}
@@ -86,13 +70,10 @@ th.sorted .sa{color:#84cc16;}
 .ld-msg{font-size:.82rem;color:var(--muted);}
 .err-bar{background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:.7rem 1rem;font-size:.78rem;color:#991b1b;display:none;margin-bottom:.3rem;}
 .tbl-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;}
-
-/* SEM BANNER */
 .sem-banner{background:var(--navy);color:#fff;border-radius:10px;padding:.7rem 1.1rem;display:flex;align-items:center;gap:.75rem;}
 .sem-banner .sem-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;}
 .sem-banner .sem-val{font-size:1.1rem;font-weight:800;color:#84cc16;letter-spacing:.02em;}
 .sem-banner .sem-sub{font-size:.68rem;color:#9ca3af;margin-left:auto;}
-
 @media(max-width:768px){
   nav{padding:10px 16px;gap:10px;}nav a.brand{font-size:16px;}
   .filter-bar{gap:.5rem;padding:.5rem .75rem;}
@@ -106,32 +87,22 @@ th.sorted .sa{color:#84cc16;}
   .kpi-lbl{font-size:.55rem;margin-top:.15rem;}
   .kpi-sub{font-size:.62rem;margin-top:.1rem;}
   .table-hdr{padding:.6rem .75rem;flex-wrap:wrap;gap:.4rem;}
-  .th-left .ttl{font-size:.8rem;}
   .th-left .sub{display:none;}
-  .table-card{border-radius:8px;}
   .tbl-scroll{max-height:none;}
-  .data-table{min-width:900px;}
+  .data-table{min-width:1100px;}
   .data-table thead th{font-size:.55rem;padding:.35rem .45rem;}
   .data-table tbody td{font-size:.68rem;padding:.28rem .45rem;}
-}
-@media(max-width:400px){
-  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:.3rem;}
-  .kpi-val{font-size:1rem;}
-  .kpi-lbl{font-size:.5rem;}
-  .kpi-sub{font-size:.58rem;}
 }
 </style>
 </head>
 <body>
 <nav><a href="index.html" class="brand">TRAXIÓN</a></nav>
-
 <div class="ld-overlay" id="ldOverlay">
   <div class="ld-logo">TRAXIÓN</div>
   <div class="ld-spin"></div>
   <div class="ld-msg" id="ldMsg">Conectando con Google Sheets…</div>
 </div>
 
-<!-- FILTER BAR TOP -->
 <div class="filter-bar">
   <div class="fg"><label>UDN</label>
     <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
@@ -147,15 +118,10 @@ th.sorted .sa{color:#84cc16;}
 
 <div class="main">
   <div class="err-bar" id="errBar"></div>
-
   <div class="sem-banner" id="semBanner" style="display:none">
-    <div>
-      <div class="sem-label">Período seleccionado</div>
-      <div class="sem-val" id="semVal">–</div>
-    </div>
+    <div><div class="sem-label">Período seleccionado</div><div class="sem-val" id="semVal">–</div></div>
     <div class="sem-sub" id="semSub"></div>
   </div>
-
   <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
     <div class="kpi" style="--kc:#7ed321">
       <div class="kpi-icon">🥇</div>
@@ -176,7 +142,7 @@ th.sorted .sa{color:#84cc16;}
   <div class="table-card" style="margin-bottom:1.5rem">
     <div class="table-hdr">
       <div class="th-left"><div class="ttl">🧑‍💼 Ranking por Coordinador</div><div class="sub">Promedio del período filtrado</div></div>
-      <div class="th-right"><span class="badge" id="cntCoord">– coordinadores</span><button class="btn-exp" onclick="exportTable('coord')">⬇ Excel</button></div>
+      <div class="th-right"><span class="badge" id="cntCoord">– coordinadores</span><button class="btn-exp" onclick="exportTable()">⬇ Excel</button></div>
     </div>
     <div class="tbl-scroll">
       <table class="data-table" id="tblCoord"><thead><tr>
@@ -189,26 +155,31 @@ th.sorted .sa{color:#84cc16;}
         <th class="r">Calidad Ruta</th>
         <th class="r">Score Seg.</th>
         <th class="r">% Score Seg.</th>
-        <th class="r">Rendimiento</th>
+        <th class="r">Rend. Camión</th>
+        <th class="r">Rend. Camioneta</th>
         <th class="r">Score Rend.</th>
         <th class="r col-sub sortable" data-col="sub" data-tbl="coord">Subtotal<span class="sa">↕</span></th>
         <th class="r">KMV</th>
         <th class="r">HD</th>
         <th class="r col-tot sortable" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
-      </tr></thead><tbody id="bodyCoord"><tr><td colspan="15" class="tbl-empty">Cargando…</td></tr></tbody></table>
+      </tr></thead><tbody id="bodyCoord"><tr><td colspan="16" class="tbl-empty">Cargando…</td></tr></tbody></table>
     </div>
   </div>
 </div>
+
 <script>
 const SHEET_ID='122gJiwBww7fiKeLlotxx_fPR6-3lrtjC9csqGI9UU9A';
-let C={mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',
-       udn:'Unidad de Negocio',plt:'Planta',coord:'Coordinador',
-       ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',
-       seg:'Score Seguridad',pseg:'% Score Seguridad',
-       ren:'Rendimiento',sren:'Score Rendimiento',
-       sub:'Subtotal',kmv:'KMV',hd:'HD',tot:'TOTAL'};
+let C={
+  mes:'Mes',sem:'Semana',jef:'Jefe',nom:'Nomina',ope:'Operador',
+  udn:'Unidad de Negocio',plt:'Planta',coord:'Coordinador',
+  ini:'% NS Inicio',lle:'% NS Llegada',cal:'Calidad de ruta',
+  seg:'Score Seguridad',pseg:'% Score Seguridad',
+  renc:'Rend. Camión',renp:'Rend. Camioneta',
+  sren:'Score Rendimiento',
+  sub:'Subtotal',kmv:'KMV',hd:'HD',tot:'TOTAL'
+};
 let DATA=[];
-const SORT={jef:{col:null,dir:'desc'},coord:{col:null,dir:'desc'},ope:{col:null,dir:'desc'},udn:{col:null,dir:'desc'}};
+const SORT={coord:{col:null,dir:'desc'}};
 
 function parseLine(line){
   const cols=[];let cur='',inQ=false;
@@ -220,7 +191,6 @@ function parseLine(line){
   }
   cols.push(cur.trim());return cols;
 }
-
 function parseCSV(text){
   const lines=text.trim().split(/\r?\n/);
   if(lines.length<2) return[];
@@ -233,7 +203,8 @@ function parseCSV(text){
   fuzzy('seg','score seguridad');
   fuzzy('pseg','% score seguridad','% score seg');
   fuzzy('cal','calidad');
-  fuzzy('ren','rendimiento');
+  fuzzy('renc','rend. camión','rend camion','rendimiento camion','rend. cam');
+  fuzzy('renp','rend. camioneta','rend camioneta','rendimiento camioneta');
   fuzzy('sren','score rendimiento','score rend');
   fuzzy('sub','subtotal');
   fuzzy('ini','ns ini','inicio','% ns i');
@@ -252,7 +223,6 @@ function parseCSV(text){
   }
   return rows;
 }
-
 function pct(v){
   if(v===undefined||v===null||String(v).trim()==='') return null;
   const n=parseFloat(String(v).replace('%','').replace(',','.'));
@@ -284,7 +254,6 @@ function rankBadge(i){
   return `<span class="rank-n">${i+1}</span>`;
 }
 function uniq(arr){return[...new Set(arr.filter(Boolean))].sort();}
-
 function autoMes(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const act=meses[new Date().getMonth()];
@@ -366,69 +335,67 @@ function aggregateBy(rows,groupKey){
   });
   return Object.values(map).map(g=>{
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
-    return{key:g.key,udn:g.udn,plt:g.plt,n:g.opeSet.size,
-           ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
-           seg:avg(C.seg),pseg:avg(C.pseg),
-           ren:avg(C.ren),sren:avg(C.sren),
-           sub:avg(C.sub),
-           kmv:avg(C.kmv),hd:avg(C.hd),tot:avg(C.tot)};
+    return{
+      key:g.key,udn:g.udn,plt:g.plt,
+      ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
+      seg:avg(C.seg),pseg:avg(C.pseg),
+      renc:avg(C.renc),renp:avg(C.renp),sren:avg(C.sren),
+      sub:avg(C.sub),kmv:avg(C.kmv),hd:avg(C.hd),tot:avg(C.tot)
+    };
   });
 }
-function sortRows(rows,tbl){
-  const col=SORT[tbl].col||'tot';
-  const dir=SORT[tbl].dir||'desc';
+function sortRows(rows){
+  const col=SORT.coord.col||'tot';
+  const dir=SORT.coord.dir||'desc';
   return[...rows].sort((a,b)=>{
     let va=a[col],vb=b[col];
     if(va===null||va===undefined) return 1;
     if(vb===null||vb===undefined) return -1;
-    if(typeof va==='string') va=va.toLowerCase();
-    if(typeof vb==='string') vb=vb.toLowerCase();
     if(va===vb) return 0;
     if(dir==='desc') return va>vb?-1:1;
     return va<vb?-1:1;
   });
 }
 function onSort(th){
-  const col=th.dataset.col,tbl=th.dataset.tbl;
-  if(!col||!tbl||!th.classList.contains('sortable')) return;
-  if(SORT[tbl].col===col){
-    SORT[tbl].dir=SORT[tbl].dir==='desc'?'asc':'desc';
+  const col=th.dataset.col;
+  if(!col||!th.classList.contains('sortable')) return;
+  if(SORT.coord.col===col){
+    SORT.coord.dir=SORT.coord.dir==='desc'?'asc':'desc';
   } else {
-    SORT[tbl].col=col;
-    SORT[tbl].dir='desc'; // siempre empieza de mayor a menor
+    SORT.coord.col=col;
+    SORT.coord.dir='desc';
   }
-  renderTable(tbl);
+  renderTable();
 }
 function render(){
   const f=getFiltered();
   const rC=aggregateBy(f,C.coord);
   updateSemBanner();
   renderKPIs(rC);
-  renderTable('coord',rC);
+  renderTable(rC);
 }
 function renderKPIs(rC){
   const sorted=[...rC].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
   const tC=sorted[0]||null;
   const worst=sorted[sorted.length-1]||null;
-  document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(1)+'%':'–';
+  document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(2)+'%':'–';
   document.getElementById('kpiCoordN').textContent=tC?tC.key:'–';
   document.getElementById('kpiCoordU').textContent=tC&&tC.udn?tC.udn:'';
-  document.getElementById('kpiWorstV').textContent=worst?worst.tot.toFixed(1)+'%':'–';
+  document.getElementById('kpiWorstV').textContent=worst?worst.tot.toFixed(2)+'%':'–';
   document.getElementById('kpiWorstN').textContent=worst?worst.key:'–';
   document.getElementById('kpiWorstU').textContent=worst&&worst.udn?worst.udn:'';
 }
-function renderTable(tbl,rowsInput){
+function renderTable(rowsInput){
   const body=document.getElementById('bodyCoord');
   const tblEl=document.getElementById('tblCoord');
-  if(!body||!tblEl) return;
   let rows=rowsInput;
   if(!rows){const f=getFiltered();rows=aggregateBy(f,C.coord);}
-  rows=sortRows(rows,tbl);
+  rows=sortRows(rows);
   tblEl.querySelectorAll('thead th').forEach(th=>{th.classList.remove('sorted');const sa=th.querySelector('.sa');if(sa) sa.textContent='↕';});
-  const sTh=tblEl.querySelector(`thead th[data-col="${SORT[tbl].col}"]`);
-  if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT[tbl].dir==='asc'?'↑':'↓';}
+  const sTh=tblEl.querySelector(`thead th[data-col="${SORT.coord.col}"]`);
+  if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT.coord.dir==='asc'?'↑':'↓';}
   document.getElementById('cntCoord').textContent=rows.length+' coordinadores';
-  if(!rows.length){body.innerHTML=`<tr><td colspan="15" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="16" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
     <td style="font-weight:600">${r.key||'–'}</td>
@@ -439,7 +406,8 @@ function renderTable(tbl,rowsInput){
     <td class="r">${scCell(r.cal)}</td>
     <td class="r">${numCell(r.seg)}</td>
     <td class="r">${scCell(r.pseg)}</td>
-    <td class="r">${numCell(r.ren)}</td>
+    <td class="r">${numCell(r.renc)}</td>
+    <td class="r">${numCell(r.renp)}</td>
     <td class="r">${scCell(r.sren)}</td>
     <td class="r col-sub">${scCell(r.sub)}</td>
     <td class="r">${scCell(r.kmv)}</td>
@@ -447,11 +415,11 @@ function renderTable(tbl,rowsInput){
     <td class="r col-tot">${totCell(r.tot)}</td>
   </tr>`).join('');
 }
-function exportTable(tbl){
-  const rows=sortRows(aggregateBy(getFiltered(),C.coord),'coord');
+function exportTable(){
+  const rows=sortRows(aggregateBy(getFiltered(),C.coord));
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const hdrs=['#','Coordinador','Planta','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rendimiento','Score Rendimiento','Subtotal','KMV','HD','TOTAL'];
-  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.ren),fmt(r.sren),fmt(r.sub),fmt(r.kmv),fmt(r.hd),fmt(r.tot)]);
+  const hdrs=['#','Coordinador','Planta','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rend. Camión','Rend. Camioneta','Score Rendimiento','Subtotal','KMV','HD','TOTAL'];
+  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.renc),fmt(r.renp),fmt(r.sren),fmt(r.sub),fmt(r.kmv),fmt(r.hd),fmt(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Ranking Coordinadores');
