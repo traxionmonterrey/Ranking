@@ -15,7 +15,6 @@ nav{background:var(--navy);padding:10px 20px;display:flex;gap:12px;align-items:c
 nav a{color:#e5e7eb;text-decoration:none;font-weight:600;padding:7px 14px;border-radius:8px;transition:all .3s;white-space:nowrap;font-size:14px;}
 nav a.brand{color:#84cc16;font-weight:800;font-size:18px;}
 nav a:hover{background:#374151;}
-/* FILTER BAR */
 .filter-bar{background:var(--white);border-bottom:1px solid var(--border);padding:.5rem 1.2rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;position:sticky;top:54px;z-index:200;box-shadow:0 1px 4px rgba(26,34,54,.05);}
 .filter-bar .fg{display:flex;align-items:center;gap:.3rem;}
 .filter-bar .fg label{font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
@@ -24,7 +23,6 @@ nav a:hover{background:#374151;}
 .filter-bar .divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
 .filter-bar .btn-reset{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);padding:.22rem .6rem;font-size:.68rem;font-family:"Inter",sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .filter-bar .btn-reset:hover{border-color:var(--red);color:var(--red);}
-/* MAIN */
 .main{padding:1rem 1.2rem;display:flex;flex-direction:column;gap:1rem;}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;}
 .kpi{background:var(--white);border-radius:12px;padding:.95rem 1.05rem;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(26,34,54,.07);border-top:4px solid var(--kc,var(--green));}
@@ -34,7 +32,6 @@ nav a:hover{background:#374151;}
 .kpi-lbl{font-size:.63rem;font-weight:600;color:var(--muted);margin-top:.22rem;text-transform:uppercase;letter-spacing:.05em;line-height:1.4;}
 .kpi-sub{font-size:.7rem;font-weight:600;color:var(--text);margin-top:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .kpi-udn{font-size:.62rem;color:var(--muted);margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* TABLE */
 .table-card{background:var(--white);border-radius:12px;box-shadow:0 2px 10px rgba(26,34,54,.07);overflow:hidden;}
 .table-hdr{display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.1rem;border-bottom:1px solid var(--border);}
 .th-left .ttl{font-size:.88rem;font-weight:700;color:var(--text);}
@@ -97,14 +94,12 @@ th.sorted .sa{color:#84cc16;}
 </head>
 <body>
 <nav><a href="index.html" class="brand">TRAXIÓN</a></nav>
-
 <div class="ld-overlay" id="ldOverlay">
   <div class="ld-logo">TRAXIÓN</div>
   <div class="ld-spin"></div>
   <div class="ld-msg" id="ldMsg">Conectando con Google Sheets…</div>
 </div>
 
-<!-- FILTER BAR TOP -->
 <div class="filter-bar">
   <div class="fg"><label>UDN</label>
     <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
@@ -125,32 +120,23 @@ th.sorted .sa{color:#84cc16;}
 <div class="main">
   <div class="err-bar" id="errBar"></div>
   <div class="sem-banner" id="semBanner" style="display:none">
-    <div>
-      <div class="sem-label">Período seleccionado</div>
-      <div class="sem-val" id="semVal">–</div>
-    </div>
+    <div><div class="sem-label">Período seleccionado</div><div class="sem-val" id="semVal">–</div></div>
     <div class="sem-sub" id="semSub"></div>
   </div>
   <div class="kpi-grid">
     <div class="kpi" style="--kc:#7ed321">
-      <div class="kpi-icon">🗂️</div>
-      <div class="kpi-val" id="kpiJefV">–</div>
-      <div class="kpi-lbl">Mejor Jefe</div>
-      <div class="kpi-sub" id="kpiJefN">–</div>
+      <div class="kpi-icon">🗂️</div><div class="kpi-val" id="kpiJefV">–</div>
+      <div class="kpi-lbl">Mejor Jefe</div><div class="kpi-sub" id="kpiJefN">–</div>
       <div class="kpi-udn" id="kpiJefU"></div>
     </div>
     <div class="kpi" style="--kc:#7ed321">
-      <div class="kpi-icon">🧑‍💼</div>
-      <div class="kpi-val" id="kpiCoordV">–</div>
-      <div class="kpi-lbl">Mejor Coordinador</div>
-      <div class="kpi-sub" id="kpiCoordN">–</div>
+      <div class="kpi-icon">🧑‍💼</div><div class="kpi-val" id="kpiCoordV">–</div>
+      <div class="kpi-lbl">Mejor Coordinador</div><div class="kpi-sub" id="kpiCoordN">–</div>
       <div class="kpi-udn" id="kpiCoordU"></div>
     </div>
     <div class="kpi" style="--kc:#7ed321">
-      <div class="kpi-icon">🏆</div>
-      <div class="kpi-val" id="kpiOpeV">–</div>
-      <div class="kpi-lbl">Mejor Operador</div>
-      <div class="kpi-sub" id="kpiOpeN">–</div>
+      <div class="kpi-icon">🏆</div><div class="kpi-val" id="kpiOpeV">–</div>
+      <div class="kpi-lbl">Mejor Operador</div><div class="kpi-sub" id="kpiOpeN">–</div>
       <div class="kpi-udn" id="kpiOpeU"></div>
     </div>
   </div>
@@ -354,17 +340,15 @@ function aggregateBy(rows,groupKey){
   });
   return Object.values(map).map(g=>{
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
-    const row={
+    // Sin exclusión por nulls — scores vacíos muestran "–"
+    return{
       key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,n:g.opeSet.size,
       ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
       seg:avg(C.seg),pseg:avg(C.pseg),
       ren:avg(C.ren),sren:avg(C.sren),
       tot:avg(C.tot)
     };
-    const scores=[row.ini,row.lle,row.cal,row.seg,row.pseg,row.ren,row.sren,row.tot];
-    if(scores.some(v=>v===null)) return null;
-    return row;
-  }).filter(Boolean);
+  });
 }
 function sortRows(rows){
   const col=SORT.ope.col||'tot';
@@ -389,7 +373,6 @@ function onSort(th){
     SORT.ope.col=col;
     SORT.ope.dir='desc';
   }
-  renderTable(getFiltered().length?null:null);
   render();
 }
 function render(){
@@ -427,10 +410,8 @@ function renderKPIs(rO,rJ){
 function renderTable(rowsInput){
   const body=document.getElementById('bodyOpe');
   const tblEl=document.getElementById('tblOpe');
-  let rows=rowsInput;
-  if(!rows){const f=getFiltered();rows=aggregateBy(f,C.ope);}
+  let rows=rowsInput||aggregateBy(getFiltered(),C.ope);
   rows=sortRows(rows);
-  // Update sort arrow
   tblEl.querySelectorAll('thead th').forEach(th=>{th.classList.remove('sorted');const sa=th.querySelector('.sa');if(sa) sa.textContent='↕';});
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT.ope.col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT.ope.dir==='asc'?'↑':'↓';}
