@@ -357,8 +357,10 @@ function cascadeSelects(){
       return true;
     });
   }
-  fillSel('f-udn',uniq(sub('udn').map(r=>r[C.udn])),'Todas');
-  fillSel('f-plt',uniq(sub('plt').map(r=>r[C.plt]||'').filter(Boolean)),'Todas');
+  // UDN y Planta son filtros "padre": siempre muestran todas las opciones del dataset completo
+  // (no se restringen por Mes/Semana, solo entre sí)
+  fillSel('f-udn',uniq(DATA.filter(r=>!plt||r[C.plt]===plt).map(r=>r[C.udn])),'Todas');
+  fillSel('f-plt',uniq(DATA.filter(r=>!udn||r[C.udn]===udn).map(r=>r[C.plt]||'').filter(Boolean)),'Todas');
   fillSel('f-mes',uniq(sub('mes').map(r=>r[C.mes])),'Todos');
   if(VIEW_MODE==='semanal'){
     fillSel('f-sem',uniq(sub('sem').map(r=>r[C.sem])),null);
@@ -403,6 +405,7 @@ function mergeGroupsByNameOverlap(groups){
   function union(a,b){const ra=find(a),rb=find(b);if(ra!==rb) parent[ra]=rb;}
   for(let i=0;i<n;i++){
     for(let j=i+1;j<n;j++){
+      if(items[i].udn!==items[j].udn) continue; // nunca fusionar entre UDNs distintas
       let overlap=0;
       for(const w of items[i].words){ if(items[j].words.has(w)) overlap++; }
       if(overlap>=2) union(i,j);
