@@ -377,14 +377,38 @@ function resetFilters(){
   cascadeSelects();
   render();
 }
+// Quita acentos, mayúsculas, espacios extra; reordena "Apellido, Nombre" -> "Nombre Apellido"
+function cleanName(raw){
+  let s=(raw||'').trim();
+  if(!s) return '';
+  s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); // quitar acentos
+  s=s.toUpperCase().replace(/\./g,'').replace(/\s+/g,' ').trim();
+  if(s.includes(',')){
+    const parts=s.split(',').map(p=>p.trim()).filter(Boolean);
+    if(parts.length===2) s=parts[1]+' '+parts[0]; // "APELLIDO, NOMBRE" -> "NOMBRE APELLIDO"
+  }
+  return s;
+}
+// Clave fuzzy: primera palabra + inicial de la última palabra (para matchear abreviaciones)
+function fuzzyKey(cleanedName){
+  const words=cleanedName.split(' ').filter(Boolean);
+  if(!words.length) return '';
+  if(words.length===1) return words[0];
+  return words[0]+'-'+words[words.length-1][0];
+}
 function aggregateBy(rows,groupKey){
-  const map={};
+  const map={};       // fuzzyKey -> grupo
   rows.forEach(r=>{
-    const k=(r[groupKey]||'').trim();if(!k||k.toLowerCase()==='pendiente') return;
-    if(!map[k]) map[k]={key:k,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
-    map[k].opeSet.add((r[C.ope]||'').trim());
-    map[k].semSet.add((r[C.sem]||'').trim());
-    map[k].rows.push(r);
+    const raw=(r[groupKey]||'').trim();if(!raw||raw.toLowerCase()==='pendiente') return;
+    const cleaned=cleanName(raw);
+    const fk=fuzzyKey(cleaned);
+    if(!map[fk]) map[fk]={key:raw,cleaned:cleaned,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[],names:new Set()};
+    map[fk].names.add(cleaned);
+    // Preferir el nombre más largo (probablemente el más completo) para mostrar
+    if(cleaned.length>map[fk].cleaned.length){map[fk].cleaned=cleaned;map[fk].key=raw;}
+    map[fk].opeSet.add((r[C.ope]||'').trim());
+    map[fk].semSet.add((r[C.sem]||'').trim());
+    map[fk].rows.push(r);
   });
   // En modo mensual, exigir que aparezca en TODAS las semanas del mes filtrado
   let requiredSems=null;
