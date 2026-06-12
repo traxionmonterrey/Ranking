@@ -389,33 +389,63 @@ function cleanName(raw){
   }
   return s;
 }
-// Clave fuzzy: primera palabra + inicial de la última palabra (para matchear abreviaciones)
-function fuzzyKey(cleanedName){
-  const words=cleanedName.split(' ').filter(Boolean);
-  if(!words.length) return '';
-  if(words.length===1) return words[0];
-  return words[0]+'-'+words[words.length-1][0];
+// Palabras significativas (4+ letras) usadas para detectar coincidencias entre formatos distintos
+const STOPWORDS=new Set(['DE','DEL','LA','LAS','LOS','Y']);
+function significantWords(cleanedName){
+  return cleanedName.split(' ').filter(w=>w.length>=4 && !STOPWORDS.has(w));
+}
+// Fusiona grupos cuyo nombre comparte 2+ palabras significativas (distinto orden/formato = misma persona)
+function mergeGroupsByNameOverlap(groups){
+  const items=groups.map(g=>({...g,words:new Set(significantWords(g.cleaned))}));
+  const n=items.length;
+  const parent=Array.from({length:n},(_, i)=>i);
+  function find(x){while(parent[x]!==x){x=parent[x];}return x;}
+  function union(a,b){const ra=find(a),rb=find(b);if(ra!==rb) parent[ra]=rb;}
+  for(let i=0;i<n;i++){
+    for(let j=i+1;j<n;j++){
+      let overlap=0;
+      for(const w of items[i].words){ if(items[j].words.has(w)) overlap++; }
+      if(overlap>=2) union(i,j);
+    }
+  }
+  const merged={};
+  for(let i=0;i<n;i++){
+    const root=find(i);
+    if(!merged[root]) merged[root]=[];
+    merged[root].push(items[i]);
+  }
+  return Object.values(merged).map(arr=>{
+    // Conservar el nombre más largo/completo para mostrar
+    let best=arr[0];
+    for(const it of arr){ if(it.cleaned.length>best.cleaned.length) best=it; }
+    const opeSet=new Set(),semSet=new Set();let rows=[];
+    let udn=best.udn,plt=best.plt,key=best.key;
+    for(const it of arr){
+      it.opeSet.forEach(v=>opeSet.add(v));
+      it.semSet.forEach(v=>semSet.add(v));
+      rows=rows.concat(it.rows);
+    }
+    return{key,udn,plt,opeSet,semSet,rows};
+  });
 }
 function aggregateBy(rows,groupKey){
-  const map={};       // fuzzyKey -> grupo
+  const map={};
   rows.forEach(r=>{
     const raw=(r[groupKey]||'').trim();if(!raw||raw.toLowerCase()==='pendiente') return;
     const cleaned=cleanName(raw);
-    const fk=fuzzyKey(cleaned);
-    if(!map[fk]) map[fk]={key:raw,cleaned:cleaned,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[],names:new Set()};
-    map[fk].names.add(cleaned);
-    // Preferir el nombre más largo (probablemente el más completo) para mostrar
-    if(cleaned.length>map[fk].cleaned.length){map[fk].cleaned=cleaned;map[fk].key=raw;}
-    map[fk].opeSet.add((r[C.ope]||'').trim());
-    map[fk].semSet.add((r[C.sem]||'').trim());
-    map[fk].rows.push(r);
+    if(!map[cleaned]) map[cleaned]={key:raw,cleaned:cleaned,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
+    if(raw.length>map[cleaned].key.length) map[cleaned].key=raw;
+    map[cleaned].opeSet.add((r[C.ope]||'').trim());
+    map[cleaned].semSet.add((r[C.sem]||'').trim());
+    map[cleaned].rows.push(r);
   });
+  const merged=mergeGroupsByNameOverlap(Object.values(map));
   // En modo mensual, exigir que aparezca en TODAS las semanas del mes filtrado
   let requiredSems=null;
   if(VIEW_MODE==='mensual'){
     requiredSems=new Set(rows.map(r=>(r[C.sem]||'').trim()).filter(Boolean));
   }
-  return Object.values(map).filter(g=>{
+  return merged.filter(g=>{
     if(!requiredSems||!requiredSems.size) return true;
     // El grupo debe contener TODAS las semanas requeridas
     for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
