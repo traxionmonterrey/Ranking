@@ -381,11 +381,22 @@ function aggregateBy(rows,groupKey){
   const map={};
   rows.forEach(r=>{
     const k=(r[groupKey]||'').trim();if(!k||k.toLowerCase()==='pendiente') return;
-    if(!map[k]) map[k]={key:k,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),rows:[]};
+    if(!map[k]) map[k]={key:k,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
     map[k].opeSet.add((r[C.ope]||'').trim());
+    map[k].semSet.add((r[C.sem]||'').trim());
     map[k].rows.push(r);
   });
-  return Object.values(map).map(g=>{
+  // En modo mensual, exigir que aparezca en TODAS las semanas del mes filtrado
+  let requiredSems=null;
+  if(VIEW_MODE==='mensual'){
+    requiredSems=new Set(rows.map(r=>(r[C.sem]||'').trim()).filter(Boolean));
+  }
+  return Object.values(map).filter(g=>{
+    if(!requiredSems||!requiredSems.size) return true;
+    // El grupo debe contener TODAS las semanas requeridas
+    for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
+    return true;
+  }).map(g=>{
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
     return{
       key:g.key,udn:g.udn,plt:g.plt,
