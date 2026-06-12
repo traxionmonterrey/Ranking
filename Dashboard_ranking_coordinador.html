@@ -23,6 +23,11 @@ nav a:hover{background:#374151;}
 .filter-bar .divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
 .filter-bar .btn-reset{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);padding:.22rem .6rem;font-size:.68rem;font-family:"Inter",sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .filter-bar .btn-reset:hover{border-color:var(--red);color:var(--red);}
+/* TOGGLE Semanal/Mensual */
+.view-toggle{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+.view-toggle button{background:none;border:none;padding:.28rem .85rem;font-size:.71rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:"Inter",sans-serif;transition:all .15s;}
+.view-toggle button.active{background:var(--navy);color:#fff;}
+.view-toggle button:not(.active):hover{color:var(--text);}
 .main{padding:1rem 1.2rem;display:flex;flex-direction:column;gap:1rem;}
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;}
 .kpi{background:var(--white);border-radius:12px;padding:.95rem 1.05rem;position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(26,34,54,.07);border-top:4px solid var(--kc,var(--green));}
@@ -104,13 +109,18 @@ th.sorted .sa{color:#84cc16;}
 </div>
 
 <div class="filter-bar">
+  <div class="view-toggle">
+    <button id="btnSemanal" class="active" onclick="setViewMode('semanal')">Semanal</button>
+    <button id="btnMensual" onclick="setViewMode('mensual')">Mensual</button>
+  </div>
+  <div class="divider"></div>
   <div class="fg"><label>UDN</label>
     <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
   <div class="fg"><label>Planta</label>
     <select id="f-plt" onchange="onFilter()"><option value="">Todas</option></select></div>
   <div class="fg"><label>Mes</label>
     <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
-  <div class="fg"><label>Semana</label>
+  <div class="fg" id="semFg"><label>Semana</label>
     <select id="f-sem" onchange="onFilter()"></select></div>
   <div class="divider"></div>
   <button class="btn-reset" onclick="resetFilters()">↺ Limpiar</button>
@@ -141,7 +151,7 @@ th.sorted .sa{color:#84cc16;}
 
   <div class="table-card" style="margin-bottom:1.5rem">
     <div class="table-hdr">
-      <div class="th-left"><div class="ttl">🧑‍💼 Ranking por Coordinador</div><div class="sub">Promedio del período filtrado</div></div>
+      <div class="th-left"><div class="ttl">🧑‍💼 Ranking por Coordinador</div><div class="sub" id="tblSub">Promedio del período filtrado</div></div>
       <div class="th-right"><span class="badge" id="cntCoord">– coordinadores</span><button class="btn-exp" onclick="exportTable()">⬇ Excel</button></div>
     </div>
     <div class="tbl-scroll">
@@ -179,6 +189,7 @@ let C={
   sub:'Subtotal',kmv:'KMV',hd:'HD',tot:'TOTAL'
 };
 let DATA=[];
+let VIEW_MODE='semanal'; // 'semanal' | 'mensual'
 const SORT={coord:{col:null,dir:'desc'}};
 
 function parseLine(line){
@@ -268,10 +279,44 @@ function autoLatestWeek(){
   for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===latest){sel.value=latest;break;}}
   cascadeSelects();
 }
+
+/* ── TOGGLE SEMANAL / MENSUAL ── */
+function setViewMode(mode){
+  VIEW_MODE=mode;
+  document.getElementById('btnSemanal').classList.toggle('active',mode==='semanal');
+  document.getElementById('btnMensual').classList.toggle('active',mode==='mensual');
+  const semFg=document.getElementById('semFg');
+  if(mode==='mensual'){
+    semFg.style.display='none';
+    document.getElementById('f-sem').value=''; // ignorar semana en modo mensual
+    if(!document.getElementById('f-mes').value) autoMes();
+  } else {
+    semFg.style.display='flex';
+    if(!document.getElementById('f-sem').value) autoLatestWeek();
+  }
+  document.getElementById('tblSub').textContent = mode==='mensual'
+    ? 'Promedio de todas las semanas del mes seleccionado'
+    : 'Promedio del período filtrado';
+  cascadeSelects();
+  render();
+}
+
 function updateSemBanner(){
   const sem=document.getElementById('f-sem').value;
   const mes=document.getElementById('f-mes').value;
   const banner=document.getElementById('semBanner');
+  if(VIEW_MODE==='mensual'){
+    if(mes){
+      banner.style.display='flex';
+      document.getElementById('semVal').textContent=mes;
+      document.getElementById('semSub').textContent='Vista mensual · promedio de todas las semanas';
+    } else {
+      banner.style.display='flex';
+      document.getElementById('semVal').textContent='Todos los meses';
+      document.getElementById('semSub').textContent='Vista mensual · promedio de todas las semanas';
+    }
+    return;
+  }
   if(sem){banner.style.display='flex';document.getElementById('semVal').textContent='Semana '+sem;document.getElementById('semSub').textContent=mes?'Mes: '+mes:'';}
   else if(mes){banner.style.display='flex';document.getElementById('semVal').textContent=mes;document.getElementById('semSub').textContent='Todas las semanas';}
   else banner.style.display='none';
@@ -295,7 +340,8 @@ function getFiltered(){
     if(udn&&r[C.udn]!==udn) return false;
     if(plt&&r[C.plt]!==plt) return false;
     if(mes&&r[C.mes]!==mes) return false;
-    if(sem&&r[C.sem]!==sem) return false;
+    // En modo mensual ignoramos el filtro de semana — promediamos todo el mes
+    if(VIEW_MODE==='semanal'&&sem&&r[C.sem]!==sem) return false;
     return true;
   });
 }
@@ -307,23 +353,29 @@ function cascadeSelects(){
       if(!ex.includes('udn')&&udn&&r[C.udn]!==udn) return false;
       if(!ex.includes('plt')&&plt&&r[C.plt]!==plt) return false;
       if(!ex.includes('mes')&&mes&&r[C.mes]!==mes) return false;
-      if(!ex.includes('sem')&&sem&&r[C.sem]!==sem) return false;
+      if(VIEW_MODE==='semanal'&&!ex.includes('sem')&&sem&&r[C.sem]!==sem) return false;
       return true;
     });
   }
   fillSel('f-udn',uniq(sub('udn').map(r=>r[C.udn])),'Todas');
   fillSel('f-plt',uniq(sub('plt').map(r=>r[C.plt]||'').filter(Boolean)),'Todas');
   fillSel('f-mes',uniq(sub('mes').map(r=>r[C.mes])),'Todos');
-  fillSel('f-sem',uniq(sub('sem').map(r=>r[C.sem])),null);
+  if(VIEW_MODE==='semanal'){
+    fillSel('f-sem',uniq(sub('sem').map(r=>r[C.sem])),null);
+  }
   if(udn) document.getElementById('f-udn').value=udn;
   if(plt) document.getElementById('f-plt').value=plt;
   if(mes) document.getElementById('f-mes').value=mes;
-  if(sem) document.getElementById('f-sem').value=sem;
+  if(VIEW_MODE==='semanal'&&sem) document.getElementById('f-sem').value=sem;
 }
 function onFilter(){cascadeSelects();render();}
 function resetFilters(){
   ['f-udn','f-plt','f-mes'].forEach(id=>document.getElementById(id).value='');
-  buildSelects();autoLatestWeek();render();
+  buildSelects();
+  if(VIEW_MODE==='semanal') autoLatestWeek();
+  else autoMes();
+  cascadeSelects();
+  render();
 }
 function aggregateBy(rows,groupKey){
   const map={};
@@ -422,8 +474,10 @@ function exportTable(){
   const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.renc),fmt(r.renp),fmt(r.sren),fmt(r.sub),fmt(r.kmv),fmt(r.hd),fmt(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Ranking Coordinadores');
-  XLSX.writeFile(wb,`ranking_coordinadores_${new Date().toISOString().slice(0,10)}.xlsx`);
+  const sheetName=VIEW_MODE==='mensual'?'Ranking Mensual Coordinadores':'Ranking Coordinadores';
+  XLSX.utils.book_append_sheet(wb,ws,sheetName);
+  const prefix=VIEW_MODE==='mensual'?'ranking_mensual_coordinadores':'ranking_coordinadores';
+  XLSX.writeFile(wb,`${prefix}_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 window.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.data-table thead th.sortable').forEach(th=>{th.addEventListener('click',()=>onSort(th));});
