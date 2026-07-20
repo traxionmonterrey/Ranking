@@ -23,7 +23,6 @@ nav a:hover{background:#374151;}
 .filter-bar .divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
 .filter-bar .btn-reset{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);padding:.22rem .6rem;font-size:.68rem;font-family:"Inter",sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .filter-bar .btn-reset:hover{border-color:var(--red);color:var(--red);}
-/* TOGGLE Semanal/Mensual */
 .view-toggle{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
 .view-toggle button{background:none;border:none;padding:.28rem .85rem;font-size:.71rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:"Inter",sans-serif;transition:all .15s;}
 .view-toggle button.active{background:var(--navy);color:#fff;}
@@ -188,8 +187,11 @@ let C={
 };
 let DATA=[];
 let DATA_COORD=[];
-let VIEW_MODE='semanal'; // 'semanal' | 'mensual'
+let VIEW_MODE='semanal';
 const SORT={ope:{col:null,dir:'desc'}};
+
+// Scores principales — si cualquiera es null el operador se excluye del ranking
+const REQUIRED_SCORES=['ini','lle','cal','seg','sren'];
 
 function parseLine(line){
   const cols=[];let cur='',inQ=false;
@@ -274,8 +276,6 @@ function autoLatestWeek(){
   for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===latest){sel.value=latest;break;}}
   cascadeSelects();
 }
-
-/* ── TOGGLE SEMANAL / MENSUAL ── */
 function setViewMode(mode){
   VIEW_MODE=mode;
   document.getElementById('btnSemanal').classList.toggle('active',mode==='semanal');
@@ -289,27 +289,20 @@ function setViewMode(mode){
     semFg.style.display='flex';
     if(!document.getElementById('f-sem').value) autoLatestWeek();
   }
-  document.getElementById('tblSub').textContent = mode==='mensual'
-    ? 'Promedio de todas las semanas del mes seleccionado'
-    : 'Promedio del período filtrado';
+  document.getElementById('tblSub').textContent=mode==='mensual'
+    ?'Promedio de todas las semanas del mes seleccionado'
+    :'Promedio del período filtrado';
   cascadeSelects();
   render();
 }
-
 function updateSemBanner(){
   const sem=document.getElementById('f-sem').value;
   const mes=document.getElementById('f-mes').value;
   const banner=document.getElementById('semBanner');
   if(VIEW_MODE==='mensual'){
-    if(mes){
-      banner.style.display='flex';
-      document.getElementById('semVal').textContent=mes;
-      document.getElementById('semSub').textContent='Vista mensual · promedio de todas las semanas';
-    } else {
-      banner.style.display='flex';
-      document.getElementById('semVal').textContent='Todos los meses';
-      document.getElementById('semSub').textContent='Vista mensual · promedio de todas las semanas';
-    }
+    banner.style.display='flex';
+    document.getElementById('semVal').textContent=mes||'Todos los meses';
+    document.getElementById('semSub').textContent='Vista mensual · promedio de todas las semanas';
     return;
   }
   if(sem){banner.style.display='flex';document.getElementById('semVal').textContent='Semana '+sem;document.getElementById('semSub').textContent=mes?'Mes: '+mes:'';}
@@ -339,7 +332,6 @@ function getFiltered(){
     if(coord&&r[C.coord]!==coord) return false;
     if(ope  &&r[C.ope]  !==ope)   return false;
     if(mes  &&r[C.mes]  !==mes)   return false;
-    // En modo mensual ignoramos el filtro de semana — promediamos todo el mes
     if(VIEW_MODE==='semanal'&&sem&&r[C.sem]!==sem) return false;
     return true;
   });
@@ -358,13 +350,14 @@ function cascadeSelects(){
       return true;
     });
   }
-  fillSel('f-udn',  uniq(sub('udn').map(r=>r[C.udn])),                      'Todas');
-  fillSel('f-plt',  uniq(sub('plt').map(r=>r[C.plt]||'').filter(Boolean)),  'Todas');
+  // UDN y Planta son filtros "padre" — no se restringen por Mes/Semana/Coord/Ope
+  fillSel('f-udn',  uniq(DATA.filter(r=>!plt||r[C.plt]===plt).map(r=>r[C.udn])), 'Todas');
+  fillSel('f-plt',  uniq(DATA.filter(r=>!udn||r[C.udn]===udn).map(r=>r[C.plt]||'').filter(Boolean)), 'Todas');
   fillSel('f-coord',uniq(sub('coord').map(r=>r[C.coord]||'').filter(Boolean)),'Todos');
   fillSel('f-ope',  uniq(sub('ope').map(r=>r[C.ope])),                      'Todos');
   fillSel('f-mes',  uniq(sub('mes').map(r=>r[C.mes])),                      'Todos');
   if(VIEW_MODE==='semanal'){
-    fillSel('f-sem',  uniq(sub('sem').map(r=>r[C.sem])),                    null);
+    fillSel('f-sem',uniq(sub('sem').map(r=>r[C.sem])),null);
   }
   if(udn)   document.getElementById('f-udn').value=udn;
   if(plt)   document.getElementById('f-plt').value=plt;
@@ -391,26 +384,29 @@ function aggregateBy(rows,groupKey){
     map[k].semSet.add((r[C.sem]||'').trim());
     map[k].rows.push(r);
   });
-  // En modo mensual, exigir que aparezca en TODAS las semanas del mes filtrado
   let requiredSems=null;
   if(VIEW_MODE==='mensual'){
     requiredSems=new Set(rows.map(r=>(r[C.sem]||'').trim()).filter(Boolean));
   }
   return Object.values(map).filter(g=>{
-    if(!requiredSems||!requiredSems.size) return true;
-    for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
+    // Regla 4 semanas en modo mensual
+    if(requiredSems&&requiredSems.size){
+      for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
+    }
     return true;
   }).map(g=>{
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
-    // Sin exclusión por nulls — scores vacíos muestran "–"
-    return{
+    const row={
       key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,n:g.opeSet.size,
       ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
       seg:avg(C.seg),pseg:avg(C.pseg),
       ren:avg(C.ren),sren:avg(C.sren),
       tot:avg(C.tot)
     };
-  });
+    // Excluir si falta cualquier score principal
+    if(REQUIRED_SCORES.some(k=>row[k]===null)) return null;
+    return row;
+  }).filter(Boolean);
 }
 function sortRows(rows){
   const col=SORT.ope.col||'tot';
@@ -429,12 +425,8 @@ function sortRows(rows){
 function onSort(th){
   const col=th.dataset.col;
   if(!col||!th.classList.contains('sortable')) return;
-  if(SORT.ope.col===col){
-    SORT.ope.dir=SORT.ope.dir==='desc'?'asc':'desc';
-  } else {
-    SORT.ope.col=col;
-    SORT.ope.dir='desc';
-  }
+  if(SORT.ope.col===col){SORT.ope.dir=SORT.ope.dir==='desc'?'asc':'desc';}
+  else{SORT.ope.col=col;SORT.ope.dir='desc';}
   render();
 }
 function render(){
