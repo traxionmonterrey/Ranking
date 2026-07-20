@@ -23,7 +23,6 @@ nav a:hover{background:#374151;}
 .filter-bar .divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
 .filter-bar .btn-reset{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);padding:.22rem .6rem;font-size:.68rem;font-family:"Inter",sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
 .filter-bar .btn-reset:hover{border-color:var(--red);color:var(--red);}
-/* TOGGLE Semanal/Mensual */
 .view-toggle{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
 .view-toggle button{background:none;border:none;padding:.28rem .85rem;font-size:.71rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:"Inter",sans-serif;transition:all .15s;}
 .view-toggle button.active{background:var(--navy);color:#fff;}
@@ -189,7 +188,7 @@ let C={
   sub:'Subtotal',kmv:'KMV',hd:'HD',tot:'TOTAL'
 };
 let DATA=[];
-let VIEW_MODE='semanal'; // 'semanal' | 'mensual'
+let VIEW_MODE='semanal';
 const SORT={coord:{col:null,dir:'desc'}};
 
 function parseLine(line){
@@ -279,8 +278,6 @@ function autoLatestWeek(){
   for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===latest){sel.value=latest;break;}}
   cascadeSelects();
 }
-
-/* ── TOGGLE SEMANAL / MENSUAL ── */
 function setViewMode(mode){
   VIEW_MODE=mode;
   document.getElementById('btnSemanal').classList.toggle('active',mode==='semanal');
@@ -288,33 +285,26 @@ function setViewMode(mode){
   const semFg=document.getElementById('semFg');
   if(mode==='mensual'){
     semFg.style.display='none';
-    document.getElementById('f-sem').value=''; // ignorar semana en modo mensual
+    document.getElementById('f-sem').value='';
     if(!document.getElementById('f-mes').value) autoMes();
   } else {
     semFg.style.display='flex';
     if(!document.getElementById('f-sem').value) autoLatestWeek();
   }
-  document.getElementById('tblSub').textContent = mode==='mensual'
-    ? 'Promedio de todas las semanas del mes seleccionado'
-    : 'Promedio del período filtrado';
+  document.getElementById('tblSub').textContent=mode==='mensual'
+    ?'Promedio de todas las semanas del mes seleccionado'
+    :'Promedio del período filtrado';
   cascadeSelects();
   render();
 }
-
 function updateSemBanner(){
   const sem=document.getElementById('f-sem').value;
   const mes=document.getElementById('f-mes').value;
   const banner=document.getElementById('semBanner');
   if(VIEW_MODE==='mensual'){
-    if(mes){
-      banner.style.display='flex';
-      document.getElementById('semVal').textContent=mes;
-      document.getElementById('semSub').textContent='Vista mensual · promedio de todas las semanas';
-    } else {
-      banner.style.display='flex';
-      document.getElementById('semVal').textContent='Todos los meses';
-      document.getElementById('semSub').textContent='Vista mensual · promedio de todas las semanas';
-    }
+    banner.style.display='flex';
+    document.getElementById('semVal').textContent=mes||'Todos los meses';
+    document.getElementById('semSub').textContent='Vista mensual · promedio de todas las semanas';
     return;
   }
   if(sem){banner.style.display='flex';document.getElementById('semVal').textContent='Semana '+sem;document.getElementById('semSub').textContent=mes?'Mes: '+mes:'';}
@@ -340,7 +330,6 @@ function getFiltered(){
     if(udn&&r[C.udn]!==udn) return false;
     if(plt&&r[C.plt]!==plt) return false;
     if(mes&&r[C.mes]!==mes) return false;
-    // En modo mensual ignoramos el filtro de semana — promediamos todo el mes
     if(VIEW_MODE==='semanal'&&sem&&r[C.sem]!==sem) return false;
     return true;
   });
@@ -357,8 +346,7 @@ function cascadeSelects(){
       return true;
     });
   }
-  // UDN y Planta son filtros "padre": siempre muestran todas las opciones del dataset completo
-  // (no se restringen por Mes/Semana, solo entre sí)
+  // UDN y Planta son filtros "padre" — no se restringen por Mes/Semana
   fillSel('f-udn',uniq(DATA.filter(r=>!plt||r[C.plt]===plt).map(r=>r[C.udn])),'Todas');
   fillSel('f-plt',uniq(DATA.filter(r=>!udn||r[C.udn]===udn).map(r=>r[C.plt]||'').filter(Boolean)),'Todas');
   fillSel('f-mes',uniq(sub('mes').map(r=>r[C.mes])),'Todos');
@@ -379,35 +367,32 @@ function resetFilters(){
   cascadeSelects();
   render();
 }
-// Quita acentos, mayúsculas, espacios extra; reordena "Apellido, Nombre" -> "Nombre Apellido"
 function cleanName(raw){
   let s=(raw||'').trim();
   if(!s) return '';
-  s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); // quitar acentos
+  s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   s=s.toUpperCase().replace(/\./g,'').replace(/\s+/g,' ').trim();
   if(s.includes(',')){
     const parts=s.split(',').map(p=>p.trim()).filter(Boolean);
-    if(parts.length===2) s=parts[1]+' '+parts[0]; // "APELLIDO, NOMBRE" -> "NOMBRE APELLIDO"
+    if(parts.length===2) s=parts[1]+' '+parts[0];
   }
   return s;
 }
-// Palabras significativas (4+ letras) usadas para detectar coincidencias entre formatos distintos
 const STOPWORDS=new Set(['DE','DEL','LA','LAS','LOS','Y']);
 function significantWords(cleanedName){
-  return cleanedName.split(' ').filter(w=>w.length>=4 && !STOPWORDS.has(w));
+  return cleanedName.split(' ').filter(w=>w.length>=4&&!STOPWORDS.has(w));
 }
-// Fusiona grupos cuyo nombre comparte 2+ palabras significativas (distinto orden/formato = misma persona)
 function mergeGroupsByNameOverlap(groups){
   const items=groups.map(g=>({...g,words:new Set(significantWords(g.cleaned))}));
   const n=items.length;
-  const parent=Array.from({length:n},(_, i)=>i);
+  const parent=Array.from({length:n},(_,i)=>i);
   function find(x){while(parent[x]!==x){x=parent[x];}return x;}
   function union(a,b){const ra=find(a),rb=find(b);if(ra!==rb) parent[ra]=rb;}
   for(let i=0;i<n;i++){
     for(let j=i+1;j<n;j++){
-      if(items[i].udn!==items[j].udn) continue; // nunca fusionar entre UDNs distintas
+      if(items[i].udn!==items[j].udn) continue;
       let overlap=0;
-      for(const w of items[i].words){ if(items[j].words.has(w)) overlap++; }
+      for(const w of items[i].words){if(items[j].words.has(w)) overlap++;}
       if(overlap>=2) union(i,j);
     }
   }
@@ -418,9 +403,8 @@ function mergeGroupsByNameOverlap(groups){
     merged[root].push(items[i]);
   }
   return Object.values(merged).map(arr=>{
-    // Conservar el nombre más largo/completo para mostrar
     let best=arr[0];
-    for(const it of arr){ if(it.cleaned.length>best.cleaned.length) best=it; }
+    for(const it of arr){if(it.cleaned.length>best.cleaned.length) best=it;}
     const opeSet=new Set(),semSet=new Set();let rows=[];
     let udn=best.udn,plt=best.plt,key=best.key;
     for(const it of arr){
@@ -432,6 +416,14 @@ function mergeGroupsByNameOverlap(groups){
   });
 }
 function aggregateBy(rows,groupKey){
+  // Precalcular promedio general de todos los coordinadores para usar como fallback
+  const SCORE_COLS=[C.ini,C.lle,C.cal,C.seg,C.pseg,C.renc,C.renp,C.sren,C.sub,C.kmv,C.hd,C.tot];
+  const globalAvg={};
+  SCORE_COLS.forEach(col=>{
+    const vs=rows.map(r=>pct(r[col])).filter(v=>v!==null);
+    globalAvg[col]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;
+  });
+
   const map={};
   rows.forEach(r=>{
     const raw=(r[groupKey]||'').trim();if(!raw||raw.toLowerCase()==='pendiente') return;
@@ -443,24 +435,28 @@ function aggregateBy(rows,groupKey){
     map[cleaned].rows.push(r);
   });
   const merged=mergeGroupsByNameOverlap(Object.values(map));
-  // En modo mensual, exigir que aparezca en TODAS las semanas del mes filtrado
   let requiredSems=null;
   if(VIEW_MODE==='mensual'){
     requiredSems=new Set(rows.map(r=>(r[C.sem]||'').trim()).filter(Boolean));
   }
   return merged.filter(g=>{
     if(!requiredSems||!requiredSems.size) return true;
-    // El grupo debe contener TODAS las semanas requeridas
-    for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
+    for(const s of requiredSems){if(!g.semSet.has(s)) return false;}
     return true;
   }).map(g=>{
-    function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
+    function avgWithFallback(col){
+      const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);
+      if(vs.length) return vs.reduce((a,b)=>a+b,0)/vs.length;
+      // Sin dato propio → usar promedio general de todos los coordinadores
+      return globalAvg[col]!==undefined?globalAvg[col]:null;
+    }
     return{
       key:g.key,udn:g.udn,plt:g.plt,
-      ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
-      seg:avg(C.seg),pseg:avg(C.pseg),
-      renc:avg(C.renc),renp:avg(C.renp),sren:avg(C.sren),
-      sub:avg(C.sub),kmv:avg(C.kmv),hd:avg(C.hd),tot:avg(C.tot)
+      ini:avgWithFallback(C.ini),lle:avgWithFallback(C.lle),cal:avgWithFallback(C.cal),
+      seg:avgWithFallback(C.seg),pseg:avgWithFallback(C.pseg),
+      renc:avgWithFallback(C.renc),renp:avgWithFallback(C.renp),sren:avgWithFallback(C.sren),
+      sub:avgWithFallback(C.sub),kmv:avgWithFallback(C.kmv),hd:avgWithFallback(C.hd),
+      tot:avgWithFallback(C.tot)
     };
   });
 }
@@ -479,12 +475,8 @@ function sortRows(rows){
 function onSort(th){
   const col=th.dataset.col;
   if(!col||!th.classList.contains('sortable')) return;
-  if(SORT.coord.col===col){
-    SORT.coord.dir=SORT.coord.dir==='desc'?'asc':'desc';
-  } else {
-    SORT.coord.col=col;
-    SORT.coord.dir='desc';
-  }
+  if(SORT.coord.col===col){SORT.coord.dir=SORT.coord.dir==='desc'?'asc':'desc';}
+  else{SORT.coord.col=col;SORT.coord.dir='desc';}
   renderTable();
 }
 function render(){
