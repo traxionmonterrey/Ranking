@@ -416,19 +416,28 @@ function mergeGroupsByNameOverlap(groups){
   });
 }
 function aggregateBy(rows,groupKey){
-  // Precalcular promedio general de todos los coordinadores para usar como fallback
+  // Precalcular promedio por Jefe para usar como fallback en scores vacíos
   const SCORE_COLS=[C.ini,C.lle,C.cal,C.seg,C.pseg,C.renc,C.renp,C.sren,C.sub,C.kmv,C.hd,C.tot];
-  const globalAvg={};
-  SCORE_COLS.forEach(col=>{
-    const vs=rows.map(r=>pct(r[col])).filter(v=>v!==null);
-    globalAvg[col]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;
+  const jefMap={};
+  rows.forEach(r=>{
+    const jef=(r[C.jef]||'').trim();if(!jef) return;
+    if(!jefMap[jef]) jefMap[jef]=[];
+    jefMap[jef].push(r);
+  });
+  const jefAvg={};
+  Object.entries(jefMap).forEach(([jef,rws])=>{
+    jefAvg[jef]={};
+    SCORE_COLS.forEach(col=>{
+      const vs=rws.map(r=>pct(r[col])).filter(v=>v!==null);
+      jefAvg[jef][col]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;
+    });
   });
 
   const map={};
   rows.forEach(r=>{
     const raw=(r[groupKey]||'').trim();if(!raw||raw.toLowerCase()==='pendiente') return;
     const cleaned=cleanName(raw);
-    if(!map[cleaned]) map[cleaned]={key:raw,cleaned:cleaned,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
+    if(!map[cleaned]) map[cleaned]={key:raw,cleaned:cleaned,jef:r[C.jef]||'',udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
     if(raw.length>map[cleaned].key.length) map[cleaned].key=raw;
     map[cleaned].opeSet.add((r[C.ope]||'').trim());
     map[cleaned].semSet.add((r[C.sem]||'').trim());
@@ -444,14 +453,15 @@ function aggregateBy(rows,groupKey){
     for(const s of requiredSems){if(!g.semSet.has(s)) return false;}
     return true;
   }).map(g=>{
+    const fb=jefAvg[g.jef]||{};
     function avgWithFallback(col){
       const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);
       if(vs.length) return vs.reduce((a,b)=>a+b,0)/vs.length;
-      // Sin dato propio → usar promedio general de todos los coordinadores
-      return globalAvg[col]!==undefined?globalAvg[col]:null;
+      // Sin dato propio → usar promedio del Jefe
+      return fb[col]!==undefined?fb[col]:null;
     }
     return{
-      key:g.key,udn:g.udn,plt:g.plt,
+      key:g.key,jef:g.jef,udn:g.udn,plt:g.plt,
       ini:avgWithFallback(C.ini),lle:avgWithFallback(C.lle),cal:avgWithFallback(C.cal),
       seg:avgWithFallback(C.seg),pseg:avgWithFallback(C.pseg),
       renc:avgWithFallback(C.renc),renp:avgWithFallback(C.renp),sren:avgWithFallback(C.sren),
