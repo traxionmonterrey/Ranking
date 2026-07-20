@@ -161,6 +161,7 @@ th.sorted .sa{color:#84cc16;}
         <th>Operador</th>
         <th>Nómina</th>
         <th style="max-width:90px;overflow:hidden;text-overflow:ellipsis">Planta</th>
+        <th>Coordinador</th>
         <th>Jefe</th>
         <th>UDN</th>
         <th class="r">% NS Inicio</th>
@@ -171,7 +172,7 @@ th.sorted .sa{color:#84cc16;}
         <th class="r">Rendimiento</th>
         <th class="r">Score Rend.</th>
         <th class="r col-tot sortable" data-col="tot" data-tbl="ope">TOTAL<span class="sa">↕</span></th>
-      </tr></thead><tbody id="bodyOpe"><tr><td colspan="14" class="tbl-empty">Cargando…</td></tr></tbody></table>
+      </tr></thead><tbody id="bodyOpe"><tr><td colspan="15" class="tbl-empty">Cargando…</td></tr></tbody></table>
     </div>
   </div>
 </div>
@@ -400,6 +401,7 @@ function aggregateBy(rows,groupKey){
   rows.forEach(r=>{
     const k=(r[groupKey]||'').trim();if(!k) return;
     if(!map[k]) map[k]={key:k,jef:r[C.jef]||'',udn:r[C.udn]||'',nom:r[C.nom]||'',plt:r[C.plt]||'',coord:r[C.coord]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
+    if(r[C.coord]) map[k].coord=r[C.coord]||'';
     map[k].opeSet.add((r[C.ope]||'').trim());
     map[k].semSet.add((r[C.sem]||'').trim());
     map[k].rows.push(r);
@@ -426,7 +428,7 @@ function aggregateBy(rows,groupKey){
     const useFb=groupKey===C.ope;
     const calc=useFb?avgWithFallback:avg;
     return{
-      key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,n:g.opeSet.size,
+      key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,coord:g.coord,n:g.opeSet.size,
       ini:calc(C.ini),lle:calc(C.lle),cal:calc(C.cal),
       seg:calc(C.seg),pseg:calc(C.pseg),
       ren:calc(C.ren),sren:calc(C.sren),
@@ -498,12 +500,13 @@ function renderTable(rowsInput){
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT.ope.col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT.ope.dir==='asc'?'↑':'↓';}
   document.getElementById('cntOpe').textContent=rows.length+' operadores';
-  if(!rows.length){body.innerHTML=`<tr><td colspan="14" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="15" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
     <td style="font-weight:600">${r.key||'–'}</td>
     <td style="color:var(--muted)">${r.nom||'–'}</td>
     <td style="color:var(--muted);max-width:90px;overflow:hidden;text-overflow:ellipsis" title="${r.plt||''}">${r.plt||'–'}</td>
+    <td style="color:var(--muted)">${r.coord||'–'}</td>
     <td style="color:var(--muted)">${r.jef||'–'}</td>
     <td style="color:var(--muted)">${r.udn||'–'}</td>
     <td class="r">${scCell(r.ini)}</td>
@@ -519,8 +522,8 @@ function renderTable(rowsInput){
 function exportTable(){
   const rows=sortRows(aggregateBy(getFiltered(),C.ope));
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const hdrs=['#','Operador','Nómina','Planta','Jefe','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rendimiento','Score Rendimiento','TOTAL'];
-  const data=rows.map((r,i)=>[i+1,r.key,r.nom,r.plt,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.ren),fmt(r.sren),fmt(r.tot)]);
+  const hdrs=['#','Operador','Nómina','Planta','Coordinador','Jefe','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rendimiento','Score Rendimiento','TOTAL'];
+  const data=rows.map((r,i)=>[i+1,r.key,r.nom,r.plt,r.coord,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.ren),fmt(r.sren),fmt(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   const sheetName=VIEW_MODE==='mensual'?'Ranking Mensual Operadores':'Ranking Operadores';
