@@ -376,10 +376,30 @@ function resetFilters(){
   render();
 }
 function aggregateBy(rows,groupKey){
+  // Precalcular promedio por coordinador para usar como fallback en scores vacíos
+  // Solo aplica cuando agrupamos por operador
+  const coordAvg={};
+  if(groupKey===C.ope){
+    const coordMap={};
+    rows.forEach(r=>{
+      const coord=(r[C.coord]||'').trim();if(!coord) return;
+      if(!coordMap[coord]) coordMap[coord]=[];
+      coordMap[coord].push(r);
+    });
+    const SCORE_COLS=[C.ini,C.lle,C.cal,C.seg,C.pseg,C.ren,C.sren,C.tot];
+    Object.entries(coordMap).forEach(([coord,rws])=>{
+      coordAvg[coord]={};
+      SCORE_COLS.forEach(col=>{
+        const vs=rws.map(r=>pct(r[col])).filter(v=>v!==null);
+        coordAvg[coord][col]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;
+      });
+    });
+  }
+
   const map={};
   rows.forEach(r=>{
     const k=(r[groupKey]||'').trim();if(!k) return;
-    if(!map[k]) map[k]={key:k,jef:r[C.jef]||'',udn:r[C.udn]||'',nom:r[C.nom]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
+    if(!map[k]) map[k]={key:k,jef:r[C.jef]||'',udn:r[C.udn]||'',nom:r[C.nom]||'',plt:r[C.plt]||'',coord:r[C.coord]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
     map[k].opeSet.add((r[C.ope]||'').trim());
     map[k].semSet.add((r[C.sem]||'').trim());
     map[k].rows.push(r);
@@ -389,24 +409,30 @@ function aggregateBy(rows,groupKey){
     requiredSems=new Set(rows.map(r=>(r[C.sem]||'').trim()).filter(Boolean));
   }
   return Object.values(map).filter(g=>{
-    // Regla 4 semanas en modo mensual
     if(requiredSems&&requiredSems.size){
       for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
     }
     return true;
   }).map(g=>{
+    const fb=coordAvg[g.coord]||{}; // fallback promedio del coordinador
+    function avgWithFallback(col){
+      const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);
+      if(vs.length) return vs.reduce((a,b)=>a+b,0)/vs.length;
+      // Sin dato propio → usar promedio del coordinador
+      return fb[col]!==undefined?fb[col]:null;
+    }
     function avg(col){const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;}
-    const row={
+    // Fallback solo para operadores; para jefe/coord usar avg normal
+    const useFb=groupKey===C.ope;
+    const calc=useFb?avgWithFallback:avg;
+    return{
       key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,n:g.opeSet.size,
-      ini:avg(C.ini),lle:avg(C.lle),cal:avg(C.cal),
-      seg:avg(C.seg),pseg:avg(C.pseg),
-      ren:avg(C.ren),sren:avg(C.sren),
-      tot:avg(C.tot)
+      ini:calc(C.ini),lle:calc(C.lle),cal:calc(C.cal),
+      seg:calc(C.seg),pseg:calc(C.pseg),
+      ren:calc(C.ren),sren:calc(C.sren),
+      tot:calc(C.tot)
     };
-    // Excluir si falta cualquier score principal
-    if(REQUIRED_SCORES.some(k=>row[k]===null)) return null;
-    return row;
-  }).filter(Boolean);
+  });
 }
 function sortRows(rows){
   const col=SORT.ope.col||'tot';
