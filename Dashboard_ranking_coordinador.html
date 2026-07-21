@@ -453,13 +453,16 @@ function aggregateBy(rows,groupKey){
       // Sin dato propio → usar promedio general de todos los coordinadores
       return globalAvg[col]!==null?globalAvg[col]:null;
     }
+    const ini=avgWithFallback(C.ini),lle=avgWithFallback(C.lle),cal=avgWithFallback(C.cal);
+    const seg=avgWithFallback(C.seg),pseg=avgWithFallback(C.pseg);
+    const renc=avgWithFallback(C.renc),renp=avgWithFallback(C.renp),sren=avgWithFallback(C.sren);
+    const sub=avgWithFallback(C.sub),kmv=avgWithFallback(C.kmv),hd=avgWithFallback(C.hd);
+    // TOTAL recalculado como promedio de los 5 scores principales (ya con fallbacks aplicados)
+    const totVals=[ini,lle,cal,seg,sren].filter(v=>v!==null);
+    const tot=totVals.length===5?totVals.reduce((a,b)=>a+b,0)/5:null;
     return{
       key:g.key,udn:g.udn,plt:g.plt,
-      ini:avgWithFallback(C.ini),lle:avgWithFallback(C.lle),cal:avgWithFallback(C.cal),
-      seg:avgWithFallback(C.seg),pseg:avgWithFallback(C.pseg),
-      renc:avgWithFallback(C.renc),renp:avgWithFallback(C.renp),sren:avgWithFallback(C.sren),
-      sub:avgWithFallback(C.sub),kmv:avgWithFallback(C.kmv),hd:avgWithFallback(C.hd),
-      tot:avgWithFallback(C.tot)
+      ini,lle,cal,seg,pseg,renc,renp,sren,sub,kmv,hd,tot
     };
   });
 }
