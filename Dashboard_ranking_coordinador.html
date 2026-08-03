@@ -64,6 +64,9 @@ nav a:hover{background:#374151;}
 .medal{font-size:1.05rem;}
 .rank-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.6rem;font-weight:700;background:#e5e7eb;color:#374151;}
 .sc-null{color:var(--muted);}
+.btn-entrega{border:1.5px solid var(--border);background:var(--bg);color:var(--muted);border-radius:6px;padding:.2rem .5rem;font-size:.65rem;font-family:"Inter",sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-entrega:hover{border-color:#f59e0b;color:#f59e0b;}
+.btn-entrega.entregado{border-color:#22c55e;background:#f0fff4;color:#16a34a;font-weight:700;}
 .sa{font-size:.6rem;margin-left:.2rem;color:rgba(255,255,255,.35);}
 th.sorted .sa{color:#84cc16;}
 .ld-overlay{position:fixed;inset:0;background:rgba(240,242,247,.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;transition:opacity .4s;}
@@ -171,7 +174,8 @@ th.sorted .sa{color:#84cc16;}
         <th class="r">KMV</th>
         <th class="r">HD</th>
         <th class="r col-tot sortable" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
-      </tr></thead><tbody id="bodyCoord"><tr><td colspan="16" class="tbl-empty">Cargando…</td></tr></tbody></table>
+        <th style="text-align:center;min-width:90px">Entrega</th>
+      </tr></thead><tbody id="bodyCoord"><tr><td colspan="17" class="tbl-empty">Cargando…</td></tr></tbody></table>
     </div>
   </div>
 </div>
@@ -485,6 +489,30 @@ function onSort(th){
   else{SORT.coord.col=col;SORT.coord.dir='desc';}
   renderTable();
 }
+// ── ENTREGA STATE ──
+function entregaKey(coordKey){
+  const sem=document.getElementById('f-sem').value;
+  const mes=document.getElementById('f-mes').value;
+  const periodo=VIEW_MODE==='mensual'?('mes:'+mes):('sem:'+sem);
+  return 'entrega::'+periodo+'::'+coordKey;
+}
+function isEntregado(coordKey){
+  try{return localStorage.getItem(entregaKey(coordKey))==='1';}catch(e){return false;}
+}
+function toggleEntrega(coordKey,btn){
+  const key=entregaKey(coordKey);
+  try{
+    if(localStorage.getItem(key)==='1'){
+      localStorage.removeItem(key);
+      btn.textContent='Pendiente';
+      btn.classList.remove('entregado');
+    } else {
+      localStorage.setItem(key,'1');
+      btn.textContent='✅ Entregado';
+      btn.classList.add('entregado');
+    }
+  }catch(e){}
+}
 function render(){
   const f=getFiltered();
   const rC=aggregateBy(f,C.coord);
@@ -513,7 +541,7 @@ function renderTable(rowsInput){
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT.coord.col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT.coord.dir==='asc'?'↑':'↓';}
   document.getElementById('cntCoord').textContent=rows.length+' coordinadores';
-  if(!rows.length){body.innerHTML=`<tr><td colspan="16" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="17" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
     <td style="font-weight:600">${r.key||'–'}</td>
@@ -531,13 +559,14 @@ function renderTable(rowsInput){
     <td class="r">${scCell(r.kmv)}</td>
     <td class="r">${scCell(r.hd)}</td>
     <td class="r col-tot">${totCell(r.tot)}</td>
+    <td style="text-align:center"><button class="btn-entrega ${isEntregado(r.key)?'entregado':''}" onclick="toggleEntrega('${r.key.replace(/'/g,"\\'")}',this)">${isEntregado(r.key)?'✅ Entregado':'Pendiente'}</button></td>
   </tr>`).join('');
 }
 function exportTable(){
   const rows=sortRows(aggregateBy(getFiltered(),C.coord));
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const hdrs=['#','Coordinador','Planta','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rend. Camión','Rend. Camioneta','Score Rendimiento','Subtotal','KMV','HD','TOTAL'];
-  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.renc),fmt(r.renp),fmt(r.sren),fmt(r.sub),fmt(r.kmv),fmt(r.hd),fmt(r.tot)]);
+  const hdrs=['#','Coordinador','Planta','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rend. Camión','Rend. Camioneta','Score Rendimiento','Subtotal','KMV','HD','TOTAL','Entrega'];
+  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.renc),fmt(r.renp),fmt(r.sren),fmt(r.sub),fmt(r.kmv),fmt(r.hd),fmt(r.tot),isEntregado(r.key)?'Entregado':'Pendiente']);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   const sheetName=VIEW_MODE==='mensual'?'Ranking Mensual Coordinadores':'Ranking Coordinadores';
