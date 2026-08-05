@@ -152,7 +152,7 @@ th.sorted .sa{color:#84cc16;}
     <div class="kpi" style="--kc:#FBAE40">
       <div class="kpi-icon">📋</div>
       <div class="kpi-val" id="kpiEntregaV">0</div>
-      <div class="kpi-lbl">Juntas con operadores realizadas</div>
+      <div class="kpi-lbl">Reconocimientos Entregados</div>
       <div class="kpi-sub" id="kpiEntregaSub">– / – coordinadores</div>
       <div class="kpi-udn" id="kpiEntregaPer"></div>
     </div>
@@ -542,7 +542,8 @@ function countEntregados(total){
       if(k&&k.startsWith(prefix)&&localStorage.getItem(k)==='1') count++;
     }
   }catch(e){}
-  document.getElementById('kpiEntregaV').textContent=count;
+  const pct=total>0?((count/total)*100).toFixed(1)+'%':'0%';
+  document.getElementById('kpiEntregaV').textContent=pct;
   document.getElementById('kpiEntregaSub').textContent=count+' / '+total+' coordinadores';
   const periodoLabel=VIEW_MODE==='mensual'?(mes?'Mes: '+mes:'Todos los meses'):(sem?'Semana '+sem:'Todas las semanas');
   document.getElementById('kpiEntregaPer').textContent=periodoLabel;
