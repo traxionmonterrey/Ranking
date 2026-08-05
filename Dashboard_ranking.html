@@ -190,7 +190,7 @@ function pct(v){
 function sColor(v){if(v===null) return '#9ca3af';if(v>=90) return '#22c55e';if(v>=75) return '#f59e0b';return '#ef4444';}
 function scCell(v){if(v===null) return '<span class="sc-null">–</span>';return `<span style="font-weight:700;font-size:.73rem;color:${sColor(v)}">${v.toFixed(2)}%</span>`;}
 function numCell(v){if(v===null) return '<span class="sc-null">–</span>';return `<span style="font-weight:700;font-size:.73rem;color:var(--text)">${v.toFixed(2)}</span>`;}
-function totCell(v){if(v===null) return '<span class="sc-null">–</span>';return `<span style="font-weight:800;font-size:.8rem;color:${sColor(v)}">${v.toFixed(2)}%</span>`;}
+function totCell(v){if(v===null) return '<span class="sc-null">–</span>';return `<span style="font-weight:800;font-size:.8rem;color:${sColor(v)}">${v.toFixed(3)}%</span>`;}
 function rankBadge(i){if(i===0) return '<span class="medal">🥇</span>';if(i===1) return '<span class="medal">🥈</span>';if(i===2) return '<span class="medal">🥉</span>';return `<span class="rank-n">${i+1}</span>`;}
 function uniq(arr){return[...new Set(arr.filter(Boolean))].sort();}
 function autoMes(){
@@ -284,13 +284,8 @@ function resetFilters(){
   if(VIEW_MODE==='semanal') autoLatestWeek(); else autoMes();
   cascadeSelects();render();
 }
-
 function aggregateBy(rows,groupKey){
   const SCORE_COLS=[C.ini,C.lle,C.cal,C.seg,C.pseg,C.ren,C.sren];
-  // Scores que componen el TOTAL recalculado
-  const TOT_KEYS=[C.ini,C.lle,C.cal,C.seg,C.sren];
-
-  // Fallback por coordinador (solo para operadores)
   const coordAvg={};
   if(groupKey===C.ope){
     const coordMap={};
@@ -299,13 +294,11 @@ function aggregateBy(rows,groupKey){
       coordAvg[coord]={};
       SCORE_COLS.forEach(col=>{
         let vs=rws.map(r=>pct(r[col])).filter(v=>v!==null);
-        // Nivel 2: si no hay dato en período, buscar en DATA completo para ese coordinador
         if(!vs.length) vs=DATA.filter(r=>(r[C.coord]||'').trim()===coord).map(r=>pct(r[col])).filter(v=>v!==null);
         coordAvg[coord][col]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;
       });
     });
   }
-
   const map={};
   rows.forEach(r=>{
     const k=(r[groupKey]||'').trim();if(!k) return;
@@ -315,37 +308,29 @@ function aggregateBy(rows,groupKey){
     map[k].semSet.add((r[C.sem]||'').trim());
     map[k].rows.push(r);
   });
-
   let requiredSems=null;
   if(VIEW_MODE==='mensual') requiredSems=new Set(rows.map(r=>(r[C.sem]||'').trim()).filter(Boolean));
-
   return Object.values(map).filter(g=>{
     if(requiredSems&&requiredSems.size){for(const s of requiredSems){if(!g.semSet.has(s)) return false;}}
     return true;
   }).map(g=>{
     const fb=coordAvg[g.coord]||{};
     const useFb=groupKey===C.ope;
-
     function calc(col){
       const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);
       if(vs.length) return vs.reduce((a,b)=>a+b,0)/vs.length;
-      // Fallback del coordinador solo para operadores
       if(useFb&&fb[col]!=null) return fb[col];
       return null;
     }
-
     const ini=calc(C.ini),lle=calc(C.lle),cal=calc(C.cal);
     const seg=calc(C.seg),pseg=calc(C.pseg);
     const ren=calc(C.ren),sren=calc(C.sren);
-
-    // TOTAL recalculado como promedio de los 5 scores principales (ya con fallbacks aplicados)
+    // TOTAL: promedio de 5 scores principales usando % Score Seg (pseg, no seg raw)
     const totVals=[ini,lle,cal,pseg,sren].filter(v=>v!==null);
     const tot=totVals.length===5?totVals.reduce((a,b)=>a+b,0)/5:null;
-
     return{key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,coord:g.coord,n:g.opeSet.size,ini,lle,cal,seg,pseg,ren,sren,tot};
   });
 }
-
 function sortRows(rows){
   const col=SORT.ope.col||'tot',dir=SORT.ope.dir||'desc';
   return[...rows].sort((a,b)=>{
@@ -369,7 +354,7 @@ function render(){
 function renderKPIs(rO,rJ){
   const top=arr=>[...arr].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot)[0]||null;
   const tJ=top(rJ),tO=top(rO);
-  document.getElementById('kpiJefV').textContent=tJ?tJ.tot.toFixed(2)+'%':'–';
+  document.getElementById('kpiJefV').textContent=tJ?tJ.tot.toFixed(3)+'%':'–';
   document.getElementById('kpiJefN').textContent=tJ?tJ.key:'–';
   document.getElementById('kpiJefU').textContent=tJ&&tJ.udn?tJ.udn:'';
   const sem=document.getElementById('f-sem').value,udn=document.getElementById('f-udn').value;
@@ -383,10 +368,10 @@ function renderKPIs(rO,rJ){
   });
   const coordRows=aggregateBy(coordFilt,C.coord);
   const tC=top(coordRows);
-  document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(2)+'%':'–';
+  document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(3)+'%':'–';
   document.getElementById('kpiCoordN').textContent=tC?tC.key:'–';
   document.getElementById('kpiCoordU').textContent=tC&&tC.udn?tC.udn:'';
-  document.getElementById('kpiOpeV').textContent=tO?tO.tot.toFixed(2)+'%':'–';
+  document.getElementById('kpiOpeV').textContent=tO?tO.tot.toFixed(3)+'%':'–';
   document.getElementById('kpiOpeN').textContent=tO?tO.key:'–';
   document.getElementById('kpiOpeU').textContent=tO&&tO.udn?tO.udn:'';
 }
@@ -419,9 +404,10 @@ function renderTable(rowsInput){
 }
 function exportTable(){
   const rows=sortRows(aggregateBy(getFiltered(),C.ope));
-  const fmt=v=>v===null?'':+v.toFixed(2);
+  const fmt3=v=>v===null?'':+v.toFixed(3);
+  const fmt2=v=>v===null?'':+v.toFixed(2);
   const hdrs=['#','Operador','Nómina','Planta','Coordinador','Jefe','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rendimiento','Score Rendimiento','TOTAL'];
-  const data=rows.map((r,i)=>[i+1,r.key,r.nom,r.plt,r.coord,r.jef,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.ren),fmt(r.sren),fmt(r.tot)]);
+  const data=rows.map((r,i)=>[i+1,r.key,r.nom,r.plt,r.coord,r.jef,r.udn,fmt2(r.ini),fmt2(r.lle),fmt2(r.cal),fmt2(r.seg),fmt2(r.pseg),fmt2(r.ren),fmt2(r.sren),fmt3(r.tot)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);const wb=XLSX.utils.book_new();
   const sheetName=VIEW_MODE==='mensual'?'Ranking Mensual Operadores':'Ranking Operadores';
   XLSX.utils.book_append_sheet(wb,ws,sheetName);
