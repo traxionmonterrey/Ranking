@@ -253,13 +253,17 @@ function scCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
   return `<span style="font-weight:700;font-size:.73rem;color:${sColor(v)}">${v.toFixed(2)}%</span>`;
 }
+function subCell(v){
+  if(v===null) return '<span class="sc-null">–</span>';
+  return `<span style="font-weight:700;font-size:.73rem;color:${sColor(v)}">${v.toFixed(3)}%</span>`;
+}
 function numCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
   return `<span style="font-weight:700;font-size:.73rem;color:var(--text)">${v.toFixed(2)}</span>`;
 }
 function totCell(v){
   if(v===null) return '<span class="sc-null">–</span>';
-  return `<span style="font-weight:800;font-size:.8rem;color:${sColor(v)}">${v.toFixed(2)}%</span>`;
+  return `<span style="font-weight:800;font-size:.8rem;color:${sColor(v)}">${v.toFixed(3)}%</span>`;
 }
 function rankBadge(i){
   if(i===0) return '<span class="medal">🥇</span>';
@@ -350,7 +354,6 @@ function cascadeSelects(){
       return true;
     });
   }
-  // UDN y Planta son filtros "padre" — no se restringen por Mes/Semana
   fillSel('f-udn',uniq(DATA.filter(r=>!plt||r[C.plt]===plt).map(r=>r[C.udn])),'Todas');
   fillSel('f-plt',uniq(DATA.filter(r=>!udn||r[C.udn]===udn).map(r=>r[C.plt]||'').filter(Boolean)),'Todas');
   fillSel('f-mes',uniq(sub('mes').map(r=>r[C.mes])),'Todos');
@@ -420,14 +423,11 @@ function mergeGroupsByNameOverlap(groups){
   });
 }
 function aggregateBy(rows,groupKey){
-  // Precalcular promedio general como fallback
-  // Nivel 1: promedio del período filtrado (rows)
-  // Nivel 2: promedio de todo DATA si el filtrado no tiene dato
-  const SCORE_COLS=[C.ini,C.lle,C.cal,C.seg,C.pseg,C.renc,C.renp,C.sren,C.sub,C.kmv,C.hd,C.tot];
+  const SCORE_COLS=[C.ini,C.lle,C.cal,C.seg,C.pseg,C.renc,C.renp,C.sren,C.kmv,C.hd];
   const globalAvg={};
   SCORE_COLS.forEach(col=>{
     let vs=rows.map(r=>pct(r[col])).filter(v=>v!==null);
-    if(!vs.length) vs=DATA.map(r=>pct(r[col])).filter(v=>v!==null); // fallback a todo DATA
+    if(!vs.length) vs=DATA.map(r=>pct(r[col])).filter(v=>v!==null);
     globalAvg[col]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;
   });
 
@@ -435,7 +435,7 @@ function aggregateBy(rows,groupKey){
   rows.forEach(r=>{
     const raw=(r[groupKey]||'').trim();if(!raw||raw.toLowerCase()==='pendiente') return;
     const cleaned=cleanName(raw);
-    if(!map[cleaned]) map[cleaned]={key:raw,cleaned:cleaned,jef:r[C.jef]||'',udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
+    if(!map[cleaned]) map[cleaned]={key:raw,cleaned:cleaned,udn:r[C.udn]||'',plt:r[C.plt]||'',opeSet:new Set(),semSet:new Set(),rows:[]};
     if(raw.length>map[cleaned].key.length) map[cleaned].key=raw;
     map[cleaned].opeSet.add((r[C.ope]||'').trim());
     map[cleaned].semSet.add((r[C.sem]||'').trim());
@@ -454,20 +454,19 @@ function aggregateBy(rows,groupKey){
     function avgWithFallback(col){
       const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);
       if(vs.length) return vs.reduce((a,b)=>a+b,0)/vs.length;
-      // Sin dato propio → usar promedio general de todos los coordinadores
       return globalAvg[col]!==null?globalAvg[col]:null;
     }
     const ini=avgWithFallback(C.ini),lle=avgWithFallback(C.lle),cal=avgWithFallback(C.cal);
     const seg=avgWithFallback(C.seg),pseg=avgWithFallback(C.pseg);
     const renc=avgWithFallback(C.renc),renp=avgWithFallback(C.renp),sren=avgWithFallback(C.sren);
-    const sub=avgWithFallback(C.sub),kmv=avgWithFallback(C.kmv),hd=avgWithFallback(C.hd);
-    // TOTAL recalculado como promedio de los 5 scores principales (ya con fallbacks aplicados)
-    const totVals=[ini,lle,cal,seg,sren].filter(v=>v!==null);
-    const tot=totVals.length===5?totVals.reduce((a,b)=>a+b,0)/5:null;
-    return{
-      key:g.key,udn:g.udn,plt:g.plt,
-      ini,lle,cal,seg,pseg,renc,renp,sren,sub,kmv,hd,tot
-    };
+    const kmv=avgWithFallback(C.kmv),hd=avgWithFallback(C.hd);
+    // SUBTOTAL: promedio de 5 scores principales usando % Score Seg (no raw)
+    const subVals=[ini,lle,cal,pseg,sren].filter(v=>v!==null);
+    const sub=subVals.length===5?subVals.reduce((a,b)=>a+b,0)/5:null;
+    // TOTAL: promedio de 7 scores (5 del subtotal + KMV + HD)
+    const totVals=[ini,lle,cal,pseg,sren,kmv,hd].filter(v=>v!==null);
+    const tot=totVals.length===7?totVals.reduce((a,b)=>a+b,0)/7:null;
+    return{key:g.key,udn:g.udn,plt:g.plt,ini,lle,cal,seg,pseg,renc,renp,sren,sub,kmv,hd,tot};
   });
 }
 function sortRows(rows){
@@ -489,7 +488,6 @@ function onSort(th){
   else{SORT.coord.col=col;SORT.coord.dir='desc';}
   renderTable();
 }
-// ── ENTREGA STATE ──
 function entregaKey(coordKey){
   const sem=document.getElementById('f-sem').value;
   const mes=document.getElementById('f-mes').value;
@@ -524,10 +522,10 @@ function renderKPIs(rC){
   const sorted=[...rC].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
   const tC=sorted[0]||null;
   const worst=sorted[sorted.length-1]||null;
-  document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(2)+'%':'–';
+  document.getElementById('kpiCoordV').textContent=tC?tC.tot.toFixed(3)+'%':'–';
   document.getElementById('kpiCoordN').textContent=tC?tC.key:'–';
   document.getElementById('kpiCoordU').textContent=tC&&tC.udn?tC.udn:'';
-  document.getElementById('kpiWorstV').textContent=worst?worst.tot.toFixed(2)+'%':'–';
+  document.getElementById('kpiWorstV').textContent=worst?worst.tot.toFixed(3)+'%':'–';
   document.getElementById('kpiWorstN').textContent=worst?worst.key:'–';
   document.getElementById('kpiWorstU').textContent=worst&&worst.udn?worst.udn:'';
 }
@@ -555,7 +553,7 @@ function renderTable(rowsInput){
     <td class="r">${numCell(r.renc)}</td>
     <td class="r">${numCell(r.renp)}</td>
     <td class="r">${scCell(r.sren)}</td>
-    <td class="r col-sub">${scCell(r.sub)}</td>
+    <td class="r col-sub">${subCell(r.sub)}</td>
     <td class="r">${scCell(r.kmv)}</td>
     <td class="r">${scCell(r.hd)}</td>
     <td class="r col-tot">${totCell(r.tot)}</td>
@@ -564,9 +562,10 @@ function renderTable(rowsInput){
 }
 function exportTable(){
   const rows=sortRows(aggregateBy(getFiltered(),C.coord));
-  const fmt=v=>v===null?'':+v.toFixed(2);
+  const fmt=v=>v===null?'':+v.toFixed(3);
+  const fmt2=v=>v===null?'':+v.toFixed(2);
   const hdrs=['#','Coordinador','Planta','UDN','% NS Inicio','% NS Llegada','Calidad Ruta','Score Seguridad','% Score Seguridad','Rend. Camión','Rend. Camioneta','Score Rendimiento','Subtotal','KMV','HD','TOTAL','Entrega'];
-  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt(r.ini),fmt(r.lle),fmt(r.cal),fmt(r.seg),fmt(r.pseg),fmt(r.renc),fmt(r.renp),fmt(r.sren),fmt(r.sub),fmt(r.kmv),fmt(r.hd),fmt(r.tot),isEntregado(r.key)?'Entregado':'Pendiente']);
+  const data=rows.map((r,i)=>[i+1,r.key,r.plt,r.udn,fmt2(r.ini),fmt2(r.lle),fmt2(r.cal),fmt2(r.seg),fmt2(r.pseg),fmt2(r.renc),fmt2(r.renp),fmt2(r.sren),fmt(r.sub),fmt2(r.kmv),fmt2(r.hd),fmt(r.tot),isEntregado(r.key)?'Entregado':'Pendiente']);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   const sheetName=VIEW_MODE==='mensual'?'Ranking Mensual Coordinadores':'Ranking Coordinadores';
