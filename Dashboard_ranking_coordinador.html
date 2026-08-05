@@ -516,6 +516,10 @@ function toggleEntrega(coordKey,btn){
       btn.textContent='✅ Entregado';
       btn.classList.add('entregado');
     }
+    // Actualizar KPI en tiempo real sin re-renderizar toda la tabla
+    const totalMatch=document.getElementById('kpiEntregaSub').textContent.match(/\/ (\d+)/);
+    const total=totalMatch?parseInt(totalMatch[1]):0;
+    countEntregados(total);
   }catch(e){}
 }
 function render(){
