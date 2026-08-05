@@ -339,7 +339,7 @@ function aggregateBy(rows,groupKey){
     const ren=calc(C.ren),sren=calc(C.sren);
 
     // TOTAL recalculado como promedio de los 5 scores principales (ya con fallbacks aplicados)
-    const totVals=[ini,lle,cal,seg,sren].filter(v=>v!==null);
+    const totVals=[ini,lle,cal,pseg,sren].filter(v=>v!==null);
     const tot=totVals.length===5?totVals.reduce((a,b)=>a+b,0)/5:null;
 
     return{key:g.key,jef:g.jef,udn:g.udn,nom:g.nom,plt:g.plt,coord:g.coord,n:g.opeSet.size,ini,lle,cal,seg,pseg,ren,sren,tot};
