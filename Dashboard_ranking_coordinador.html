@@ -134,7 +134,7 @@ th.sorted .sa{color:#84cc16;}
     <div><div class="sem-label">Período seleccionado</div><div class="sem-val" id="semVal">–</div></div>
     <div class="sem-sub" id="semSub"></div>
   </div>
-  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="kpi" style="--kc:#7ed321">
       <div class="kpi-icon">🥇</div>
       <div class="kpi-val" id="kpiCoordV">–</div>
@@ -148,6 +148,13 @@ th.sorted .sa{color:#84cc16;}
       <div class="kpi-lbl">Peor Coordinador</div>
       <div class="kpi-sub" id="kpiWorstN">–</div>
       <div class="kpi-udn" id="kpiWorstU"></div>
+    </div>
+    <div class="kpi" style="--kc:#FBAE40">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-val" id="kpiEntregaV">0</div>
+      <div class="kpi-lbl">Reconocimientos Entregados</div>
+      <div class="kpi-sub" id="kpiEntregaSub">– / – coordinadores</div>
+      <div class="kpi-udn" id="kpiEntregaPer"></div>
     </div>
   </div>
 
@@ -518,6 +525,24 @@ function render(){
   renderKPIs(rC);
   renderTable(rC);
 }
+function countEntregados(total){
+  // Contar cuántos coordinadores tienen entrega marcada en el período actual
+  const sem=document.getElementById('f-sem').value;
+  const mes=document.getElementById('f-mes').value;
+  const periodo=VIEW_MODE==='mensual'?('mes:'+mes):('sem:'+sem);
+  const prefix='entrega::'+periodo+'::';
+  let count=0;
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith(prefix)&&localStorage.getItem(k)==='1') count++;
+    }
+  }catch(e){}
+  document.getElementById('kpiEntregaV').textContent=count;
+  document.getElementById('kpiEntregaSub').textContent=count+' / '+total+' coordinadores';
+  const periodoLabel=VIEW_MODE==='mensual'?(mes?'Mes: '+mes:'Todos los meses'):(sem?'Semana '+sem:'Todas las semanas');
+  document.getElementById('kpiEntregaPer').textContent=periodoLabel;
+}
 function renderKPIs(rC){
   const sorted=[...rC].filter(r=>r.tot!==null).sort((a,b)=>b.tot-a.tot);
   const tC=sorted[0]||null;
@@ -528,6 +553,7 @@ function renderKPIs(rC){
   document.getElementById('kpiWorstV').textContent=worst?worst.tot.toFixed(3)+'%':'–';
   document.getElementById('kpiWorstN').textContent=worst?worst.key:'–';
   document.getElementById('kpiWorstU').textContent=worst&&worst.udn?worst.udn:'';
+  countEntregados(rC.length);
 }
 function renderTable(rowsInput){
   const body=document.getElementById('bodyCoord');
