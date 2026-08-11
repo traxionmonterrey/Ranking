@@ -176,64 +176,6 @@ th.sorted .sa{color:#84cc16;}
     <div class="sem-sub" id="semSub"></div>
   </div>
 
-  <!-- KPIs -->
-  <div class="kpi-grid">
-    <div class="kpi" style="--kc:#7ed321">
-      <div class="kpi-icon">⛽</div>
-      <div class="kpi-val" id="kpiRend">–</div>
-      <div class="kpi-lbl">Rendimiento Real</div>
-      <div class="kpi-sub">km / litro (flota filtrada)</div>
-    </div>
-    <div class="kpi" style="--kc:#FBAE40">
-      <div class="kpi-icon">🎯</div>
-      <div class="kpi-val" id="kpiAut">–</div>
-      <div class="kpi-lbl">Rendimiento Autorizado</div>
-      <div class="kpi-sub" id="kpiAutSub">Promedio autorizado</div>
-    </div>
-    <div class="kpi" style="--kc:#60a5fa">
-      <div class="kpi-icon">🚛</div>
-      <div class="kpi-val" id="kpiUnits">–</div>
-      <div class="kpi-lbl">Unidades</div>
-      <div class="kpi-sub" id="kpiUnitsSub">en el período</div>
-    </div>
-    <div class="kpi" style="--kc:#ef4444">
-      <div class="kpi-icon">⚠️</div>
-      <div class="kpi-val" id="kpiBajo">–</div>
-      <div class="kpi-lbl">Bajo Autorizado</div>
-      <div class="kpi-sub" id="kpiBajoSub">unidades por debajo</div>
-    </div>
-  </div>
-
-  <!-- Top/Bottom ranking + bar chart by coordinator -->
-  <div class="cards-row">
-    <!-- Bar chart coordinadores -->
-    <div class="card">
-      <div class="card-hdr">
-        <div><div class="ttl">📊 Rendimiento por Coordinador</div>
-        <div class="sub">km/L real vs autorizado</div></div>
-        <span class="badge" id="cntCoord">–</span>
-      </div>
-      <div class="bar-wrap" id="barCoord"></div>
-    </div>
-
-    <!-- Top/Bottom unidades -->
-    <div class="card">
-      <div class="card-hdr">
-        <div><div class="ttl">🏆 Top & Bottom Unidades</div>
-        <div class="sub">Mejores y peores 5 por rendimiento real</div></div>
-      </div>
-      <div class="tbl-wrap" style="max-height:340px">
-        <table class="data-table" id="tblTopBot">
-          <thead><tr>
-            <th>#</th><th>Eco</th><th>Coordinador</th>
-            <th class="r">km/L Real</th><th class="r">Autorizado</th><th class="r">Vs Auth</th>
-          </tr></thead>
-          <tbody id="bodyTopBot"><tr><td colspan="6" class="tbl-empty">Cargando…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
   <!-- Full unit table -->
   <div class="full-card">
     <div class="card-hdr">
@@ -340,9 +282,10 @@ function enrichData(){
     const lt=parseFloat((r['Litros']||'0').replace(',','.'))||0;
     const autStr=(r['Rendimiento Autorizado']||'').replace(',','.');
     const aut=parseFloat(autStr)||null;
+    const eco=(r['Eco']||'').trim();
     return{
       idVeh,
-      eco:(r['Eco']||idVeh).trim(),
+      eco:eco||idVeh,  // display: Eco si existe, si no IdVehiculo
       fecha:d,
       semana:d?getWeek(d):null,
       mes:d?getMesNombre(d):null,
@@ -514,28 +457,6 @@ function render(){
   updateBanner();
   const f=getFiltered();
   const units=aggregateUnits(f);
-  const coords=aggregateCoords(units);
-
-  // KPIs
-  const totalKm=units.reduce((s,u)=>s+u.totalKm,0);
-  const totalLt=units.reduce((s,u)=>s+u.totalLt,0);
-  const rendReal=totalLt>0?totalKm/totalLt:null;
-  const autAll=units.filter(u=>u.aut!==null);
-  const autProm=autAll.length?autAll.reduce((s,u)=>s+u.aut,0)/autAll.length:null;
-  const bajoAut=units.filter(u=>u.rend!==null&&u.aut!==null&&u.rend<u.aut).length;
-
-  document.getElementById('kpiRend').textContent=rendReal!==null?rendReal.toFixed(2)+' km/L':'–';
-  document.getElementById('kpiAut').textContent=autProm!==null?autProm.toFixed(2)+' km/L':'–';
-  document.getElementById('kpiUnits').textContent=units.length;
-  document.getElementById('kpiUnitsSub').textContent=`de ${units.length} unidades con cargas`;
-  document.getElementById('kpiBajo').textContent=bajoAut;
-  document.getElementById('kpiBajoSub').textContent=units.length?`${((bajoAut/units.length)*100).toFixed(0)}% de la flota`:'';
-
-  // Bar chart coordinadores
-  renderBarChart(coords);
-
-  // Top/Bottom
-  renderTopBot(units);
 
   // Full table
   renderUnitsTable(units);
