@@ -265,7 +265,7 @@ function getMesNombre(d){
 function buildAsigLookup(){
   const map={};
   DATA_ASIG.forEach(r=>{
-    const id=(r['ID VEH']||r['IdVehiculo']||'').trim();
+    const id=String(r['ID VEH']||r['IdVehiculo']||'').trim();
     if(id) map[id]=r;
   });
   return map;
@@ -276,11 +276,15 @@ function enrichData(){
   const asig=buildAsigLookup();
   return DATA_REND.map(r=>{
     const d=parseDate(r['Fecha de Carga']);
-    const idVeh=(r['IdVehiculo']||r['ID VEH']||'').trim();
+    const idVeh=String(r['IdVehiculo']||r['ID VEH']||'').trim();
     const a=asig[idVeh]||{};
-    const km=parseFloat((r['Kilómetros Recorridos']||'0').replace(',','.'))||0;
-    const lt=parseFloat((r['Litros']||'0').replace(',','.'))||0;
-    const autStr=(r['Rendimiento Autorizado']||'').replace(',','.');
+    // Try both possible column names for km and litros
+    const kmRaw=r['Kilómetros Recorridos']||r['Kilómetros']||r['Kilometros Recorridos']||r['Kilometros']||'0';
+    const ltRaw=r['Litros']||'0';
+    const autRaw=r['Rendimiento Autorizado']||r['Rendimiento Aut']||'';
+    const km=parseFloat(String(kmRaw).replace(',','.'))||0;
+    const lt=parseFloat(String(ltRaw).replace(',','.'))||0;
+    const autStr=String(autRaw).replace(',','.');
     const aut=parseFloat(autStr)||null;
     return{
       idVeh,
