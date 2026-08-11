@@ -503,7 +503,7 @@ function renderTopBot(units){
     `<tr><td colspan="6" style="background:#f0f2f7;font-size:.6rem;font-weight:700;color:var(--muted);padding:.2rem .55rem;letter-spacing:.05em">— BOTTOM 5 —</td></tr>`,
     ...bot5.map((u,i)=>`<tr>
       <td><span style="font-weight:700;color:#ef4444">▼${i+1}</span></td>
-      <td style="font-weight:600">${u.eco}</td>
+      <td style="font-weight:600">${u.idVeh}</td>
       <td style="color:var(--muted);font-size:.65rem">${u.coord||'–'}</td>
       <td class="r">${rendCell(u.rend,u.aut)}</td>
       <td class="r" style="color:var(--muted)">${u.aut!==null?u.aut.toFixed(2):'–'}</td>
@@ -526,7 +526,7 @@ function renderUnitsTable(units){
   document.getElementById('cntUnits').textContent=sorted.length+' unidades';
   if(!sorted.length){body.innerHTML='<tr><td colspan="11" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>';return;}
   body.innerHTML=sorted.map(u=>`<tr>
-    <td style="font-weight:600">${u.eco}</td>
+    <td style="font-weight:600">${u.idVeh}</td>
     <td style="color:var(--muted);font-size:.65rem">${u.planta||'–'}</td>
     <td style="font-size:.65rem">${u.coord||'–'}</td>
     <td style="color:var(--muted);font-size:.65rem">${u.udn||'–'}</td>
