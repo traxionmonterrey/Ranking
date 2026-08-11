@@ -169,7 +169,7 @@ function parseCSV(text){
   const hdrs=parseLine(lines[0]);
   function fuzzy(key,...p){if(hdrs.includes(C[key])) return;const f=hdrs.find(h=>p.some(x=>h.toLowerCase().includes(x)));if(f) C[key]=f;}
   fuzzy('seg','score seguridad');fuzzy('pseg','% score seguridad','% score seg');fuzzy('cal','calidad');
-  fuzzy('ren','rendimiento');fuzzy('sren','score rendimiento','score rend');
+  fuzzy('sren','score rendimiento','score rend');fuzzy('ren','rendimiento');
   fuzzy('ini','ns ini','inicio','% ns i');fuzzy('lle','ns lle','llegada','% ns l');
   fuzzy('udn','unidad','negocio');fuzzy('coord','coordinador');
   const rows=[];
