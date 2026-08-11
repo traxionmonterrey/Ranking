@@ -293,8 +293,11 @@ function aggregateBy(rows,groupKey){
     Object.entries(coordMap).forEach(([coord,rws])=>{
       coordAvg[coord]={};
       SCORE_COLS.forEach(col=>{
-        let vs=rws.map(r=>pct(r[col])).filter(v=>v!==null);
-        if(!vs.length) vs=DATA.filter(r=>(r[C.coord]||'').trim()===coord).map(r=>pct(r[col])).filter(v=>v!==null);
+        const parse=col===C.ren
+          ?r=>{ const n=parseFloat((r[col]||'').replace(',','.'));return isNaN(n)?null:n;}
+          :r=>pct(r[col]);
+        let vs=rws.map(parse).filter(v=>v!==null);
+        if(!vs.length) vs=DATA.filter(r=>(r[C.coord]||'').trim()===coord).map(parse).filter(v=>v!==null);
         coordAvg[coord][col]=vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;
       });
     });
@@ -316,15 +319,23 @@ function aggregateBy(rows,groupKey){
   }).map(g=>{
     const fb=coordAvg[g.coord]||{};
     const useFb=groupKey===C.ope;
+    // calc: usa pct() para scores de porcentaje
+    // raw: usa parseFloat directo para valores absolutos (km/L, etc.)
     function calc(col){
       const vs=g.rows.map(r=>pct(r[col])).filter(v=>v!==null);
       if(vs.length) return vs.reduce((a,b)=>a+b,0)/vs.length;
       if(useFb&&fb[col]!=null) return fb[col];
       return null;
     }
+    function calcRaw(col){
+      const vs=g.rows.map(r=>{const n=parseFloat((r[col]||'').replace(',','.'));return isNaN(n)?null:n;}).filter(v=>v!==null);
+      if(vs.length) return vs.reduce((a,b)=>a+b,0)/vs.length;
+      if(useFb&&fb[col]!=null) return fb[col];
+      return null;
+    }
     const ini=calc(C.ini),lle=calc(C.lle),cal=calc(C.cal);
     const seg=calc(C.seg),pseg=calc(C.pseg);
-    const ren=calc(C.ren),sren=calc(C.sren);
+    const ren=calcRaw(C.ren),sren=calc(C.sren);
     // TOTAL: promedio de 5 scores principales usando % Score Seg (pseg, no seg raw)
     const totVals=[ini,lle,cal,pseg,sren].filter(v=>v!==null);
     const tot=totVals.length===5?totVals.reduce((a,b)=>a+b,0)/5:null;
