@@ -189,7 +189,7 @@ th.sorted .sa{color:#84cc16;}
     <div class="tbl-wrap tbl-full">
       <table class="data-table" id="tblUnits">
         <thead><tr>
-          <th class="sortable" data-col="eco">Eco<span class="sa">↕</span></th>
+          <th class="sortable" data-col="idVeh">ID Vehículo<span class="sa">↕</span></th>
           <th>Planta</th><th>Coordinador</th><th>UDN</th>
           <th class="r">Km Total</th><th class="r">Litros</th>
           <th class="r">Cargas</th>
@@ -282,10 +282,8 @@ function enrichData(){
     const lt=parseFloat((r['Litros']||'0').replace(',','.'))||0;
     const autStr=(r['Rendimiento Autorizado']||'').replace(',','.');
     const aut=parseFloat(autStr)||null;
-    const eco=(r['Eco']||'').trim();
     return{
       idVeh,
-      eco:eco||idVeh,  // display: Eco si existe, si no IdVehiculo
       fecha:d,
       semana:d?getWeek(d):null,
       mes:d?getMesNombre(d):null,
@@ -370,8 +368,8 @@ function resetFilters(){
 function aggregateUnits(rows){
   const map={};
   rows.forEach(r=>{
-    const k=r.eco||r.idVeh;
-    if(!map[k]) map[k]={eco:k,coord:r.coord,planta:r.planta,udn:r.udn,
+    const k=r.idVeh;
+    if(!map[k]) map[k]={idVeh:k,coord:r.coord,planta:r.planta,udn:r.udn,
                          totalKm:0,totalLt:0,cargas:0,autVals:[],combs:new Set()};
     map[k].totalKm+=r.km;
     map[k].totalLt+=r.lt;
@@ -491,7 +489,7 @@ function renderTopBot(units){
   const rows=[
     ...top5.map((u,i)=>`<tr>
       <td><span style="font-weight:700;color:#22c55e">▲${i+1}</span></td>
-      <td style="font-weight:600">${u.eco}</td>
+      <td style="font-weight:600">${u.idVeh}</td>
       <td style="color:var(--muted);font-size:.65rem">${u.coord||'–'}</td>
       <td class="r">${rendCell(u.rend,u.aut)}</td>
       <td class="r" style="color:var(--muted)">${u.aut!==null?u.aut.toFixed(2):'–'}</td>
@@ -553,9 +551,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ── EXPORT ──
 function exportExcel(){
   const units=sortUnits(aggregateUnits(getFiltered()));
-  const hdrs=['Eco','Planta','Coordinador','UDN','Km Total','Litros','Cargas','km/L Real','Autorizado','Diferencia','Combustible'];
+  const hdrs=['ID Vehículo','Planta','Coordinador','UDN','Km Total','Litros','Cargas','km/L Real','Autorizado','Diferencia','Combustible'];
   const fmt=v=>v===null?'':+v.toFixed(2);
-  const data=units.map(u=>[u.eco,u.planta,u.coord,u.udn,
+  const data=units.map(u=>[u.idVeh,u.planta,u.coord,u.udn,
     +u.totalKm.toFixed(1),+u.totalLt.toFixed(1),u.cargas,
     fmt(u.rend),fmt(u.aut),fmt(u.diff),u.comb]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
