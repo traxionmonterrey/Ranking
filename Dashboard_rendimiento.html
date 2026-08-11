@@ -155,6 +155,8 @@ th.sorted .sa{color:#84cc16;}
     <select id="f-plt" onchange="onFilter()"><option value="">Todas</option></select></div>
   <div class="fg"><label>Coordinador</label>
     <select id="f-coord" onchange="onFilter()"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Tipo</label>
+    <select id="f-tipo" onchange="onFilter()"><option value="">Todos</option></select></div>
   <div class="fg"><label>Combustible</label>
     <select id="f-comb" onchange="onFilter()"><option value="">Todos</option></select></div>
   <div class="fg"><label>Mes</label>
@@ -196,6 +198,7 @@ th.sorted .sa{color:#84cc16;}
           <th class="r sortable col-rend" data-col="rend">km/L Real<span class="sa">↕</span></th>
           <th class="r">Autorizado</th>
           <th class="r sortable" data-col="diff">Diferencia<span class="sa">↕</span></th>
+          <th>Tipo</th>
           <th class="r">Combustible</th>
         </tr></thead>
         <tbody id="bodyUnits"><tr><td colspan="11" class="tbl-empty">Cargando…</td></tr></tbody>
@@ -292,6 +295,7 @@ function enrichData(){
       semana:d?getWeek(d):null,
       mes:d?getMesNombre(d):null,
       km,lt,aut,
+      tipo:(r['Tipo']||'').trim(),
       comb:(r['Tipo de Combustible']||'').trim(),
       nomOp:(r['Nomina Operador']||'').trim(),
       nombrOp:(r['Nombre op.']||'').trim(),
@@ -317,6 +321,7 @@ function buildSelects(){
   fillSel('f-udn',uniq(ENRICHED.map(r=>r.udn)),'Todas');
   fillSel('f-plt',uniq(ENRICHED.map(r=>r.planta)),'Todas');
   fillSel('f-coord',uniq(ENRICHED.map(r=>r.coord)),'Todos');
+  fillSel('f-tipo',uniq(ENRICHED.map(r=>r.tipo).filter(Boolean)),'Todos');
   fillSel('f-comb',uniq(ENRICHED.map(r=>r.comb)),'Todos');
   fillSel('f-mes',uniq(ENRICHED.map(r=>r.mes).filter(Boolean)),'Todos');
   fillSel('f-sem',uniq(ENRICHED.map(r=>r.semana).filter(v=>v!==null).map(String)),null);
@@ -353,6 +358,8 @@ function getFiltered(){
     if(udn&&r.udn!==udn) return false;
     if(plt&&r.planta!==plt) return false;
     if(coord&&r.coord!==coord) return false;
+    const tipo=v('f-tipo');
+    if(tipo&&r.tipo!==tipo) return false;
     if(comb&&r.comb!==comb) return false;
     if(mes&&r.mes!==mes) return false;
     if(VIEW==='semanal'&&sem&&String(r.semana)!==sem) return false;
@@ -375,7 +382,7 @@ function aggregateUnits(rows){
     const k=r.idVeh;
     if(!k||k==='undefined') return;
     if(!map[k]) map[k]={idVeh:k,coord:r.coord,planta:r.planta,udn:r.udn,
-                         totalKm:0,totalLt:0,cargas:0,autVals:[],combs:new Set()};
+                         tipo:r.tipo,totalKm:0,totalLt:0,cargas:0,autVals:[],combs:new Set()};
     map[k].totalKm+=r.km;
     map[k].totalLt+=r.lt;
     map[k].cargas++;
@@ -536,6 +543,7 @@ function renderUnitsTable(units){
     <td class="r">${rendCell(u.rend,u.aut)}</td>
     <td class="r" style="color:var(--muted)">${u.aut!==null?u.aut.toFixed(2):'–'}</td>
     <td class="r">${diffBadge(u.diff)}</td>
+    <td style="font-size:.65rem;color:var(--muted)">${u.tipo||'–'}</td>
     <td style="font-size:.65rem;color:var(--muted)">${u.comb||'–'}</td>
   </tr>`).join('');
 }
@@ -556,11 +564,11 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ── EXPORT ──
 function exportExcel(){
   const units=sortUnits(aggregateUnits(getFiltered()));
-  const hdrs=['ID Vehículo','Planta','Coordinador','UDN','Km Total','Litros','Cargas','km/L Real','Autorizado','Diferencia','Combustible'];
+  const hdrs=['ID Vehículo','Planta','Coordinador','UDN','Km Total','Litros','Cargas','km/L Real','Autorizado','Diferencia','Tipo','Combustible'];
   const fmt=v=>v===null?'':+v.toFixed(2);
   const data=units.map(u=>[u.idVeh,u.planta,u.coord,u.udn,
     +u.totalKm.toFixed(1),+u.totalLt.toFixed(1),u.cargas,
-    fmt(u.rend),fmt(u.aut),fmt(u.diff),u.comb]);
+    fmt(u.rend),fmt(u.aut),fmt(u.diff),u.tipo,u.comb]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Rendimiento');
