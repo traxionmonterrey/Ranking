@@ -295,7 +295,7 @@ function enrichData(){
       comb:(r['Tipo de Combustible']||'').trim(),
       nomOp:(r['Nomina Operador']||'').trim(),
       nombrOp:(r['Nombre op.']||'').trim(),
-      coord:(a['COORDINADOR']||'').trim(),
+      coord:(a['COORDINADOR']||'Sin asignar').trim(),
       jefe:(a['JEFE']||'').trim(),
       planta:(a['PLANTA']||'').trim(),
       udn:(a['Unidad de negocio']||'').trim(),
@@ -373,6 +373,7 @@ function aggregateUnits(rows){
   const map={};
   rows.forEach(r=>{
     const k=r.idVeh;
+    if(!k||k==='undefined') return;
     if(!map[k]) map[k]={idVeh:k,coord:r.coord,planta:r.planta,udn:r.udn,
                          totalKm:0,totalLt:0,cargas:0,autVals:[],combs:new Set()};
     map[k].totalKm+=r.km;
