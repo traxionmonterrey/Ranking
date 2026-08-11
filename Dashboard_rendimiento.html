@@ -585,7 +585,13 @@ async function loadData(){
     DATA_REND=parseCSV(t1);
     DATA_ASIG=parseCSV(t2);
     if(!DATA_REND.length) throw new Error('Hoja Rendimiento vacía');
+    // DEBUG: log first row keys of both sheets
+    if(DATA_REND.length) console.log('REND keys:', Object.keys(DATA_REND[0]));
+    if(DATA_ASIG.length) console.log('ASIG keys:', Object.keys(DATA_ASIG[0]));
+    if(DATA_REND.length) console.log('REND row0:', DATA_REND[0]);
+    if(DATA_ASIG.length) console.log('ASIG row0:', DATA_ASIG[0]);
     ENRICHED=enrichData();
+    console.log('ENRICHED sample:', ENRICHED.slice(0,3));
     ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
     buildSelects();
     autoLatest();
