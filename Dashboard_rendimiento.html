@@ -591,6 +591,12 @@ async function loadData(){
     if(DATA_ASIG.length) console.log('ASIG keys:', Object.keys(DATA_ASIG[0]));
     if(DATA_REND.length) console.log('REND row0:', DATA_REND[0]);
     if(DATA_ASIG.length) console.log('ASIG row0:', DATA_ASIG[0]);
+    // Test join manually
+    const testId=String(DATA_REND[0]['IdVehiculo']||'').trim();
+    const testAsig=DATA_ASIG.find(r=>String(r['ID VEH']||'').trim()===testId);
+    console.log('JOIN TEST - IdVehiculo:', JSON.stringify(testId), '| ID VEH match:', JSON.stringify(testAsig));
+    // Show first few ID VEH values from asig
+    console.log('ASIG ID VEH samples:', DATA_ASIG.slice(0,5).map(r=>JSON.stringify(r['ID VEH'])));
     ENRICHED=enrichData();
     console.log('ENRICHED sample:', ENRICHED.slice(0,3));
     ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
