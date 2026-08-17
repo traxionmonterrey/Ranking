@@ -181,8 +181,8 @@ th.sorted .sa{color:#84cc16;}
         <th class="r">KMV</th>
         <th class="r">HD</th>
         <th class="r col-tot sortable" data-col="tot" data-tbl="coord">TOTAL<span class="sa">↕</span></th>
-        <th style="text-align:center;min-width:90px">Entrega</th>
-      </tr></thead><tbody id="bodyCoord"><tr><td colspan="17" class="tbl-empty">Cargando…</td></tr></tbody></table>
+        <!-- <th style="text-align:center;min-width:90px">Entrega</th> -->
+      </tr></thead><tbody id="bodyCoord"><tr><td colspan="16" class="tbl-empty">Cargando…</td></tr></tbody></table>
     </div>
   </div>
 </div>
@@ -570,7 +570,7 @@ function renderTable(rowsInput){
   const sTh=tblEl.querySelector(`thead th[data-col="${SORT.coord.col}"]`);
   if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT.coord.dir==='asc'?'↑':'↓';}
   document.getElementById('cntCoord').textContent=rows.length+' coordinadores';
-  if(!rows.length){body.innerHTML=`<tr><td colspan="17" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="16" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
     <td style="font-weight:600">${r.key||'–'}</td>
@@ -588,7 +588,7 @@ function renderTable(rowsInput){
     <td class="r">${scCell(r.kmv)}</td>
     <td class="r">${scCell(r.hd)}</td>
     <td class="r col-tot">${totCell(r.tot)}</td>
-    <td style="text-align:center"><button class="btn-entrega ${isEntregado(r.key)?'entregado':''}" onclick="toggleEntrega('${r.key.replace(/'/g,"\\'")}',this)">${isEntregado(r.key)?'✅ Entregado':'Pendiente'}</button></td>
+    <!-- <td style="text-align:center"><button class="btn-entrega ${isEntregado(r.key)?'entregado':''}" onclick="toggleEntrega('${r.key.replace(/'/g,"\\'")}',this)">${isEntregado(r.key)?'✅ Entregado':'Pendiente'}</button></td> -->
   </tr>`).join('');
 }
 function exportTable(){
