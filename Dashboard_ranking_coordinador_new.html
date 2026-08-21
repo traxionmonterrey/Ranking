@@ -568,16 +568,20 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 // ── VIAJES DATA ──
-const VIAJES_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vS_8zx-kHCBNlE2xRkB59x40COUlt127YaxHD98w-anaoHwQgAEdPehJRb9z1GT-XT0KZOrhaK3zWm-/pub?output=csv&gid=1591245784';
-let DATA_VIAJES=null; // lazy load
-let VIAJES_LOADING=false;
+// Viajes: usa gviz/tq con query para solo descargar ns_inicio-ok=0 (~1500 filas vs 15122)
+const VIAJES_SHEET_ID='1CcnlP_YdEgvbW83zvf24NueqNCwab5PZI6O-caqXa-E';
+const VIAJES_GID='1591245784';
+let VIAJES_ALL=null;
 
-async function loadViajes(){
-  if(DATA_VIAJES!==null) return DATA_VIAJES;
-  if(VIAJES_LOADING) return null;
-  VIAJES_LOADING=true;
+async function loadViajesNsInicio(){
+  if(VIAJES_ALL!==null) return VIAJES_ALL;
+  const query=encodeURIComponent("SELECT * WHERE Z='0'");
+  const url=`https://docs.google.com/spreadsheets/d/${VIAJES_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${VIAJES_GID}&tq=${query}`;
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),15000);
   try{
-    const res=await fetch(VIAJES_URL);
+    const res=await fetch(url,{signal:controller.signal});
+    clearTimeout(timeout);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const text=await res.text();
     const lines=text.trim().split(/
@@ -592,11 +596,12 @@ async function loadViajes(){
       hdrs.forEach((h,idx)=>{obj[h]=cols[idx]!==undefined?cols[idx].trim():'';});
       rows.push(obj);
     }
-    DATA_VIAJES=rows;
+    VIAJES_ALL=rows;
     return rows;
   }catch(e){
-    VIAJES_LOADING=false;
-    DATA_VIAJES=null;
+    clearTimeout(timeout);
+    VIAJES_ALL=null;
+    if(e.name==='AbortError') throw new Error('Tiempo de espera agotado');
     throw e;
   }
 }
@@ -614,13 +619,12 @@ function showModal(title,sub){
 async function openNsInicio(coord,udn,score){
   showModal('Inicios Tarde — '+coord,'Score % NS Inicio: '+score+'% · '+udn);
   try{
-    const viajes=await loadViajes();
+    const viajes=await loadViajesNsInicio();
     if(!viajes) throw new Error('No se pudo cargar viajes_facturacion');
     // Filter: coordinador match + ns_inicio-ok = 0
     const late=viajes.filter(r=>{
       const c=(r['Coordinador']||r['Coordinador asignado']||'').trim().toUpperCase();
-      const ns=String(r['ns_inicio-ok']||r['ns_inicio']||'').trim();
-      return c===coord.toUpperCase() && ns==='0';
+      return c===coord.toUpperCase();
     });
     if(!late.length){
       document.getElementById('modalBody').innerHTML='<div class="modal-empty">✅ Sin inicios tarde para este coordinador en el período.</div>';
