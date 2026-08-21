@@ -585,7 +585,8 @@ async function loadViajesNsInicio(){
     if(!res.ok) throw new Error('HTTP '+res.status);
     const text=await res.text();
     const lines=text.trim().split(/
-?\n/);
+?
+/);
     if(lines.length<2) return[];
     const hdrs=parseLine(lines[0]).map(h=>h.trim());
     const rows=[];
