@@ -155,7 +155,7 @@ th.sorted .sa{color:#84cc16;}
     <div class="sem-sub" id="semSub"></div>
   </div>
 
-  <div class="kpi-grid">
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">
     <div class="kpi" style="--kc:#7ed321">
       <div class="kpi-icon">🥇</div>
       <div class="kpi-val" id="kpiBestV">–</div>
@@ -169,12 +169,6 @@ th.sorted .sa{color:#84cc16;}
       <div class="kpi-lbl">Peor Coordinador</div>
       <div class="kpi-sub" id="kpiWorstN">–</div>
       <div class="kpi-udn" id="kpiWorstU"></div>
-    </div>
-    <div class="kpi" style="--kc:#60a5fa">
-      <div class="kpi-icon">👥</div>
-      <div class="kpi-val" id="kpiCount">–</div>
-      <div class="kpi-lbl">Coordinadores</div>
-      <div class="kpi-sub" id="kpiCountSub">en el período</div>
     </div>
   </div>
 
@@ -465,8 +459,7 @@ function render(){
   document.getElementById('kpiWorstV').textContent=worst?worst.final.toFixed(3)+'%':'–';
   document.getElementById('kpiWorstN').textContent=worst?worst.coord:'–';
   document.getElementById('kpiWorstU').textContent=worst?worst.udn:'';
-  document.getElementById('kpiCount').textContent=rows.length;
-  document.getElementById('kpiCountSub').textContent='coordinadores en el período';
+
 
   // Table subtitle
   document.getElementById('tblSub').textContent=VIEW==='mensual'?'Promedio de todas las semanas del mes':'Período seleccionado';
