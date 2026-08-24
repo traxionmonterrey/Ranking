@@ -575,8 +575,7 @@ const SCORE_OPE_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFs
 let DATA_ASIG=null, DATA_SCORE_OPE=null;
 
 function parseCSVGeneric(text){
-  const lines=text.trim().split(/\r?\n?
-/);
+  const lines=text.replace(/^﻿/,'').trim().split(/\r\n|\r|\n/);
   if(lines.length<2) return{hdrs:[],rows:[]};
   const hdrs=parseLine(lines[0]).map(h=>h.trim());
   const rows=[];
