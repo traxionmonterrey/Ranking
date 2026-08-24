@@ -120,33 +120,6 @@ th.sorted .sa{color:#84cc16;}
   .tbl-scroll{max-height:none;}
   .data-table{min-width:1400px;}
 }
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
-               display:flex;align-items:center;justify-content:center;padding:1rem;}
-.modal-overlay.hidden{display:none;}
-.modal{background:var(--white);border-radius:14px;width:100%;max-width:1100px;
-       max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);}
-.modal-hdr{padding:.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.modal-hdr .m-ttl{font-size:.9rem;font-weight:700;}
-.modal-hdr .m-sub{font-size:.68rem;color:var(--muted);margin-top:.15rem;}
-.modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:.2rem .5rem;border-radius:6px;}
-.modal-close:hover{background:var(--bg);color:var(--red);}
-.modal-body{padding:.75rem 1rem;overflow-y:auto;flex:1;}
-.modal-loading{text-align:center;padding:2rem;color:var(--muted);font-size:.82rem;}
-.modal-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.82rem;}
-.m-table{width:100%;border-collapse:collapse;}
-.m-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.6rem;font-weight:600;
-                   letter-spacing:.03em;text-transform:uppercase;padding:.35rem .55rem;text-align:left;
-                   white-space:nowrap;position:sticky;top:0;}
-.m-table thead th.r{text-align:right;}
-.m-table tbody td{padding:.28rem .55rem;font-size:.71rem;border-bottom:1px solid var(--border);}
-.m-table tbody td.r{text-align:right;}
-.m-table tbody tr:hover{background:#f7f9ff;}
-.m-table tbody tr:last-child td{border-bottom:none;}
-.cell-link{color:var(--green);cursor:pointer;font-weight:700;text-decoration:underline;text-underline-offset:2px;}
-.cell-link:hover{color:#5aad1a;}
-.late-badge{display:inline-block;padding:.1rem .35rem;border-radius:4px;font-size:.62rem;font-weight:700;
-            background:#fee2e2;color:#dc2626;}
 </style>
 </head>
 <body>
@@ -509,7 +482,7 @@ function render(){
     <td style="font-weight:600;white-space:nowrap">${r.coord||'–'}</td>
     <td style="color:var(--muted);font-size:.65rem">${r.udn||'–'}</td>
     <td class="r ${dc}">${numCell(r.ops,0)}</td>
-    <td class="r" onclick="openNsInicio('${r.coord}','${r.udn}',${r.nsIni!==null?r.nsIni.toFixed(2):'0'})" style="cursor:pointer" title="Ver inicios tarde">${r.nsIni!==null?`<span class='cell-link'>${r.nsIni.toFixed(2)}%</span>`:'<span class="sc-null"></span>'}</td>
+        <td class="r">${scCell(r.nsIni)}</td>
     <td class="r">${scCell(r.nsLle)}</td>
     <td class="r">${scCell(r.cal)}</td>
     <td class="r ${dc}">${numCell(r.seg)}</td>
@@ -567,101 +540,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadData();
 });
 
-// ── VIAJES DATA ──
-// Viajes: usa gviz/tq con query para solo descargar ns_inicio-ok=0 (~1500 filas vs 15122)
-const VIAJES_SHEET_ID='1CcnlP_YdEgvbW83zvf24NueqNCwab5PZI6O-caqXa-E';
-const VIAJES_GID='1591245784';
-let VIAJES_ALL=null;
-
-async function loadViajesNsInicio(){
-  if(VIAJES_ALL!==null) return VIAJES_ALL;
-  const query=encodeURIComponent("SELECT * WHERE Z='0'");
-  const url=`https://docs.google.com/spreadsheets/d/${VIAJES_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${VIAJES_GID}&tq=${query}`;
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),15000);
-  try{
-    const res=await fetch(url,{signal:controller.signal});
-    clearTimeout(timeout);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const text=await res.text();
-    const lines=text.trim().split(/\r?\n/);
-    if(lines.length<2) return[];
-    const hdrs=parseLine(lines[0]).map(h=>h.trim());
-    const rows=[];
-    for(let i=1;i<lines.length;i++){
-      if(!lines[i].trim()) continue;
-      const cols=parseLine(lines[i]);
-      const obj={};
-      hdrs.forEach((h,idx)=>{obj[h]=cols[idx]!==undefined?cols[idx].trim():'';});
-      rows.push(obj);
-    }
-    VIAJES_ALL=rows;
-    return rows;
-  }catch(e){
-    clearTimeout(timeout);
-    VIAJES_ALL=null;
-    if(e.name==='AbortError') throw new Error('Tiempo de espera agotado');
-    throw e;
-  }
-}
-
-// ── MODAL ──
-function closeModal(e){if(e.target===document.getElementById('modalOverlay')) hideModal();}
-function hideModal(){document.getElementById('modalOverlay').classList.add('hidden');}
-function showModal(title,sub){
-  document.getElementById('modalTitle').textContent=title;
-  document.getElementById('modalSub').textContent=sub;
-  document.getElementById('modalBody').innerHTML='<div class="modal-loading">⏳ Cargando datos de viajes…</div>';
-  document.getElementById('modalOverlay').classList.remove('hidden');
-}
-
-async function openNsInicio(coord,udn,score){
-  showModal('Inicios Tarde — '+coord,'Score % NS Inicio: '+score+'% · '+udn);
-  try{
-    const viajes=await loadViajesNsInicio();
-    if(!viajes) throw new Error('No se pudo cargar viajes_facturacion');
-    // Filter: coordinador match + ns_inicio-ok = 0
-    const late=viajes.filter(r=>{
-      const c=(r['Coordinador']||r['Coordinador asignado']||'').trim().toUpperCase();
-      return c===coord.toUpperCase();
-    });
-    if(!late.length){
-      document.getElementById('modalBody').innerHTML='<div class="modal-empty">✅ Sin inicios tarde para este coordinador en el período.</div>';
-      return;
-    }
-    // Sort by start_date, then start_time
-    late.sort((a,b)=>{
-      const d=String(a.start_date||'').localeCompare(String(b.start_date||''));
-      if(d!==0) return d;
-      return String(a.start_time||'').localeCompare(String(b.start_time||''));
-    });
-    const html=`<div style="font-size:.68rem;color:var(--muted);margin-bottom:.5rem">${late.length} viaje(s) con inicio tarde</div>
-    <table class="m-table">
-      <thead><tr>
-        <th>Fecha</th><th>Grupo</th><th>Descripción</th><th>Unidad</th>
-        <th>Hora Inicio</th><th>ETA Inicio</th><th>Operador</th><th>Nómina</th>
-        <th class="r">Min. Tarde</th>
-      </tr></thead>
-      <tbody>${late.map(r=>{
-        const dif=parseFloat((r['dif_inicio']||'').replace(',','.'))||0;
-        return`<tr>
-          <td>${r['start_date']||'–'}</td>
-          <td>${r['group']||'–'}</td>
-          <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r['des']||''}">${r['des']||'–'}</td>
-          <td>${r['car']||'–'}</td>
-          <td>${r['start_time']||'–'}</td>
-          <td>${r['start_eta']||'–'}</td>
-          <td>${r['operador']||r['Operador']||'–'}</td>
-          <td>${r['no. de nomina']||r['worker_id']||'–'}</td>
-          <td class="r"><span class="late-badge">+${dif.toFixed(0)} min</span></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>`;
-    document.getElementById('modalBody').innerHTML=html;
-  }catch(e){
-    document.getElementById('modalBody').innerHTML='<div class="modal-empty">⚠️ Error al cargar: '+e.message+'</div>';
-  }
-}
 
 // ── LOAD ──
 async function loadData(){
@@ -694,20 +572,4 @@ async function loadData(){
   }
 }
 </script>
-<!-- DETAIL MODAL -->
-<div class="modal-overlay hidden" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal">
-    <div class="modal-hdr">
-      <div>
-        <div class="m-ttl" id="modalTitle">Detalle</div>
-        <div class="m-sub" id="modalSub"></div>
-      </div>
-      <button class="modal-close" onclick="hideModal()">✕</button>
-    </div>
-    <div class="modal-body" id="modalBody">
-      <div class="modal-loading">Cargando…</div>
-    </div>
-  </div>
-</div>
 </body>
-</html>
