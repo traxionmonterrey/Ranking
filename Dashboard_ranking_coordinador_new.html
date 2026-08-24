@@ -122,24 +122,41 @@ th.sorted .sa{color:#84cc16;}
 .modal{background:var(--white);border-radius:14px;width:100%;max-width:1200px;
        max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .modal-hdr{padding:.9rem 1.2rem;border-bottom:1px solid var(--border);
-           display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.modal-hdr .m-ttl{font-size:.9rem;font-weight:700;}
-.modal-hdr .m-sub{font-size:.68rem;color:var(--muted);margin-top:.15rem;}
+           display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:.6rem;}
+.modal-hdr .m-hdr-left{min-width:0;flex:1;}
+.modal-hdr .m-hdr-right{display:flex;align-items:center;gap:.4rem;flex-shrink:0;}
+.modal-hdr .m-ttl{font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;}
+.modal-hdr .m-sub{font-size:.68rem;color:var(--muted);margin-top:.15rem;
+                  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;
              color:var(--muted);padding:.2rem .5rem;border-radius:6px;}
 .modal-close:hover{background:var(--bg);color:var(--red);}
+.btn-detail-m{background:none;border:1px solid var(--orange);color:var(--orange);border-radius:6px;
+              padding:.28rem .7rem;font-size:.7rem;font-family:"Inter",sans-serif;
+              font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn-detail-m:hover{background:var(--orange);color:#fff;}
 .modal-body{padding:.75rem 1rem;overflow-y:auto;flex:1;}
 .modal-loading{text-align:center;padding:2rem;color:var(--muted);font-size:.82rem;}
-.m-table{width:100%;border-collapse:collapse;}
+.m-scroll{overflow-x:auto;max-height:70vh;overflow-y:auto;}
+.m-table{width:100%;border-collapse:collapse;min-width:max-content;}
 .m-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.6rem;
                    font-weight:600;letter-spacing:.03em;text-transform:uppercase;
-                   padding:.35rem .55rem;text-align:left;white-space:nowrap;position:sticky;top:0;}
+                   padding:.35rem .55rem;text-align:left;white-space:nowrap;position:sticky;top:0;z-index:10;}
 .m-table thead th.r{text-align:right;}
 .m-table thead th.col-final{background:#1a2d1a;border-top:3px solid var(--green);}
+.m-table thead th.col-ctx{background:#2d1f0a;border-top:3px solid var(--orange);color:rgba(255,200,100,.9);}
+.m-table thead th.col-ctx.hidden-col,
+.m-table tbody td.col-ctx.hidden-col{display:none;}
 .m-table tbody td{padding:.28rem .55rem;font-size:.71rem;border-bottom:1px solid var(--border);}
 .m-table tbody td.r{text-align:right;}
-.m-table tbody tr:hover{background:#f7f9ff;}
+.m-table tbody td.col-ctx{background:#fffaf3;}
+.m-table tbody tr:hover td{background:#f7f9ff;}
+.m-table tbody tr:hover td.col-ctx{background:#fff3e0;}
 .m-table tbody tr:last-child td{border-bottom:none;}
+.m-table .rank-col{position:sticky;left:0;z-index:11;}
+.m-table thead th.rank-col{background:var(--navy2);}
+.m-table tbody td.rank-col{background:#fff;color:var(--muted);z-index:5;}
+.m-table tbody tr:hover td.rank-col{background:#f7f9ff;}
 .coord-link{color:var(--green);cursor:pointer;font-weight:700;
             text-decoration:underline;text-underline-offset:2px;}
 .coord-link:hover{color:#5aad1a;}
@@ -147,6 +164,18 @@ th.sorted .sa{color:#84cc16;}
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
   .tbl-scroll{max-height:none;}
   .data-table{min-width:1400px;}
+  /* modal responsivo */
+  .modal-overlay{padding:.4rem;align-items:flex-start;}
+  .modal{max-height:96vh;border-radius:10px;margin-top:.5rem;}
+  .modal-hdr{padding:.65rem .7rem;flex-wrap:wrap;}
+  .modal-hdr .m-ttl{font-size:.82rem;}
+  .modal-hdr .m-sub{font-size:.62rem;white-space:normal;}
+  .modal-hdr .m-hdr-right{width:100%;justify-content:flex-end;}
+  .btn-detail-m{font-size:.65rem;padding:.22rem .55rem;}
+  .modal-body{padding:.55rem .5rem;}
+  .m-scroll{max-height:calc(96vh - 130px);}
+  .m-table thead th{font-size:.55rem;padding:.28rem .4rem;}
+  .m-table tbody td{font-size:.66rem;padding:.24rem .4rem;}
 }
 </style>
 </head>
@@ -660,6 +689,21 @@ function fmtCell(val,hdr){
   return v;
 }
 
+// Columnas de contexto que se ocultan por defecto en el modal (toggle "Ver detalle")
+let MODAL_DETAIL_VISIBLE=false;
+function isCtxHeader(h){
+  const H=normTxt(h);
+  return H==='MES'||H==='SEMANA'||H==='UDN'||H==='UNIDAD DE NEGOCIO'||H==='COORDINADOR';
+}
+function toggleModalDetail(){
+  MODAL_DETAIL_VISIBLE=!MODAL_DETAIL_VISIBLE;
+  document.querySelectorAll('#modalBody .col-ctx').forEach(el=>{
+    el.classList.toggle('hidden-col',!MODAL_DETAIL_VISIBLE);
+  });
+  const btn=document.getElementById('btnDetailModal');
+  if(btn) btn.textContent=MODAL_DETAIL_VISIBLE?'🔍 Ocultar detalle':'🔍 Ver detalle';
+}
+
 async function openCoordDetail(coord,udn,sem,mes){
   // Show modal immediately with loading state
   document.getElementById('modalTitle').textContent=coord;
@@ -667,6 +711,10 @@ async function openCoordDetail(coord,udn,sem,mes){
   document.getElementById('modalSub').textContent=udn+' · '+periodo;
   document.getElementById('modalBody').innerHTML='<div class="modal-loading">⏳ Cargando operadores…</div>';
   document.getElementById('modalOverlay').classList.remove('hidden');
+  // Reset toggle a "oculto" cada vez que se abre
+  MODAL_DETAIL_VISIBLE=false;
+  const btnDet=document.getElementById('btnDetailModal');
+  if(btnDet) btnDet.textContent='🔍 Ver detalle';
   try{
     await loadSupportData();
     if(!DATA_SCORE_OPE_COORD_KEY){
@@ -699,28 +747,29 @@ async function openCoordDetail(coord,udn,sem,mes){
     }
     // Todas las columnas del CSV como headers de la tabla
     const hdrs=DATA_SCORE_OPE_HDRS||Object.keys(scoreRows[0]);
+    // Clases combinadas: alineación, col-final, col-ctx (columnas de contexto)
     const cellCls=h=>{
-      if(isFinalHeader(h)) return 'r col-final';
-      if(isPctHeader(h)||isNumericHeader(h)) return 'r';
-      return '';
+      const parts=[];
+      if(isPctHeader(h)||isFinalHeader(h)||isNumericHeader(h)) parts.push('r');
+      if(isFinalHeader(h)) parts.push('col-final');
+      if(isCtxHeader(h)) parts.push('col-ctx');
+      if(isCtxHeader(h)&&!MODAL_DETAIL_VISIBLE) parts.push('hidden-col');
+      return parts.join(' ');
     };
-    const tdCls=h=>{
-      const c=cellCls(h);
-      return c?(' class="'+c+'"'):'';
-    };
+    const attr=h=>{const c=cellCls(h);return c?(' class="'+c+'"'):'';};
     document.getElementById('modalBody').innerHTML=`
       <div style="font-size:.68rem;color:var(--muted);margin-bottom:.6rem">
-        ${scoreRows.length} operador${scoreRows.length===1?'':'es'} · ${hdrs.length} columnas
+        ${scoreRows.length} operador${scoreRows.length===1?'':'es'} · ${hdrs.filter(h=>!isCtxHeader(h)).length} columnas visibles
       </div>
-      <div style="overflow-x:auto;max-height:70vh;overflow-y:auto">
-        <table class="m-table" style="min-width:max-content">
+      <div class="m-scroll">
+        <table class="m-table">
           <thead><tr>
-            <th style="position:sticky;left:0;background:var(--navy2);z-index:11">#</th>
-            ${hdrs.map(h=>`<th${cellCls(h).includes('r')?' class="'+cellCls(h)+'"':''}>${h}</th>`).join('')}
+            <th class="rank-col">#</th>
+            ${hdrs.map(h=>`<th${attr(h)}>${h}</th>`).join('')}
           </tr></thead>
           <tbody>${scoreRows.map((r,i)=>`<tr>
-            <td style="position:sticky;left:0;background:#fff;color:var(--muted);z-index:5">${i+1}</td>
-            ${hdrs.map(h=>`<td${tdCls(h)}>${fmtCell(r[h],h)}</td>`).join('')}
+            <td class="rank-col">${i+1}</td>
+            ${hdrs.map(h=>`<td${attr(h)}>${fmtCell(r[h],h)}</td>`).join('')}
           </tr>`).join('')}</tbody>
         </table>
       </div>`;
@@ -765,11 +814,14 @@ async function loadData(){
 <div class="modal-overlay hidden" id="modalOverlay" onclick="closeModalOv(event)">
   <div class="modal">
     <div class="modal-hdr">
-      <div>
+      <div class="m-hdr-left">
         <div class="m-ttl" id="modalTitle">Detalle</div>
         <div class="m-sub" id="modalSub"></div>
       </div>
-      <button class="modal-close" onclick="hideModal()">✕</button>
+      <div class="m-hdr-right">
+        <button class="btn-detail-m" id="btnDetailModal" onclick="toggleModalDetail()">🔍 Ver detalle</button>
+        <button class="modal-close" onclick="hideModal()">✕</button>
+      </div>
     </div>
     <div class="modal-body" id="modalBody">
       <div class="modal-loading">Cargando…</div>
