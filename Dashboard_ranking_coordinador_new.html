@@ -507,9 +507,7 @@ function render(){
 
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
-    <td style="font-weight:600;white-space:nowrap">
-      <span class="coord-link" onclick="openCoordDetail('${(r.coord||'').replace(/'/g,"\\'")}','${(r.udn||'').replace(/'/g,"\\'")}','${document.getElementById('f-sem').value}','${document.getElementById('f-mes').value}')">${r.coord||'–'}</span>
-    </td>
+    <td style="font-weight:600;white-space:nowrap"><span class="coord-link" data-coord="${encodeURIComponent(r.coord||'')}" data-udn="${encodeURIComponent(r.udn||'')}" onclick="handleCoordClick(this)">${r.coord||'–'}</span></td>
     <td style="color:var(--muted);font-size:.65rem">${r.udn||'–'}</td>
     <td class="r ${dc}">${numCell(r.ops,0)}</td>
         <td class="r">${scCell(r.nsIni)}</td>
@@ -614,6 +612,13 @@ async function loadSupportData(){
 function closeModalOv(e){if(e.target===document.getElementById('modalOverlay')) hideModal();}
 function hideModal(){document.getElementById('modalOverlay').classList.add('hidden');}
 
+function handleCoordClick(el){
+  const coord=decodeURIComponent(el.getAttribute('data-coord')||'');
+  const udn=decodeURIComponent(el.getAttribute('data-udn')||'');
+  const sem=document.getElementById('f-sem').value;
+  const mes=document.getElementById('f-mes').value;
+  openCoordDetail(coord,udn,sem,mes);
+}
 async function openCoordDetail(coord,udn,sem,mes){
   // Show modal immediately with loading state
   document.getElementById('modalTitle').textContent=coord;
