@@ -144,14 +144,14 @@ th.sorted .sa{color:#84cc16;}
                    padding:.35rem .55rem;text-align:left;white-space:nowrap;position:sticky;top:0;z-index:10;}
 .m-table thead th.r{text-align:right;}
 .m-table thead th.col-final{background:#1a2d1a;border-top:3px solid var(--green);}
-.m-table thead th.col-ctx{background:#2d1f0a;border-top:3px solid var(--orange);color:rgba(255,200,100,.9);}
-.m-table thead th.col-ctx.hidden-col,
-.m-table tbody td.col-ctx.hidden-col{display:none;}
+.m-table thead th.col-detail-m{background:#2d1f0a;border-top:3px solid var(--orange);color:rgba(255,200,100,.9);}
+.m-table thead th.col-detail-m.hidden-col,
+.m-table tbody td.col-detail-m.hidden-col{display:none;}
 .m-table tbody td{padding:.28rem .55rem;font-size:.71rem;border-bottom:1px solid var(--border);}
 .m-table tbody td.r{text-align:right;}
-.m-table tbody td.col-ctx{background:#fffaf3;}
+.m-table tbody td.col-detail-m{background:#fffaf3;}
 .m-table tbody tr:hover td{background:#f7f9ff;}
-.m-table tbody tr:hover td.col-ctx{background:#fff3e0;}
+.m-table tbody tr:hover td.col-detail-m{background:#fff3e0;}
 .m-table tbody tr:last-child td{border-bottom:none;}
 .m-table .rank-col{position:sticky;left:0;z-index:11;}
 .m-table thead th.rank-col{background:var(--navy2);}
@@ -659,7 +659,14 @@ function handleCoordClick(el){
 // Detecta si un header es de porcentaje / score, y aplica color por umbrales
 function isPctHeader(h){
   const H=normTxt(h);
+  // Score Seg (sin %) es número absoluto, NO porcentaje
+  if(isScoreSegAbsHeader(h)) return false;
   return H.includes('%')||H.includes('SCORE')||H.includes('CALIDAD');
+}
+// "Score seg" absoluto (sin %), va como número con 2 decimales
+function isScoreSegAbsHeader(h){
+  const H=normTxt(h);
+  return !H.includes('%')&&(H==='SCORE SEG'||H==='SCORE SEGURIDAD'||H==='SEG'||H==='SCORE DE SEGURIDAD');
 }
 function isFinalHeader(h){
   return normTxt(h)==='SCORE FINAL';
@@ -673,6 +680,10 @@ function fmtCell(val,hdr){
   const v=(val==null?'':String(val)).trim();
   if(!v) return '<span style="color:var(--muted)">–</span>';
   const n=parseFloat(v.replace('%','').replace(/,/g,'.'));
+  // Score seg absoluto: número con 2 decimales, sin %
+  if(!isNaN(n)&&isScoreSegAbsHeader(hdr)){
+    return `<span style="font-weight:600">${n.toFixed(2)}</span>`;
+  }
   const isPct=isPctHeader(hdr);
   const isFinal=isFinalHeader(hdr);
   if(!isNaN(n)&&(isPct||isFinal)){
@@ -689,15 +700,23 @@ function fmtCell(val,hdr){
   return v;
 }
 
-// Columnas de contexto que se ocultan por defecto en el modal (toggle "Ver detalle")
-let MODAL_DETAIL_VISIBLE=false;
+// Columnas que se OMITEN por completo del modal (nunca se muestran)
 function isCtxHeader(h){
   const H=normTxt(h);
   return H==='MES'||H==='SEMANA'||H==='UDN'||H==='UNIDAD DE NEGOCIO'||H==='COORDINADOR';
 }
+// Columnas de detalle: Rendimiento (Camión / Camioneta / %) + Score Seg absoluto
+// Estas SE muestran/ocultan con el botón "Ver detalle"
+let MODAL_DETAIL_VISIBLE=false;
+function isDetailHeader(h){
+  const H=normTxt(h);
+  if(isScoreSegAbsHeader(h)) return true;
+  // "Rend." / "Rendimiento" con Camión o Camioneta, con o sin %
+  return H.includes('REND')&&(H.includes('CAMION')||H.includes('CAMIONETA'));
+}
 function toggleModalDetail(){
   MODAL_DETAIL_VISIBLE=!MODAL_DETAIL_VISIBLE;
-  document.querySelectorAll('#modalBody .col-ctx').forEach(el=>{
+  document.querySelectorAll('#modalBody .col-detail-m').forEach(el=>{
     el.classList.toggle('hidden-col',!MODAL_DETAIL_VISIBLE);
   });
   const btn=document.getElementById('btnDetailModal');
@@ -745,21 +764,23 @@ async function openCoordDetail(coord,udn,sem,mes){
         '<div class="modal-loading">Sin operadores con datos para este período.</div>';
       return;
     }
-    // Todas las columnas del CSV como headers de la tabla
-    const hdrs=DATA_SCORE_OPE_HDRS||Object.keys(scoreRows[0]);
-    // Clases combinadas: alineación, col-final, col-ctx (columnas de contexto)
+    // Columnas: se OMITEN las de contexto (Mes/Semana/UDN/Coordinador) por completo
+    const allHdrs=DATA_SCORE_OPE_HDRS||Object.keys(scoreRows[0]);
+    const hdrs=allHdrs.filter(h=>!isCtxHeader(h));
+    // Clases combinadas: alineación, col-final, col-detail-m (rendimiento + score seg absoluto)
     const cellCls=h=>{
       const parts=[];
-      if(isPctHeader(h)||isFinalHeader(h)||isNumericHeader(h)) parts.push('r');
+      if(isPctHeader(h)||isFinalHeader(h)||isNumericHeader(h)||isScoreSegAbsHeader(h)) parts.push('r');
       if(isFinalHeader(h)) parts.push('col-final');
-      if(isCtxHeader(h)) parts.push('col-ctx');
-      if(isCtxHeader(h)&&!MODAL_DETAIL_VISIBLE) parts.push('hidden-col');
+      if(isDetailHeader(h)) parts.push('col-detail-m');
+      if(isDetailHeader(h)&&!MODAL_DETAIL_VISIBLE) parts.push('hidden-col');
       return parts.join(' ');
     };
     const attr=h=>{const c=cellCls(h);return c?(' class="'+c+'"'):'';};
+    const visibleCount=hdrs.filter(h=>!isDetailHeader(h)||MODAL_DETAIL_VISIBLE).length;
     document.getElementById('modalBody').innerHTML=`
       <div style="font-size:.68rem;color:var(--muted);margin-bottom:.6rem">
-        ${scoreRows.length} operador${scoreRows.length===1?'':'es'} · ${hdrs.filter(h=>!isCtxHeader(h)).length} columnas visibles
+        ${scoreRows.length} operador${scoreRows.length===1?'':'es'} · ${visibleCount} columnas visibles
       </div>
       <div class="m-scroll">
         <table class="m-table">
