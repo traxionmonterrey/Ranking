@@ -237,7 +237,11 @@ function parseCSV(text){
       pren:  pct(cols[15]),
       final: pct(cols[16]),
     };
-    if(r.nombre||r.nom) rows.push(r);
+    // Excluir registros cuyo nombre empiece con 'C.' o 'P.' (no son operadores reales)
+    const nm=(r.nombre||r.nom||'').trim();
+    if(!nm) continue;
+    if(/^[CP]\./i.test(nm)) continue;
+    rows.push(r);
   }
   return rows;
 }
