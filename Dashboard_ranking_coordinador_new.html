@@ -569,10 +569,15 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 
-// ── ASIGNACION + SCORE OPERADOR DATA ──
-const ASIG_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9hqnW1D8f6GhY_mQEA4m70mZ_ueKQcueyd2CBxLMZXwSg1CDoh3WXQhQwo1nK5bM64/pub?output=csv&gid=1209267237';
+// ── SCORE OPERADOR DATA ──
 const SCORE_OPE_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9hqnW1D8f6GhY_mQEA4m70mZ_ueKQcueyd2CBxLMZXwSg1CDoh3WXQhQwo1nK5bM64/pub?output=csv&gid=1056567557';
-let DATA_ASIG=null, DATA_SCORE_OPE=null;
+let DATA_SCORE_OPE=null, DATA_SCORE_OPE_HDRS=null, DATA_SCORE_OPE_COORD_KEY=null;
+
+// Normaliza texto para comparaciones (mayúsculas, sin acentos, sin espacios extra)
+function normTxt(s){
+  return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toUpperCase().replace(/\s+/g,' ').trim();
+}
 
 function parseCSVGeneric(text){
   const lines=text.replace(/^﻿/,'').trim().split(/\r\n|\r|\n/);
@@ -601,10 +606,13 @@ async function fetchCSV(url){
 }
 
 async function loadSupportData(){
-  if(DATA_ASIG&&DATA_SCORE_OPE) return;
-  const [t1,t2]=await Promise.all([fetchCSV(ASIG_URL),fetchCSV(SCORE_OPE_URL)]);
-  DATA_ASIG=parseCSVGeneric(t1).rows;
-  DATA_SCORE_OPE=parseCSVGeneric(t2).rows;
+  if(DATA_SCORE_OPE) return;
+  const t=await fetchCSV(SCORE_OPE_URL);
+  const parsed=parseCSVGeneric(t);
+  DATA_SCORE_OPE=parsed.rows;
+  DATA_SCORE_OPE_HDRS=parsed.hdrs;
+  // Detectar la columna que contiene "coordinador" (case-insensitive, tolerando acentos)
+  DATA_SCORE_OPE_COORD_KEY=parsed.hdrs.find(h=>normTxt(h).includes('COORDINADOR'))||null;
 }
 
 // ── MODAL ──
@@ -618,6 +626,40 @@ function handleCoordClick(el){
   const mes=document.getElementById('f-mes').value;
   openCoordDetail(coord,udn,sem,mes);
 }
+// ── formateo dinámico de celdas ──
+// Detecta si un header es de porcentaje / score, y aplica color por umbrales
+function isPctHeader(h){
+  const H=normTxt(h);
+  return H.includes('%')||H.includes('SCORE')||H.includes('CALIDAD');
+}
+function isFinalHeader(h){
+  return normTxt(h)==='SCORE FINAL';
+}
+function isNumericHeader(h){
+  const H=normTxt(h);
+  // Numérico si el nombre habla de puntos / rendimiento absoluto / operadores / vacío / seg
+  return /(^|\s)(PTS|PUNTOS|OPERADORES|SEGUIMIENTO|VACIO|VACÍO|REND\.?)($|\s)/.test(H);
+}
+function fmtCell(val,hdr){
+  const v=(val==null?'':String(val)).trim();
+  if(!v) return '<span style="color:var(--muted)">–</span>';
+  const n=parseFloat(v.replace('%','').replace(/,/g,'.'));
+  const isPct=isPctHeader(hdr);
+  const isFinal=isFinalHeader(hdr);
+  if(!isNaN(n)&&(isPct||isFinal)){
+    let val2=n;
+    if(v.includes('%')||(n>0&&n<=1.5)) val2=n<=1.5?n*100:n;
+    const color=val2>=90?'#22c55e':val2>=75?'#f59e0b':'#ef4444';
+    const w=isFinal?800:700;
+    const dec=isFinal?3:2;
+    return `<span style="font-weight:${w};color:${color}">${val2.toFixed(dec)}%</span>`;
+  }
+  if(!isNaN(n)&&isNumericHeader(hdr)){
+    return `<span>${(Math.round(n*100)/100).toString()}</span>`;
+  }
+  return v;
+}
+
 async function openCoordDetail(coord,udn,sem,mes){
   // Show modal immediately with loading state
   document.getElementById('modalTitle').textContent=coord;
@@ -627,69 +669,61 @@ async function openCoordDetail(coord,udn,sem,mes){
   document.getElementById('modalOverlay').classList.remove('hidden');
   try{
     await loadSupportData();
-    // Get nominas of operators for this coordinator from Asignacion
-    const coordNorm=coord.toUpperCase().trim();
-    const asigOps=DATA_ASIG.filter(r=>(r['COORDINADOR']||'').toUpperCase().trim()===coordNorm);
-    const nominas=new Set(asigOps.map(r=>(r['NOMINA OP']||'').trim()).filter(Boolean));
-    // Filter Score Operador by nomina + period
+    if(!DATA_SCORE_OPE_COORD_KEY){
+      document.getElementById('modalBody').innerHTML=
+        '<div class="modal-loading">⚠️ La hoja Score Operador no tiene una columna que contenga "Coordinador". Encabezados encontrados: '+
+        (DATA_SCORE_OPE_HDRS||[]).join(', ')+'</div>';
+      return;
+    }
+    const coordN=normTxt(coord);
+    // Filtro por coordinador (columna detectada) + período
     let scoreRows=DATA_SCORE_OPE.filter(r=>{
-      const nom=(r['NOMINA OP']||'').trim();
-      if(!nominas.has(nom)) return false;
+      if(normTxt(r[DATA_SCORE_OPE_COORD_KEY])!==coordN) return false;
       if(VIEW==='semanal'&&sem&&(r['Semana']||'').trim()!==sem) return false;
       if(mes&&(r['Mes']||'').trim()!==mes) return false;
       return true;
     });
-    // Sort by Score Final desc
-    scoreRows.sort((a,b)=>{
-      const fa=parseFloat((a['Score Final']||'').replace('%',''))||0;
-      const fb=parseFloat((b['Score Final']||'').replace('%',''))||0;
-      return fb-fa;
-    });
+    // Orden: Score Final desc si existe
+    const finalKey=(DATA_SCORE_OPE_HDRS||[]).find(h=>normTxt(h)==='SCORE FINAL');
+    if(finalKey){
+      scoreRows.sort((a,b)=>{
+        const fa=parseFloat((a[finalKey]||'').replace('%','').replace(/,/g,'.'))||0;
+        const fb=parseFloat((b[finalKey]||'').replace('%','').replace(/,/g,'.'))||0;
+        return fb-fa;
+      });
+    }
     if(!scoreRows.length){
       document.getElementById('modalBody').innerHTML=
         '<div class="modal-loading">Sin operadores con datos para este período.</div>';
       return;
     }
-    const f=v=>{
-      if(!v||v.trim()==='') return '<span style="color:var(--muted)">–</span>';
-      const n=parseFloat(v.replace('%','').replace(',','.'));
-      if(isNaN(n)) return v;
-      const pct=v.includes('%')||(n>0&&n<=1.5);
-      const val=pct&&n<=1.5?n*100:n;
-      const color=val>=90?'#22c55e':val>=75?'#f59e0b':'#ef4444';
-      return `<span style="font-weight:700;color:${color}">${val.toFixed(2)}%</span>`;
+    // Todas las columnas del CSV como headers de la tabla
+    const hdrs=DATA_SCORE_OPE_HDRS||Object.keys(scoreRows[0]);
+    const cellCls=h=>{
+      if(isFinalHeader(h)) return 'r col-final';
+      if(isPctHeader(h)||isNumericHeader(h)) return 'r';
+      return '';
     };
-    const fn=v=>{
-      if(!v||v.trim()==='') return '<span style="color:var(--muted)">–</span>';
-      const n=parseFloat(v.replace('%','').replace(',','.'));
-      if(isNaN(n)) return v;
-      const pct=v.includes('%')||(n>0&&n<=1.5);
-      const val=pct&&n<=1.5?n*100:n;
-      const color=val>=90?'#22c55e':val>=75?'#f59e0b':'#ef4444';
-      return `<span style="font-weight:800;color:${color}">${val.toFixed(3)}%</span>`;
+    const tdCls=h=>{
+      const c=cellCls(h);
+      return c?(' class="'+c+'"'):'';
     };
     document.getElementById('modalBody').innerHTML=`
-      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.6rem">${scoreRows.length} operadores</div>
-      <table class="m-table">
-        <thead><tr>
-          <th>#</th><th>Operador</th><th>Nómina</th>
-          <th class="r">% NS Inicio</th><th class="r">% NS Llegada</th>
-          <th class="r">Calidad Ruta</th><th class="r">% Score Seg.</th>
-          <th class="r">% Score Rend.</th>
-          <th class="r col-final">Score Final</th>
-        </tr></thead>
-        <tbody>${scoreRows.map((r,i)=>`<tr>
-          <td style="color:var(--muted)">${i+1}</td>
-          <td style="font-weight:600">${r['NOMBRE OPERADOR']||'–'}</td>
-          <td style="color:var(--muted)">${r['NOMINA OP']||'–'}</td>
-          <td class="r">${f(r['%NS Inicios'])}</td>
-          <td class="r">${f(r['%NS Llegadas'])}</td>
-          <td class="r">${f(r['Calidad de ruta'])}</td>
-          <td class="r">${f(r['% Score seg'])}</td>
-          <td class="r">${f(r['%Score Rendimiento'])}</td>
-          <td class="r">${fn(r['Score Final'])}</td>
-        </tr>`).join('')}</tbody>
-      </table>`;
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.6rem">
+        ${scoreRows.length} operador${scoreRows.length===1?'':'es'} · ${hdrs.length} columnas
+      </div>
+      <div style="overflow-x:auto;max-height:70vh;overflow-y:auto">
+        <table class="m-table" style="min-width:max-content">
+          <thead><tr>
+            <th style="position:sticky;left:0;background:var(--navy2);z-index:11">#</th>
+            ${hdrs.map(h=>`<th${cellCls(h).includes('r')?' class="'+cellCls(h)+'"':''}>${h}</th>`).join('')}
+          </tr></thead>
+          <tbody>${scoreRows.map((r,i)=>`<tr>
+            <td style="position:sticky;left:0;background:#fff;color:var(--muted);z-index:5">${i+1}</td>
+            ${hdrs.map(h=>`<td${tdCls(h)}>${fmtCell(r[h],h)}</td>`).join('')}
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>`;
   }catch(e){
     document.getElementById('modalBody').innerHTML=
       `<div class="modal-loading">⚠️ Error: ${e.message}</div>`;
