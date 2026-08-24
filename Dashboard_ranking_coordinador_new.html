@@ -115,6 +115,34 @@ th.sorted .sa{color:#84cc16;}
          font-size:.78rem;color:#991b1b;display:none;margin-bottom:.3rem;}
 .tbl-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;}
 
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
+               display:flex;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--white);border-radius:14px;width:100%;max-width:1200px;
+       max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-hdr{padding:.9rem 1.2rem;border-bottom:1px solid var(--border);
+           display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.modal-hdr .m-ttl{font-size:.9rem;font-weight:700;}
+.modal-hdr .m-sub{font-size:.68rem;color:var(--muted);margin-top:.15rem;}
+.modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;
+             color:var(--muted);padding:.2rem .5rem;border-radius:6px;}
+.modal-close:hover{background:var(--bg);color:var(--red);}
+.modal-body{padding:.75rem 1rem;overflow-y:auto;flex:1;}
+.modal-loading{text-align:center;padding:2rem;color:var(--muted);font-size:.82rem;}
+.m-table{width:100%;border-collapse:collapse;}
+.m-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.6rem;
+                   font-weight:600;letter-spacing:.03em;text-transform:uppercase;
+                   padding:.35rem .55rem;text-align:left;white-space:nowrap;position:sticky;top:0;}
+.m-table thead th.r{text-align:right;}
+.m-table thead th.col-final{background:#1a2d1a;border-top:3px solid var(--green);}
+.m-table tbody td{padding:.28rem .55rem;font-size:.71rem;border-bottom:1px solid var(--border);}
+.m-table tbody td.r{text-align:right;}
+.m-table tbody tr:hover{background:#f7f9ff;}
+.m-table tbody tr:last-child td{border-bottom:none;}
+.coord-link{color:var(--green);cursor:pointer;font-weight:700;
+            text-decoration:underline;text-underline-offset:2px;}
+.coord-link:hover{color:#5aad1a;}
 @media(max-width:768px){
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
   .tbl-scroll{max-height:none;}
@@ -479,7 +507,9 @@ function render(){
 
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
-    <td style="font-weight:600;white-space:nowrap">${r.coord||'–'}</td>
+    <td style="font-weight:600;white-space:nowrap">
+      <span class="coord-link" onclick="openCoordDetail('${(r.coord||'').replace(/'/g,"\\'")}','${(r.udn||'').replace(/'/g,"\\'")}','${document.getElementById('f-sem').value}','${document.getElementById('f-mes').value}')">${r.coord||'–'}</span>
+    </td>
     <td style="color:var(--muted);font-size:.65rem">${r.udn||'–'}</td>
     <td class="r ${dc}">${numCell(r.ops,0)}</td>
         <td class="r">${scCell(r.nsIni)}</td>
@@ -541,6 +571,127 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 
+// ── ASIGNACION + SCORE OPERADOR DATA ──
+const ASIG_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vS_8zx-kHCBNlE2xRkB59x40COUlt127YaxHD98w-anaoHwQgAEdPehJRb9z1GT-XT0KZOrhaK3zWm-/pub?output=csv&gid=1934520436';
+const SCORE_OPE_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9hqnW1D8f6GhY_mQEA4m70mZ_ueKQcueyd2CBxLMZXwSg1CDoh3WXQhQwo1nK5bM64/pub?output=csv&gid=1056567557';
+let DATA_ASIG=null, DATA_SCORE_OPE=null;
+
+function parseCSVGeneric(text){
+  const lines=text.trim().split(/\r?\n?
+/);
+  if(lines.length<2) return{hdrs:[],rows:[]};
+  const hdrs=parseLine(lines[0]).map(h=>h.trim());
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const cols=parseLine(lines[i]);
+    const obj={};
+    hdrs.forEach((h,idx)=>{obj[h]=(cols[idx]||'').trim();});
+    rows.push(obj);
+  }
+  return{hdrs,rows};
+}
+
+async function fetchCSV(url){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),20000);
+  try{
+    const res=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(t);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return await res.text();
+  }catch(e){clearTimeout(t);throw e;}
+}
+
+async function loadSupportData(){
+  if(DATA_ASIG&&DATA_SCORE_OPE) return;
+  const [t1,t2]=await Promise.all([fetchCSV(ASIG_URL),fetchCSV(SCORE_OPE_URL)]);
+  DATA_ASIG=parseCSVGeneric(t1).rows;
+  DATA_SCORE_OPE=parseCSVGeneric(t2).rows;
+}
+
+// ── MODAL ──
+function closeModalOv(e){if(e.target===document.getElementById('modalOverlay')) hideModal();}
+function hideModal(){document.getElementById('modalOverlay').classList.add('hidden');}
+
+async function openCoordDetail(coord,udn,sem,mes){
+  // Show modal immediately with loading state
+  document.getElementById('modalTitle').textContent=coord;
+  const periodo=VIEW==='mensual'?(mes||'Todos los meses'):('Semana '+(sem||'?'));
+  document.getElementById('modalSub').textContent=udn+' · '+periodo;
+  document.getElementById('modalBody').innerHTML='<div class="modal-loading">⏳ Cargando operadores…</div>';
+  document.getElementById('modalOverlay').classList.remove('hidden');
+  try{
+    await loadSupportData();
+    // Get nominas of operators for this coordinator from Asignacion
+    const coordNorm=coord.toUpperCase().trim();
+    const asigOps=DATA_ASIG.filter(r=>(r['COORDINADOR']||'').toUpperCase().trim()===coordNorm);
+    const nominas=new Set(asigOps.map(r=>(r['NOMINA OP']||'').trim()).filter(Boolean));
+    // Filter Score Operador by nomina + period
+    let scoreRows=DATA_SCORE_OPE.filter(r=>{
+      const nom=(r['NOMINA OP']||'').trim();
+      if(!nominas.has(nom)) return false;
+      if(VIEW==='semanal'&&sem&&(r['Semana']||'').trim()!==sem) return false;
+      if(mes&&(r['Mes']||'').trim()!==mes) return false;
+      return true;
+    });
+    // Sort by Score Final desc
+    scoreRows.sort((a,b)=>{
+      const fa=parseFloat((a['Score Final']||'').replace('%',''))||0;
+      const fb=parseFloat((b['Score Final']||'').replace('%',''))||0;
+      return fb-fa;
+    });
+    if(!scoreRows.length){
+      document.getElementById('modalBody').innerHTML=
+        '<div class="modal-loading">Sin operadores con datos para este período.</div>';
+      return;
+    }
+    const f=v=>{
+      if(!v||v.trim()==='') return '<span style="color:var(--muted)">–</span>';
+      const n=parseFloat(v.replace('%','').replace(',','.'));
+      if(isNaN(n)) return v;
+      const pct=v.includes('%')||(n>0&&n<=1.5);
+      const val=pct&&n<=1.5?n*100:n;
+      const color=val>=90?'#22c55e':val>=75?'#f59e0b':'#ef4444';
+      return `<span style="font-weight:700;color:${color}">${val.toFixed(2)}%</span>`;
+    };
+    const fn=v=>{
+      if(!v||v.trim()==='') return '<span style="color:var(--muted)">–</span>';
+      const n=parseFloat(v.replace('%','').replace(',','.'));
+      if(isNaN(n)) return v;
+      const pct=v.includes('%')||(n>0&&n<=1.5);
+      const val=pct&&n<=1.5?n*100:n;
+      const color=val>=90?'#22c55e':val>=75?'#f59e0b':'#ef4444';
+      return `<span style="font-weight:800;color:${color}">${val.toFixed(3)}%</span>`;
+    };
+    document.getElementById('modalBody').innerHTML=`
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:.6rem">${scoreRows.length} operadores</div>
+      <table class="m-table">
+        <thead><tr>
+          <th>#</th><th>Operador</th><th>Nómina</th>
+          <th class="r">% NS Inicio</th><th class="r">% NS Llegada</th>
+          <th class="r">Calidad Ruta</th><th class="r">% Score Seg.</th>
+          <th class="r">% Score Rend.</th>
+          <th class="r col-final">Score Final</th>
+        </tr></thead>
+        <tbody>${scoreRows.map((r,i)=>`<tr>
+          <td style="color:var(--muted)">${i+1}</td>
+          <td style="font-weight:600">${r['NOMBRE OPERADOR']||'–'}</td>
+          <td style="color:var(--muted)">${r['NOMINA OP']||'–'}</td>
+          <td class="r">${f(r['%NS Inicios'])}</td>
+          <td class="r">${f(r['%NS Llegadas'])}</td>
+          <td class="r">${f(r['Calidad de ruta'])}</td>
+          <td class="r">${f(r['% Score seg'])}</td>
+          <td class="r">${f(r['%Score Rendimiento'])}</td>
+          <td class="r">${fn(r['Score Final'])}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+  }catch(e){
+    document.getElementById('modalBody').innerHTML=
+      `<div class="modal-loading">⚠️ Error: ${e.message}</div>`;
+  }
+}
+
 // ── LOAD ──
 async function loadData(){
   const ov=document.getElementById('ldOverlay');
@@ -572,4 +723,19 @@ async function loadData(){
   }
 }
 </script>
+<!-- MODAL DETALLE COORDINADOR -->
+<div class="modal-overlay hidden" id="modalOverlay" onclick="closeModalOv(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="m-ttl" id="modalTitle">Detalle</div>
+        <div class="m-sub" id="modalSub"></div>
+      </div>
+      <button class="modal-close" onclick="hideModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="modal-loading">Cargando…</div>
+    </div>
+  </div>
+</div>
 </body>
