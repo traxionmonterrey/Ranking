@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ranking Operadores | Traxión</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="favicon-traxion.svg">
+<style>
+:root{
+  --navy:#1a2236;--navy2:#222d42;--navy3:#2c3a55;
+  --green:#7ed321;--white:#fff;--bg:#f0f2f7;
+  --border:#dde3f0;--text:#1a2236;--muted:#6b7a99;
+  --red:#e53e3e;--gold:#FBAE40;--orange:#f97316;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text);font-family:"Inter",sans-serif;min-height:100vh;}
+nav{background:var(--navy);padding:10px 20px;display:flex;gap:12px;align-items:center;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);position:sticky;top:0;z-index:300;flex-wrap:wrap;}
+nav a{color:#e5e7eb;text-decoration:none;font-weight:600;padding:7px 14px;border-radius:8px;
+      transition:all .3s;white-space:nowrap;font-size:14px;}
+nav a.brand{color:#84cc16;font-weight:800;font-size:18px;}
+nav a:hover{background:#374151;}
+.filter-bar{background:var(--white);border-bottom:1px solid var(--border);padding:.5rem 1.2rem;
+            display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;
+            position:sticky;top:54px;z-index:200;box-shadow:0 1px 4px rgba(26,34,54,.05);}
+.fg{display:flex;align-items:center;gap:.3rem;}
+.fg label{font-size:.6rem;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
+.fg select{background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);
+           padding:.22rem .5rem;font-size:.71rem;font-family:"Inter",sans-serif;
+           appearance:none;cursor:pointer;outline:none;max-width:160px;}
+.fg select:focus{border-color:var(--green);}
+.divider{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.btn-reset{background:none;border:1px solid var(--border);border-radius:5px;color:var(--muted);
+           padding:.22rem .6rem;font-size:.68rem;font-family:"Inter",sans-serif;cursor:pointer;}
+.btn-reset:hover{border-color:var(--red);color:var(--red);}
+.view-toggle{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+.view-toggle button{background:none;border:none;padding:.28rem .85rem;font-size:.71rem;font-weight:700;
+                    color:var(--muted);cursor:pointer;font-family:"Inter",sans-serif;transition:all .15s;}
+.view-toggle button.active{background:var(--navy);color:#fff;}
+.main{padding:1rem 1.2rem;display:flex;flex-direction:column;gap:1rem;}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.85rem;}
+.kpi{background:var(--white);border-radius:12px;padding:.95rem 1.05rem;position:relative;overflow:hidden;
+     box-shadow:0 2px 10px rgba(26,34,54,.07);border-top:4px solid var(--kc,var(--green));}
+.kpi::after{content:"";position:absolute;bottom:-14px;right:-14px;width:66px;height:66px;
+            border-radius:50%;background:var(--kc,var(--green));opacity:.06;}
+.kpi-icon{font-size:1rem;margin-bottom:.28rem;}
+.kpi-val{font-size:1.65rem;font-weight:800;color:var(--kc,var(--green));line-height:1;letter-spacing:-.02em;}
+.kpi-lbl{font-size:.63rem;font-weight:600;color:var(--muted);margin-top:.22rem;text-transform:uppercase;letter-spacing:.05em;}
+.kpi-sub{font-size:.7rem;font-weight:600;color:var(--text);margin-top:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi-udn{font-size:.62rem;color:var(--muted);margin-top:.08rem;}
+.table-card{background:var(--white);border-radius:12px;box-shadow:0 2px 10px rgba(26,34,54,.07);overflow:hidden;}
+.table-hdr{display:flex;align-items:center;justify-content:space-between;padding:.78rem 1.1rem;border-bottom:1px solid var(--border);}
+.th-left .ttl{font-size:.88rem;font-weight:700;}
+.th-left .sub{font-size:.66rem;color:var(--muted);margin-top:.1rem;}
+.th-right{display:flex;align-items:center;gap:.55rem;}
+.badge{font-size:.7rem;color:var(--muted);background:var(--bg);border-radius:20px;padding:.17rem .55rem;}
+.btn-exp{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:.28rem .7rem;
+         font-size:.7rem;font-family:"Inter",sans-serif;font-weight:600;cursor:pointer;}
+.btn-exp:hover{background:var(--navy3);}
+.btn-toggle-detail{background:none;border:1px solid var(--orange);color:var(--orange);border-radius:6px;
+                   padding:.28rem .7rem;font-size:.7rem;font-family:"Inter",sans-serif;font-weight:600;cursor:pointer;}
+.btn-toggle-detail:hover{background:var(--orange);color:#fff;}
+.tbl-scroll{overflow-x:auto;max-height:calc(100vh - 320px);overflow-y:auto;}
+.data-table{width:100%;border-collapse:collapse;}
+.data-table thead th{background:var(--navy2);color:rgba(255,255,255,.85);font-size:.58rem;font-weight:600;
+                     letter-spacing:.03em;text-transform:uppercase;padding:.38rem .55rem;text-align:left;
+                     white-space:nowrap;position:sticky;top:0;z-index:10;}
+.data-table thead th.r{text-align:right;}
+.data-table thead th.sortable{cursor:pointer;}
+.data-table thead th.sortable:hover{background:var(--navy3);}
+.data-table thead th.col-final{background:#1a2d1a;border-top:3px solid var(--green);}
+.data-table thead th.col-detail{background:#2d1f0a;border-top:3px solid var(--orange);color:rgba(255,200,100,.9);}
+.data-table thead th.col-detail.hidden-col{display:none;}
+.data-table tbody td{padding:.3rem .55rem;font-size:.71rem;border-bottom:1px solid var(--border);}
+.data-table tbody td.r{text-align:right;}
+.data-table tbody td.col-detail{background:#fffaf3;}
+.data-table tbody td.col-detail.hidden-col{display:none;}
+.data-table tbody tr:hover td{background:#f7f9ff;}
+.data-table tbody tr:hover td.col-detail{background:#fff3e0;}
+.data-table tbody tr:last-child td{border-bottom:none;}
+.medal{font-size:1.05rem;}
+.rank-n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;
+        border-radius:50%;font-size:.6rem;font-weight:700;background:#e5e7eb;color:#374151;}
+.sc-null{color:var(--muted);}
+.sa{font-size:.6rem;margin-left:.2rem;color:rgba(255,255,255,.35);}
+th.sorted .sa{color:#84cc16;}
+.sem-banner{background:var(--navy);color:#fff;border-radius:10px;padding:.7rem 1.1rem;
+            display:flex;align-items:center;gap:.75rem;}
+.sem-banner .sem-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;}
+.sem-banner .sem-val{font-size:1.1rem;font-weight:800;color:#84cc16;}
+.sem-banner .sem-sub{font-size:.68rem;color:#9ca3af;margin-left:auto;}
+.ld-overlay{position:fixed;inset:0;background:rgba(240,242,247,.97);z-index:9999;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;transition:opacity .4s;}
+.ld-overlay.hidden{opacity:0;pointer-events:none;}
+.ld-logo{font-size:1.9rem;font-weight:900;color:#7ed321;letter-spacing:4px;}
+.ld-spin{width:34px;height:34px;border:3px solid var(--border);border-top-color:#7ed321;
+         border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-msg{font-size:.82rem;color:var(--muted);}
+.err-bar{background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:.7rem 1rem;
+         font-size:.78rem;color:#991b1b;display:none;margin-bottom:.3rem;}
+.tbl-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;}
+@media(max-width:768px){
+  .kpi-grid{grid-template-columns:1fr;}
+  .tbl-scroll{max-height:none;}
+  .data-table{min-width:1100px;}
+}
+</style>
+</head>
+<body>
+<nav><a href="index.html" class="brand">TRAXIÓN</a></nav>
+<div class="ld-overlay" id="ldOverlay">
+  <div class="ld-logo">TRAXIÓN</div>
+  <div class="ld-spin"></div>
+  <div class="ld-msg" id="ldMsg">Cargando datos…</div>
+</div>
+
+<div class="filter-bar">
+  <div class="view-toggle">
+    <button id="btnSemanal" class="active" onclick="setView('semanal')">Semanal</button>
+    <button id="btnMensual" onclick="setView('mensual')">Mensual</button>
+  </div>
+  <div class="divider"></div>
+  <div class="fg"><label>UDN</label>
+    <select id="f-udn" onchange="onFilter()"><option value="">Todas</option></select></div>
+  <div class="fg"><label>Coordinador</label>
+    <select id="f-coord" onchange="onFilter()"><option value="">Todos</option></select></div>
+  <div class="fg"><label>Mes</label>
+    <select id="f-mes" onchange="onFilter()"><option value="">Todos</option></select></div>
+  <div class="fg" id="semFg"><label>Semana</label>
+    <select id="f-sem" onchange="onFilter()"></select></div>
+  <div class="divider"></div>
+  <button class="btn-reset" onclick="resetFilters()">↺ Limpiar</button>
+</div>
+
+<div class="main">
+  <div class="err-bar" id="errBar"></div>
+  <div class="sem-banner" id="semBanner" style="display:none">
+    <div><div class="sem-label">Período seleccionado</div><div class="sem-val" id="semVal">–</div></div>
+    <div class="sem-sub" id="semSub"></div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi" style="--kc:#7ed321">
+      <div class="kpi-icon">🏆</div>
+      <div class="kpi-val" id="kpiBestV">–</div>
+      <div class="kpi-lbl">Mejor Operador</div>
+      <div class="kpi-sub" id="kpiBestN">–</div>
+      <div class="kpi-udn" id="kpiBestU"></div>
+    </div>
+    <div class="kpi" style="--kc:#ef4444">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-val" id="kpiWorstV">–</div>
+      <div class="kpi-lbl">Peor Operador</div>
+      <div class="kpi-sub" id="kpiWorstN">–</div>
+      <div class="kpi-udn" id="kpiWorstU"></div>
+    </div>
+  </div>
+
+  <div class="table-card" style="margin-bottom:1.5rem">
+    <div class="table-hdr">
+      <div class="th-left">
+        <div class="ttl">🏆 Ranking por Operador</div>
+        <div class="sub" id="tblSub">Período seleccionado</div>
+      </div>
+      <div class="th-right">
+        <button class="btn-toggle-detail" onclick="toggleDetail()">🔍 Ver detalle</button>
+        <span class="badge" id="cntOpe">– operadores</span>
+        <button class="btn-exp" onclick="exportExcel()">⬇ Excel</button>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="data-table" id="tblOpe">
+        <thead><tr>
+          <th style="width:36px">#</th>
+          <th>Operador</th>
+          <th>Nómina</th>
+          <th>Coordinador</th>
+          <th>UDN</th>
+          <th class="r sortable" data-col="nsIni">% NS Inicio<span class="sa">↕</span></th>
+          <th class="r sortable" data-col="nsLle">% NS Llegada<span class="sa">↕</span></th>
+          <th class="r sortable" data-col="cal">Calidad Ruta<span class="sa">↕</span></th>
+          <!-- detalle -->
+          <th class="r col-detail hidden-col">Score Seg.</th>
+          <th class="r sortable" data-col="pseg">% Score Seg.<span class="sa">↕</span></th>
+          <!-- detalle -->
+          <th class="r col-detail hidden-col">Rend. Camión</th>
+          <th class="r col-detail hidden-col">Rend. Camioneta</th>
+          <th class="r col-detail hidden-col">% Rend Camión</th>
+          <th class="r col-detail hidden-col">% Rend Camioneta</th>
+          <th class="r sortable" data-col="pren">% Score Rend.<span class="sa">↕</span></th>
+          <th class="r col-final sortable" data-col="final">Score Final<span class="sa">↕</span></th>
+        </tr></thead>
+        <tbody id="bodyOpe">
+          <tr><td colspan="16" class="tbl-empty">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEET_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9hqnW1D8f6GhY_mQEA4m70mZ_ueKQcueyd2CBxLMZXwSg1CDoh3WXQhQwo1nK5bM64/pub?output=csv&gid=1056567557';
+
+let DATA=[], VIEW='semanal', DETAIL_VISIBLE=false;
+const SORT={col:'final',dir:'desc'};
+
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/);
+  if(lines.length<2) return[];
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const cols=parseLine(lines[i]);
+    if(cols.length<10) continue;
+    // Mes(0) Semana(1) UDN(2) NOMINA(3) NOMBRE(4) Coord(5)
+    // %NSIni(6) %NSLle(7) Cal(8) ScoreSeg(9) %ScoreSeg(10)
+    // RendCam(11) RendCam2(12) %RendCam(13) %RendCam2(14) %ScoreRend(15) ScoreFinal(16)
+    const r={
+      mes:   (cols[0]||'').trim(),
+      sem:   (cols[1]||'').trim(),
+      udn:   (cols[2]||'').trim(),
+      nom:   (cols[3]||'').trim(),
+      nombre:(cols[4]||'').trim(),
+      coord: (cols[5]||'').trim(),
+      nsIni: pct(cols[6]),
+      nsLle: pct(cols[7]),
+      cal:   pct(cols[8]),
+      seg:   num(cols[9]),
+      pseg:  pct(cols[10]),
+      renc:  num(cols[11]),
+      renp:  num(cols[12]),
+      prenc: pct(cols[13]),
+      prenp: pct(cols[14]),
+      pren:  pct(cols[15]),
+      final: pct(cols[16]),
+    };
+    if(r.nombre||r.nom) rows.push(r);
+  }
+  return rows;
+}
+function parseLine(line){
+  const cols=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
+    else cur+=ch;
+  }
+  cols.push(cur.trim());return cols;
+}
+function pct(v){
+  if(v===undefined||v===null||String(v).trim()==='') return null;
+  const n=parseFloat(String(v).replace('%','').replace(',','.'));
+  if(isNaN(n)) return null;
+  return (n>0&&n<=1.5)?n*100:n;
+}
+function num(v){
+  if(v===undefined||v===null||String(v).trim()==='') return null;
+  const n=parseFloat(String(v).replace(',','.'));
+  return isNaN(n)?null:n;
+}
+
+function uniq(arr){return[...new Set(arr.filter(Boolean))].sort();}
+function fillSel(id,vals,ph){
+  const s=document.getElementById(id),cur=s.value;
+  s.innerHTML=ph!==null?`<option value="">${ph}</option>`:'';
+  vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
+  if(vals.includes(cur)) s.value=cur;
+}
+function buildSelects(){
+  fillSel('f-udn',uniq(DATA.map(r=>r.udn)),'Todas');
+  fillSel('f-coord',uniq(DATA.map(r=>r.coord)),'Todos');
+  fillSel('f-mes',uniq(DATA.map(r=>r.mes)),'Todos');
+  fillSel('f-sem',uniq(DATA.map(r=>r.sem)),null);
+}
+function autoLatestWeek(){
+  const sems=uniq(DATA.map(r=>r.sem)).sort((a,b)=>Number(b)-Number(a));
+  if(!sems.length) return;
+  const sel=document.getElementById('f-sem');
+  for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===sems[0]){sel.value=sems[0];break;}}
+}
+function autoMes(){
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const act=meses[new Date().getMonth()];
+  const sel=document.getElementById('f-mes');
+  for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===act){sel.value=act;break;}}
+}
+function setView(mode){
+  VIEW=mode;
+  document.getElementById('btnSemanal').classList.toggle('active',mode==='semanal');
+  document.getElementById('btnMensual').classList.toggle('active',mode==='mensual');
+  document.getElementById('semFg').style.display=mode==='semanal'?'flex':'none';
+  if(mode==='mensual'&&!document.getElementById('f-mes').value) autoMes();
+  if(mode==='semanal'&&!document.getElementById('f-sem').value) autoLatestWeek();
+  render();
+}
+function getFiltered(){
+  const v=id=>document.getElementById(id).value;
+  const udn=v('f-udn'),coord=v('f-coord'),mes=v('f-mes'),sem=v('f-sem');
+  return DATA.filter(r=>{
+    if(udn&&r.udn!==udn) return false;
+    if(coord&&r.coord!==coord) return false;
+    if(mes&&r.mes!==mes) return false;
+    if(VIEW==='semanal'&&sem&&r.sem!==sem) return false;
+    return true;
+  });
+}
+function onFilter(){render();}
+function resetFilters(){
+  ['f-udn','f-coord','f-mes'].forEach(id=>document.getElementById(id).value='');
+  buildSelects();
+  if(VIEW==='semanal') autoLatestWeek(); else autoMes();
+  render();
+}
+function aggregateMensual(rows){
+  const map={};
+  rows.forEach(r=>{
+    const k=r.nom+'::'+r.udn;
+    if(!map[k]) map[k]={nom:r.nom,nombre:r.nombre,udn:r.udn,coord:r.coord,rows:[]};
+    map[k].rows.push(r);
+  });
+  const pctCols=['nsIni','nsLle','cal','pseg','prenc','prenp','pren','final'];
+  const numCols=['seg','renc','renp'];
+  return Object.values(map).map(g=>{
+    const avg=col=>{const vs=g.rows.map(r=>r[col]).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;};
+    const out={nom:g.nom,nombre:g.nombre,udn:g.udn,coord:g.coord};
+    [...pctCols,...numCols].forEach(c=>out[c]=avg(c));
+    return out;
+  });
+}
+function sortRows(rows){
+  return[...rows].sort((a,b)=>{
+    let va=a[SORT.col],vb=b[SORT.col];
+    if(va===null||va===undefined) return 1;
+    if(vb===null||vb===undefined) return -1;
+    if(va===vb) return 0;
+    return SORT.dir==='desc'?(va>vb?-1:1):(va<vb?-1:1);
+  });
+}
+function sColor(v){
+  if(v===null) return '#9ca3af';
+  if(v>=90) return '#22c55e';
+  if(v>=75) return '#f59e0b';
+  return '#ef4444';
+}
+function scCell(v,d=2){
+  if(v===null||v===undefined) return '<span class="sc-null"></span>';
+  return `<span style="font-weight:700;color:${sColor(v)}">${v.toFixed(d)}%</span>`;
+}
+function numCell(v,d=2){
+  if(v===null||v===undefined) return '<span class="sc-null"></span>';
+  return `<span style="color:var(--text)">${v.toFixed(d)}</span>`;
+}
+function finalCell(v){
+  if(v===null||v===undefined) return '<span class="sc-null"></span>';
+  return `<span style="font-weight:800;font-size:.8rem;color:${sColor(v)}">${v.toFixed(3)}%</span>`;
+}
+function rankBadge(i){
+  if(i===0) return '<span class="medal">🥇</span>';
+  if(i===1) return '<span class="medal">🥈</span>';
+  if(i===2) return '<span class="medal">🥉</span>';
+  return `<span class="rank-n">${i+1}</span>`;
+}
+function toggleDetail(){
+  DETAIL_VISIBLE=!DETAIL_VISIBLE;
+  document.querySelectorAll('.col-detail').forEach(el=>el.classList.toggle('hidden-col',!DETAIL_VISIBLE));
+  document.querySelector('.btn-toggle-detail').textContent=DETAIL_VISIBLE?'🔍 Ocultar detalle':'🔍 Ver detalle';
+}
+function updateBanner(){
+  const sem=document.getElementById('f-sem').value;
+  const mes=document.getElementById('f-mes').value;
+  const banner=document.getElementById('semBanner');
+  if(VIEW==='mensual'){
+    banner.style.display='flex';
+    document.getElementById('semVal').textContent=mes||'Todos los meses';
+    document.getElementById('semSub').textContent='Vista mensual · promedio de semanas';
+  } else if(sem){
+    banner.style.display='flex';
+    document.getElementById('semVal').textContent='Semana '+sem;
+    document.getElementById('semSub').textContent=mes?'Mes: '+mes:'';
+  } else banner.style.display='none';
+}
+function render(){
+  updateBanner();
+  let rows=getFiltered();
+  if(VIEW==='mensual') rows=aggregateMensual(rows);
+  rows=sortRows(rows);
+
+  const scored=rows.filter(r=>r.final!==null).sort((a,b)=>b.final-a.final);
+  const best=scored[0]||null, worst=scored[scored.length-1]||null;
+  document.getElementById('kpiBestV').textContent=best?best.final.toFixed(3)+'%':'–';
+  document.getElementById('kpiBestN').textContent=best?best.nombre||best.nom:'–';
+  document.getElementById('kpiBestU').textContent=best?(best.coord?best.coord+' · ':'')+best.udn:'';
+  document.getElementById('kpiWorstV').textContent=worst?worst.final.toFixed(3)+'%':'–';
+  document.getElementById('kpiWorstN').textContent=worst?worst.nombre||worst.nom:'–';
+  document.getElementById('kpiWorstU').textContent=worst?(worst.coord?worst.coord+' · ':'')+worst.udn:'';
+
+  document.getElementById('tblSub').textContent=VIEW==='mensual'?'Promedio de todas las semanas del mes':'Período seleccionado';
+  document.getElementById('cntOpe').textContent=rows.length+' operadores';
+
+  document.querySelectorAll('.data-table thead th').forEach(th=>{
+    th.classList.remove('sorted');
+    const sa=th.querySelector('.sa');if(sa) sa.textContent='↕';
+  });
+  const sTh=document.querySelector(`.data-table thead th[data-col="${SORT.col}"]`);
+  if(sTh){sTh.classList.add('sorted');const sa=sTh.querySelector('.sa');if(sa) sa.textContent=SORT.dir==='asc'?'↑':'↓';}
+
+  const body=document.getElementById('bodyOpe');
+  const dc=DETAIL_VISIBLE?'col-detail':'col-detail hidden-col';
+  if(!rows.length){body.innerHTML=`<tr><td colspan="16" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+
+  body.innerHTML=rows.map((r,i)=>`<tr>
+    <td style="text-align:center">${rankBadge(i)}</td>
+    <td style="font-weight:600;white-space:nowrap">${r.nombre||r.nom||'–'}</td>
+    <td style="color:var(--muted);font-size:.65rem">${r.nom||'–'}</td>
+    <td style="color:var(--muted);font-size:.65rem">${r.coord||'–'}</td>
+    <td style="color:var(--muted);font-size:.65rem">${r.udn||'–'}</td>
+    <td class="r">${scCell(r.nsIni)}</td>
+    <td class="r">${scCell(r.nsLle)}</td>
+    <td class="r">${scCell(r.cal)}</td>
+    <td class="r ${dc}">${numCell(r.seg)}</td>
+    <td class="r">${scCell(r.pseg)}</td>
+    <td class="r ${dc}">${numCell(r.renc)}</td>
+    <td class="r ${dc}">${numCell(r.renp)}</td>
+    <td class="r ${dc}">${scCell(r.prenc)}</td>
+    <td class="r ${dc}">${scCell(r.prenp)}</td>
+    <td class="r">${scCell(r.pren)}</td>
+    <td class="r" style="background:#f0fff4">${finalCell(r.final)}</td>
+  </tr>`).join('');
+}
+function exportExcel(){
+  let rows=getFiltered();
+  if(VIEW==='mensual') rows=aggregateMensual(rows);
+  rows=sortRows(rows);
+  const f=v=>v===null||v===undefined?'':+v.toFixed(2);
+  const f3=v=>v===null||v===undefined?'':+v.toFixed(3);
+  const hdrs=['#','Operador','Nómina','Coordinador','UDN',
+    '%NS Inicio','%NS Llegada','Calidad Ruta',
+    'Score Seg.','%Score Seg.',
+    'Rend. Camión','Rend. Camioneta','%Rend Camión','%Rend Camioneta',
+    '%Score Rend.','Score Final'];
+  const data=rows.map((r,i)=>[i+1,r.nombre||r.nom,r.nom,r.coord,r.udn,
+    f(r.nsIni),f(r.nsLle),f(r.cal),f(r.seg),f(r.pseg),
+    f(r.renc),f(r.renp),f(r.prenc),f(r.prenp),f(r.pren),f3(r.final)]);
+  const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Ranking Operadores');
+  XLSX.writeFile(wb,`ranking_operadores_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.data-table thead th.sortable').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const col=th.dataset.col;if(!col) return;
+      if(SORT.col===col) SORT.dir=SORT.dir==='desc'?'asc':'desc';
+      else{SORT.col=col;SORT.dir='desc';}
+      render();
+    });
+  });
+  loadData();
+});
+async function loadData(){
+  const ov=document.getElementById('ldOverlay');
+  const msg=document.getElementById('ldMsg');
+  const err=document.getElementById('errBar');
+  try{
+    msg.textContent='Conectando con Google Sheets…';
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),20000);
+    let res;
+    try{
+      res=await fetch(SHEET_URL,{signal:controller.signal});
+      clearTimeout(timeout);
+    }catch(e){
+      clearTimeout(timeout);
+      if(e.name==='AbortError') throw new Error('Tiempo de espera agotado (20s). Verifica que el Sheet esté publicado.');
+      throw e;
+    }
+    if(!res.ok) throw new Error('HTTP '+res.status+'. Verifica que el Sheet sea público.');
+    const text=await res.text();
+    DATA=parseCSV(text);
+    if(!DATA.length) throw new Error('Sheet vacío. Verifica que la pestaña "Score Operador" esté publicada y con gid=1056567557.');
+    ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
+    buildSelects();autoMes();autoLatestWeek();render();
+  }catch(e){
+    ov.classList.add('hidden');setTimeout(()=>ov.style.display='none',450);
+    err.style.display='block';
+    err.textContent='⚠️ Error al cargar: '+e.message;
+  }
+}
+</script>
+</body>
+</html>
