@@ -661,6 +661,12 @@ async function openCoordDetail(coord,udn,sem,mes){
       const color=val>=90?'#22c55e':val>=75?'#f59e0b':'#ef4444';
       return `<span style="font-weight:700;color:${color}">${val.toFixed(2)}%</span>`;
     };
+    const fnum=v=>{
+      if(!v||v.trim()==='') return '<span style="color:var(--muted)">–</span>';
+      const n=parseFloat(v.replace(',','.'));
+      if(isNaN(n)) return v;
+      return `<span>${n.toFixed(2)}</span>`;
+    };
     const fn=v=>{
       if(!v||v.trim()==='') return '<span style="color:var(--muted)">–</span>';
       const n=parseFloat(v.replace('%','').replace(',','.'));
@@ -678,6 +684,7 @@ async function openCoordDetail(coord,udn,sem,mes){
           <th class="r">% NS Inicio</th><th class="r">% NS Llegada</th>
           <th class="r">Calidad Ruta</th><th class="r">% Score Seg.</th>
           <th class="r">% Score Rend.</th>
+          <th class="r">Vacío Arranque</th>
           <th class="r col-final">Score Final</th>
         </tr></thead>
         <tbody>${scoreRows.map((r,i)=>`<tr>
@@ -689,6 +696,7 @@ async function openCoordDetail(coord,udn,sem,mes){
           <td class="r">${f(r['Calidad de ruta'])}</td>
           <td class="r">${f(r['% Score seg'])}</td>
           <td class="r">${f(r['%Score Rendimiento'])}</td>
+          <td class="r">${fnum(r['Vacio de arranque'])}</td>
           <td class="r">${fn(r['Score Final'])}</td>
         </tr>`).join('')}</tbody>
       </table>`;
