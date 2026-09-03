@@ -237,6 +237,7 @@ th.sorted .sa{color:#84cc16;}
           <th class="r sortable" data-col="pren">% Score Rend.<span class="sa">↕</span></th>
           <!-- detail -->
           <th class="r col-detail hidden-col">Vacío Arranque</th>
+          <th class="r col-detail hidden-col">Operadores &gt;15 kms</th>
           <th class="r sortable" data-col="pvac">% Vacío Arr.<span class="sa">↕</span></th>
           <!-- detail -->
           <th class="r col-detail hidden-col">Pts Días Desc.</th>
@@ -251,7 +252,7 @@ th.sorted .sa{color:#84cc16;}
           <th class="r col-final sortable" data-col="final">Score Final<span class="sa">↕</span></th>
         </tr></thead>
         <tbody id="bodyCoord">
-          <tr><td colspan="25" class="tbl-empty">Cargando…</td></tr>
+          <tr><td colspan="26" class="tbl-empty">Cargando…</td></tr>
         </tbody>
       </table>
     </div>
@@ -265,9 +266,9 @@ const SHEET_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9h
 // Mes(0) Semana(1) UDN(2) COORDINADOR(3) JEFE(4) Operadores(5)
 // %NS Inicios(6) %NS Llegadas(7) Calidad(8) Score seg(9) %Score seg(10)
 // Rend.Camion(11) Rend.Camioneta(12) %Rend Camion(13) %Rend Camioneta(14) %Score Rend(15)
-// Vacio Arranque(16) %Vacio Arranque(17)
-// Pts dias descanso(18) Pts Jornada(19) Puntos(20) Puntos/Operador(21)
-// %Horas Descanso(22) %Rotacion(23) %Score Rotacion(24) Score Final(25)
+// Vacio Arranque(16) Operadores>15kms(17) %Vacio Arranque(18)
+// Pts dias descanso(19) Pts Jornada(20) Puntos(21) Puntos/Operador(22)
+// %Horas Descanso(23) %Rotacion(24) %Score Rotacion(25) Score Final(26)
 
 let DATA=[], VIEW='semanal';
 let DETAIL_VISIBLE=false;
@@ -301,15 +302,16 @@ function parseCSV(text){
       prenp:  pct(cols[14]),
       pren:   pct(cols[15]),
       vac:    num(cols[16]),
-      pvac:   pct(cols[17]),
-      ptsDd:  num(cols[18]),
-      ptsJor: num(cols[19]),
-      pts:    num(cols[20]),
-      ptsOp:  num(cols[21]),
-      phd:    pct(cols[22]),
-      prot:   pct(cols[23]),
-      psrot:  pct(cols[24]),
-      final:  pct(cols[25]),
+      ops15:  num(cols[17]),
+      pvac:   pct(cols[18]),
+      ptsDd:  num(cols[19]),
+      ptsJor: num(cols[20]),
+      pts:    num(cols[21]),
+      ptsOp:  num(cols[22]),
+      phd:    pct(cols[23]),
+      prot:   pct(cols[24]),
+      psrot:  pct(cols[25]),
+      final:  pct(cols[26]),
     };
     if(r.coord) rows.push(r);
   }
@@ -400,7 +402,7 @@ function aggregateMensual(rows){
     if(!map[k]) map[k]={coord:r.coord,udn:r.udn,jefe:r.jefe,rows:[]};
     map[k].rows.push(r);
   });
-  const numCols=['ops','seg','renc','renp','vac','ptsDd','ptsJor','pts','ptsOp'];
+  const numCols=['ops','seg','renc','renp','vac','ops15','ptsDd','ptsJor','pts','ptsOp'];
   const pctCols=['nsIni','nsLle','cal','pseg','prenc','prenp','pren','pvac','phd','prot','psrot','final'];
   return Object.values(map).map(g=>{
     const avg=col=>{const vs=g.rows.map(r=>r[col]).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;};
@@ -505,7 +507,7 @@ function render(){
 
   const body=document.getElementById('bodyCoord');
   const dc=DETAIL_VISIBLE?'col-detail':'col-detail hidden-col';
-  if(!rows.length){body.innerHTML=`<tr><td colspan="25" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="26" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
 
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
@@ -524,6 +526,7 @@ function render(){
     <td class="r ${dc}">${scCell(r.prenp)}</td>
     <td class="r">${scCell(r.pren)}</td>
     <td class="r ${dc}">${numCell(r.vac,2)}</td>
+    <td class="r ${dc}">${numCell(r.ops15,0)}</td>
     <td class="r">${scCell(r.pvac)}</td>
     <td class="r ${dc}">${numCell(r.ptsDd)}</td>
     <td class="r ${dc}">${numCell(r.ptsJor)}</td>
@@ -545,12 +548,12 @@ function exportExcel(){
   const f3=v=>v===null||v===undefined?'':+v.toFixed(3);
   const hdrs=['#','Coordinador','Jefe','UDN','Operadores','%NS Inicio','%NS Llegada','Calidad Ruta',
     'Score Seg.','%Score Seg.','Rend.Camión','Rend.Camioneta','%Rend Camión','%Rend Camioneta',
-    '%Score Rend.','Vacío Arranque','%Vacío Arr.','Pts Días Desc.','Pts Jornada','Puntos','Pts/Op',
+    '%Score Rend.','Vacío Arranque','Operadores >15 kms','%Vacío Arr.','Pts Días Desc.','Pts Jornada','Puntos','Pts/Op',
     '%Hrs Descanso','%Rotación','%Score Rot.','Score Final'];
   const data=rows.map((r,i)=>[i+1,r.coord,r.jefe,r.udn,f(r.ops),
     f(r.nsIni),f(r.nsLle),f(r.cal),f(r.seg),f(r.pseg),
     f(r.renc),f(r.renp),f(r.prenc),f(r.prenp),f(r.pren),
-    f(r.vac),f(r.pvac),f(r.ptsDd),f(r.ptsJor),f(r.pts),f(r.ptsOp),
+    f(r.vac),f(r.ops15),f(r.pvac),f(r.ptsDd),f(r.ptsJor),f(r.pts),f(r.ptsOp),
     f(r.phd),f(r.prot),f(r.psrot),f3(r.final)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
