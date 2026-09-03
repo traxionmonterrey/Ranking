@@ -690,8 +690,18 @@ function isCtxHeader(h){
 let MODAL_DETAIL_VISIBLE=false;
 function isDetailHeader(h){
   const H=normTxt(h);
+  // Mismas columnas de detalle que el tablero:
+  // Operadores, Score Seg (abs), Rend. Camion/Camioneta (+%),
+  // Vacio Arranque, Operadores >15 kms, Pts dias desc, Pts Jornada,
+  // Puntos, Puntos/Operador, % Rotacion
   if(isScoreSegAbsHeader(h)) return true;
-  return H.includes('REND')&&(H.includes('CAMION')||H.includes('CAMIONETA'));
+  if(H==='OPERADORES') return true;
+  if(H.includes('OPERADORES')&&H.includes('15')) return true;
+  if(H.includes('REND')&&(H.includes('CAMION')||H.includes('CAMIONETA'))) return true;
+  if(H.includes('VACIO')&&!H.includes('%')) return true;
+  if(H.includes('PUNTOS')||H.includes('PTS')) return true;
+  if(H==='% ROTACION'||H==='%ROTACION') return true;
+  return false;
 }
 function toggleModalDetail(){
   MODAL_DETAIL_VISIBLE=!MODAL_DETAIL_VISIBLE;
