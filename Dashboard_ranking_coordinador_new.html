@@ -572,13 +572,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 
-// ── ASIGNACION + SCORE OPERADOR DATA ──
-const ASIG_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9hqnW1D8f6GhY_mQEA4m70mZ_ueKQcueyd2CBxLMZXwSg1CDoh3WXQhQwo1nK5bM64/pub?output=csv&gid=1209267237';
-const SCORE_OPE_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9hqnW1D8f6GhY_mQEA4m70mZ_ueKQcueyd2CBxLMZXwSg1CDoh3WXQhQwo1nK5bM64/pub?output=csv&gid=1056567557';
-let DATA_ASIG=null, DATA_SCORE_OPE=null;
+// ── SCORE OPERADOR DATA ──
+const SCORE_OPE_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9hqnW1D8f6GhY_mQEA4m70mZ_ueKQcueyd2CBxLMZXwSg1CDoh3WXQhQwo1nK5bM64/pub?gid=1056567557&single=true&output=csv';
+let DATA_SCORE_OPE=null;
 
 function parseCSVGeneric(text){
-  const lines=text.trim().split(/\r?\n?/);
+  const lines=text.replace(/^\ufeff/,'').trim().split(/\r\n|\r|\n/);
   if(lines.length<2) return{hdrs:[],rows:[]};
   const hdrs=parseLine(lines[0]).map(h=>h.trim());
   const rows=[];
@@ -604,10 +603,9 @@ async function fetchCSV(url){
 }
 
 async function loadSupportData(){
-  if(DATA_ASIG&&DATA_SCORE_OPE) return;
-  const [t1,t2]=await Promise.all([fetchCSV(ASIG_URL),fetchCSV(SCORE_OPE_URL)]);
-  DATA_ASIG=parseCSVGeneric(t1).rows;
-  DATA_SCORE_OPE=parseCSVGeneric(t2).rows;
+  if(DATA_SCORE_OPE) return;
+  const t=await fetchCSV(SCORE_OPE_URL);
+  DATA_SCORE_OPE=parseCSVGeneric(t).rows;
 }
 
 // ── MODAL ──
@@ -630,14 +628,12 @@ async function openCoordDetail(coord,udn,sem,mes){
   document.getElementById('modalOverlay').classList.remove('hidden');
   try{
     await loadSupportData();
-    // Get nominas of operators for this coordinator from Asignacion
-    const coordNorm=coord.toUpperCase().trim();
-    const asigOps=DATA_ASIG.filter(r=>(r['COORDINADOR']||'').toUpperCase().trim()===coordNorm);
-    const nominas=new Set(asigOps.map(r=>(r['NOMINA OP']||'').trim()).filter(Boolean));
-    // Filter Score Operador by nomina + period
+    // Filtrar Score Operador directo por columna Coordinador + período
+    const norm=s=>(s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toUpperCase().replace(/\s+/g,' ').trim();
+    const coordNorm=norm(coord);
     let scoreRows=DATA_SCORE_OPE.filter(r=>{
-      const nom=(r['NOMINA OP']||'').trim();
-      if(!nominas.has(nom)) return false;
+      if(norm(r['Coordinador'])!==coordNorm) return false;
       if(VIEW==='semanal'&&sem&&(r['Semana']||'').trim()!==sem) return false;
       if(mes&&(r['Mes']||'').trim()!==mes) return false;
       return true;
