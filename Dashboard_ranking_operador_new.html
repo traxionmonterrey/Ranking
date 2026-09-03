@@ -191,10 +191,11 @@ th.sorted .sa{color:#84cc16;}
           <th class="r col-detail hidden-col">% Rend Camión</th>
           <th class="r col-detail hidden-col">% Rend Camioneta</th>
           <th class="r sortable" data-col="pren">% Score Rend.<span class="sa">↕</span></th>
+          <th class="r col-detail hidden-col">Vacío Arranque</th>
           <th class="r col-final sortable" data-col="final">Score Final<span class="sa">↕</span></th>
         </tr></thead>
         <tbody id="bodyOpe">
-          <tr><td colspan="16" class="tbl-empty">Cargando…</td></tr>
+          <tr><td colspan="17" class="tbl-empty">Cargando…</td></tr>
         </tbody>
       </table>
     </div>
@@ -217,7 +218,7 @@ function parseCSV(text){
     if(cols.length<10) continue;
     // Mes(0) Semana(1) UDN(2) NOMINA(3) NOMBRE(4) Coord(5)
     // %NSIni(6) %NSLle(7) Cal(8) ScoreSeg(9) %ScoreSeg(10)
-    // RendCam(11) RendCam2(12) %RendCam(13) %RendCam2(14) %ScoreRend(15) ScoreFinal(16)
+    // RendCam(11) RendCam2(12) %RendCam(13) %RendCam2(14) %ScoreRend(15) VacioArranque(16) ScoreFinal(17)
     const r={
       mes:   (cols[0]||'').trim(),
       sem:   (cols[1]||'').trim(),
@@ -235,7 +236,8 @@ function parseCSV(text){
       prenc: pct(cols[13]),
       prenp: pct(cols[14]),
       pren:  pct(cols[15]),
-      final: pct(cols[16]),
+      vac:   num(cols[16]),
+      final: pct(cols[17]),
     };
     // Excluir registros cuyo nombre empiece con 'C.' o 'P.' (no son operadores reales)
     const nm=(r.nombre||r.nom||'').trim();
@@ -327,7 +329,7 @@ function aggregateMensual(rows){
     map[k].rows.push(r);
   });
   const pctCols=['nsIni','nsLle','cal','pseg','prenc','prenp','pren','final'];
-  const numCols=['seg','renc','renp'];
+  const numCols=['seg','renc','renp','vac'];
   return Object.values(map).map(g=>{
     const avg=col=>{const vs=g.rows.map(r=>r[col]).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;};
     const out={nom:g.nom,nombre:g.nombre,udn:g.udn,coord:g.coord};
@@ -414,7 +416,7 @@ function render(){
 
   const body=document.getElementById('bodyOpe');
   const dc=DETAIL_VISIBLE?'col-detail':'col-detail hidden-col';
-  if(!rows.length){body.innerHTML=`<tr><td colspan="16" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
+  if(!rows.length){body.innerHTML=`<tr><td colspan="17" class="tbl-empty">Sin datos para los filtros seleccionados</td></tr>`;return;}
 
   body.innerHTML=rows.map((r,i)=>`<tr>
     <td style="text-align:center">${rankBadge(i)}</td>
@@ -432,6 +434,7 @@ function render(){
     <td class="r ${dc}">${scCell(r.prenc)}</td>
     <td class="r ${dc}">${scCell(r.prenp)}</td>
     <td class="r">${scCell(r.pren)}</td>
+    <td class="r ${dc}">${numCell(r.vac,2)}</td>
     <td class="r" style="background:#f0fff4">${finalCell(r.final)}</td>
   </tr>`).join('');
 }
@@ -445,10 +448,10 @@ function exportExcel(){
     '%NS Inicio','%NS Llegada','Calidad Ruta',
     'Score Seg.','%Score Seg.',
     'Rend. Camión','Rend. Camioneta','%Rend Camión','%Rend Camioneta',
-    '%Score Rend.','Score Final'];
+    '%Score Rend.','Vacío Arranque','Score Final'];
   const data=rows.map((r,i)=>[i+1,r.nombre||r.nom,r.nom,r.coord,r.udn,
     f(r.nsIni),f(r.nsLle),f(r.cal),f(r.seg),f(r.pseg),
-    f(r.renc),f(r.renp),f(r.prenc),f(r.prenp),f(r.pren),f3(r.final)]);
+    f(r.renc),f(r.renp),f(r.prenc),f(r.prenp),f(r.pren),f(r.vac),f3(r.final)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Ranking Operadores');
