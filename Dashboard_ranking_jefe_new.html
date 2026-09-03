@@ -140,6 +140,25 @@ th.sorted .sa{color:#84cc16;}
 .m-table tbody td.r{text-align:right;}
 .m-table tbody tr:hover{background:#f7f9ff;}
 .m-table tbody tr:last-child td{border-bottom:none;}
+/* modal: scroll + columnas de detalle colapsables */
+.m-scroll{overflow-x:auto;max-height:70vh;overflow-y:auto;}
+.m-table{min-width:max-content;}
+.m-table thead th.col-detail-m{background:#2d1f0a;border-top:3px solid var(--orange);color:rgba(255,200,100,.9);}
+.m-table tbody td.col-detail-m{background:#fffaf3;}
+.m-table thead th.col-detail-m.hidden-col,
+.m-table tbody td.col-detail-m.hidden-col{display:none;}
+.m-table tbody tr:hover td.col-detail-m{background:#fff3e0;}
+.m-table .rank-col{position:sticky;left:0;z-index:11;}
+.m-table thead th.rank-col{background:var(--navy2);}
+.m-table tbody td.rank-col{background:#fff;color:var(--muted);z-index:5;}
+.m-table tbody tr:hover td.rank-col{background:#f7f9ff;}
+/* header del modal con botón */
+.modal-hdr .m-hdr-left{min-width:0;flex:1;}
+.modal-hdr .m-hdr-right{display:flex;align-items:center;gap:.4rem;flex-shrink:0;}
+.btn-detail-m{background:none;border:1px solid var(--orange);color:var(--orange);border-radius:6px;
+              padding:.28rem .7rem;font-size:.7rem;font-family:"Inter",sans-serif;
+              font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn-detail-m:hover{background:var(--orange);color:#fff;}
 .coord-link{color:var(--green);cursor:pointer;font-weight:700;
             text-decoration:underline;text-underline-offset:2px;}
 .coord-link:hover{color:#5aad1a;}
