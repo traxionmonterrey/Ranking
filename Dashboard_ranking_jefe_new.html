@@ -687,6 +687,10 @@ function isCtxHeader(h){
   const H=normTxt(h);
   return H==='MES'||H==='SEMANA'||H==='UDN'||H==='UNIDAD DE NEGOCIO'||H==='JEFE';
 }
+function isCtxHeader2(h){
+  const H=normTxt(h);
+  return H==='MES'||H==='SEMANA'||H==='UDN'||H==='UNIDAD DE NEGOCIO'||H==='COORDINADOR';
+}
 let MODAL_DETAIL_VISIBLE=false;
 function isDetailHeader(h){
   const H=normTxt(h);
@@ -768,13 +772,123 @@ async function openJefeDetail(jefe,udn,sem,mes){
     html+='</tr></thead><tbody>';
     html+=scoreRows.map((r,i)=>{
       let tr='<tr><td class="rank-col">'+(i+1)+'</td>';
-      tr+=hdrs.map(h=>'<td'+attr(h)+'>'+fmtCell(r[h],h)+'</td>').join('');
+      tr+=hdrs.map(h=>{
+        // Si la columna es COORDINADOR, hacerla clickeable para abrir modal 2
+        if(normTxt(h)==='COORDINADOR'){
+          const cv=(r[h]||'').trim();
+          const udnv=(r['Unidad de negocio']||r['UDN']||'').trim();
+          return '<td'+attr(h)+'><span class="coord-link" data-coord="'+
+            encodeURIComponent(cv)+'" data-udn="'+encodeURIComponent(udnv)+
+            '" onclick="handleCoordFromJefe(this)">'+(cv||'-')+'</span></td>';
+        }
+        return '<td'+attr(h)+'>'+fmtCell(r[h],h)+'</td>';
+      }).join('');
       return tr+'</tr>';
     }).join('');
     html+='</tbody></table></div>';
     document.getElementById('modalBody').innerHTML=html;
   }catch(e){
     document.getElementById('modalBody').innerHTML=
+      '<div class="modal-loading">Error: '+e.message+'</div>';
+  }
+}
+
+// ── MODAL 2: OPERADORES DE UN COORDINADOR ──
+const SCORE_OPE_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vQiO609NOFsJc9hqnW1D8f6GhY_mQEA4m70mZ_ueKQcueyd2CBxLMZXwSg1CDoh3WXQhQwo1nK5bM64/pub?gid=1056567557&single=true&output=csv';
+let DATA_SCORE_OPE=null, DATA_SCORE_OPE_HDRS=null;
+let MODAL2_DETAIL_VISIBLE=false;
+
+async function loadOperadores(){
+  if(DATA_SCORE_OPE) return;
+  const t=await fetchCSV(SCORE_OPE_URL);
+  const parsed=parseCSVGeneric(t);
+  DATA_SCORE_OPE=parsed.rows;
+  DATA_SCORE_OPE_HDRS=parsed.hdrs;
+}
+
+function closeModal2Ov(e){if(e.target===document.getElementById('modal2Overlay')) hideModal2();}
+function hideModal2(){document.getElementById('modal2Overlay').classList.add('hidden');}
+
+function toggleModal2Detail(){
+  MODAL2_DETAIL_VISIBLE=!MODAL2_DETAIL_VISIBLE;
+  document.querySelectorAll('#modal2Body .col-detail-m').forEach(el=>{
+    el.classList.toggle('hidden-col',!MODAL2_DETAIL_VISIBLE);
+  });
+  const btn=document.getElementById('btnDetailModal2');
+  if(btn) btn.textContent=MODAL2_DETAIL_VISIBLE?'\u{1F50D} Ocultar detalle':'\u{1F50D} Ver detalle';
+}
+
+function handleCoordFromJefe(el){
+  const coord=decodeURIComponent(el.getAttribute('data-coord')||'');
+  const udn=decodeURIComponent(el.getAttribute('data-udn')||'');
+  const sem=document.getElementById('f-sem').value;
+  const mes=document.getElementById('f-mes').value;
+  openCoordOperadores(coord,udn,sem,mes);
+}
+
+async function openCoordOperadores(coord,udn,sem,mes){
+  document.getElementById('modal2Title').textContent=coord;
+  const periodo=VIEW==='mensual'?(mes||'Todos los meses'):('Semana '+(sem||'?'));
+  document.getElementById('modal2Sub').textContent=(udn?udn+' \u00b7 ':'')+periodo;
+  document.getElementById('modal2Body').innerHTML='<div class="modal-loading">Cargando operadores...</div>';
+  document.getElementById('modal2Overlay').classList.remove('hidden');
+  MODAL2_DETAIL_VISIBLE=false;
+  const b=document.getElementById('btnDetailModal2');
+  if(b) b.textContent='\u{1F50D} Ver detalle';
+  try{
+    await loadOperadores();
+    const coordN=normTxt(coord);
+    const coordKey=(DATA_SCORE_OPE_HDRS||[]).find(h=>normTxt(h).includes('COORDINADOR'));
+    if(!coordKey){
+      document.getElementById('modal2Body').innerHTML=
+        '<div class="modal-loading">La hoja Score Operador no tiene columna Coordinador.</div>';
+      return;
+    }
+    let rows=DATA_SCORE_OPE.filter(r=>{
+      if(normTxt(r[coordKey])!==coordN) return false;
+      if(VIEW==='semanal'&&sem&&(r['Semana']||'').trim()!==sem) return false;
+      if(mes&&(r['Mes']||'').trim()!==mes) return false;
+      return true;
+    });
+    const finalKey=(DATA_SCORE_OPE_HDRS||[]).find(h=>normTxt(h)==='SCORE FINAL');
+    if(finalKey){
+      rows.sort((a,b)=>{
+        const fa=parseFloat((a[finalKey]||'').replace('%','').replace(/,/g,'.'))||0;
+        const fb=parseFloat((b[finalKey]||'').replace('%','').replace(/,/g,'.'))||0;
+        return fb-fa;
+      });
+    }
+    if(!rows.length){
+      document.getElementById('modal2Body').innerHTML=
+        '<div class="modal-loading">Sin operadores con datos para este periodo.</div>';
+      return;
+    }
+    const allH=DATA_SCORE_OPE_HDRS||Object.keys(rows[0]);
+    const hdrs=allH.filter(h=>!isCtxHeader2(h));
+    const cellCls=h=>{
+      const parts=[];
+      if(isPctHeader(h)||isFinalHeader(h)||isNumericHeader(h)||isScoreSegAbsHeader(h)) parts.push('r');
+      if(isFinalHeader(h)) parts.push('col-final');
+      if(isDetailHeader(h)) parts.push('col-detail-m');
+      if(isDetailHeader(h)&&!MODAL2_DETAIL_VISIBLE) parts.push('hidden-col');
+      return parts.join(' ');
+    };
+    const attr=h=>{const cc=cellCls(h);return cc?(' class="'+cc+'"'):'';};
+    const vis=hdrs.filter(h=>!isDetailHeader(h)||MODAL2_DETAIL_VISIBLE).length;
+    let html='<div style="font-size:.68rem;color:var(--muted);margin-bottom:.6rem">';
+    html+=rows.length+' operador'+(rows.length===1?'':'es')+' \u00b7 '+vis+' columnas visibles</div>';
+    html+='<div class="m-scroll"><table class="m-table"><thead><tr><th class="rank-col">#</th>';
+    html+=hdrs.map(h=>'<th'+attr(h)+'>'+h+'</th>').join('');
+    html+='</tr></thead><tbody>';
+    html+=rows.map((r,i)=>{
+      let tr='<tr><td class="rank-col">'+(i+1)+'</td>';
+      tr+=hdrs.map(h=>'<td'+attr(h)+'>'+fmtCell(r[h],h)+'</td>').join('');
+      return tr+'</tr>';
+    }).join('');
+    html+='</tbody></table></div>';
+    document.getElementById('modal2Body').innerHTML=html;
+  }catch(e){
+    document.getElementById('modal2Body').innerHTML=
       '<div class="modal-loading">Error: '+e.message+'</div>';
   }
 }
@@ -824,6 +938,24 @@ async function loadData(){
       </div>
     </div>
     <div class="modal-body" id="modalBody">
+      <div class="modal-loading">Cargando…</div>
+    </div>
+  </div>
+</div>
+<!-- MODAL 2: OPERADORES DEL COORDINADOR -->
+<div class="modal-overlay hidden" id="modal2Overlay" onclick="closeModal2Ov(event)" style="z-index:1100">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="m-hdr-left">
+        <div class="m-ttl" id="modal2Title">Detalle</div>
+        <div class="m-sub" id="modal2Sub"></div>
+      </div>
+      <div class="m-hdr-right">
+        <button class="btn-detail-m" id="btnDetailModal2" onclick="toggleModal2Detail()">🔍 Ver detalle</button>
+        <button class="modal-close" onclick="hideModal2()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modal2Body">
       <div class="modal-loading">Cargando…</div>
     </div>
   </div>
