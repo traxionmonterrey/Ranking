@@ -413,15 +413,23 @@ function resetFilters(){
 
 // ── MONTHLY AGGREGATE ──
 function aggregateMensual(rows){
+  // Semanas presentes en el período filtrado
+  const requiredSems=new Set(rows.map(r=>(r.sem||'').trim()).filter(Boolean));
   const map={};
   rows.forEach(r=>{
     const k=r.jefe+'::'+r.udn;
-    if(!map[k]) map[k]={jefe:r.jefe,udn:r.udn,rows:[]};
+    if(!map[k]) map[k]={jefe:r.jefe,udn:r.udn,semSet:new Set(),rows:[]};
+    map[k].semSet.add((r.sem||'').trim());
     map[k].rows.push(r);
   });
   const numCols=['ops','seg','renc','renp','vac','ops15','ptsDd','ptsJor','pts','ptsOp'];
   const pctCols=['nsIni','nsLle','cal','pseg','prenc','prenp','pren','pvac','phd','prot','psrot','final'];
-  return Object.values(map).map(g=>{
+  return Object.values(map).filter(g=>{
+    // Solo los presentes en TODAS las semanas del mes
+    if(!requiredSems.size) return true;
+    for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
+    return true;
+  }).map(g=>{
     const avg=col=>{const vs=g.rows.map(r=>r[col]).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;};
     const out={jefe:g.jefe,udn:g.udn};
     [...numCols,...pctCols].forEach(c=>out[c]=avg(c));
@@ -636,6 +644,24 @@ async function loadSupportData(){
 }
 
 // ── MODAL ──
+// Mensual: conserva solo las entidades presentes en TODAS las semanas del período
+function filtrarSemanasCompletas(rows,keyCol){
+  if(VIEW!=='mensual'||!rows.length) return rows;
+  const reqSems=new Set(rows.map(r=>(r['Semana']||'').trim()).filter(Boolean));
+  if(!reqSems.size) return rows;
+  const bySem={};
+  rows.forEach(r=>{
+    const k=normTxt(r[keyCol]);
+    if(!bySem[k]) bySem[k]=new Set();
+    bySem[k].add((r['Semana']||'').trim());
+  });
+  return rows.filter(r=>{
+    const s=bySem[normTxt(r[keyCol])];
+    if(!s) return true;
+    for(const x of reqSems){ if(!s.has(x)) return false; }
+    return true;
+  });
+}
 function closeModalOv(e){if(e.target===document.getElementById('modalOverlay')) hideModal();}
 function hideModal(){document.getElementById('modalOverlay').classList.add('hidden');}
 
@@ -740,6 +766,7 @@ async function openJefeDetail(jefe,udn,sem,mes){
       if(mes&&(r['Mes']||'').trim()!==mes) return false;
       return true;
     });
+    scoreRows=filtrarSemanasCompletas(scoreRows,'COORDINADOR');
     const finalKey=(DATA_SCORE_COORD_HDRS||[]).find(h=>normTxt(h)==='SCORE FINAL');
     if(finalKey){
       scoreRows.sort((a,b)=>{
@@ -850,6 +877,7 @@ async function openCoordOperadores(coord,udn,sem,mes){
       if(mes&&(r['Mes']||'').trim()!==mes) return false;
       return true;
     });
+    rows=filtrarSemanasCompletas(rows,'NOMINA OP');
     const finalKey=(DATA_SCORE_OPE_HDRS||[]).find(h=>normTxt(h)==='SCORE FINAL');
     if(finalKey){
       rows.sort((a,b)=>{
