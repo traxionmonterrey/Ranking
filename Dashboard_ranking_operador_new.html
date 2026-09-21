@@ -436,7 +436,7 @@ function render(){
     <td class="r">${scCell(r.nsLle)}</td>
     <td class="r">${scCell(r.cal)}</td>
     <td class="r ${dc}">${numCell(r.seg)}</td>
-    <td class="r">${scCell(r.pseg)}</td>
+    <td class="r">${scCell(r.pseg,3)}</td>
     <td class="r ${dc}">${numCell(r.renc)}</td>
     <td class="r ${dc}">${numCell(r.renp)}</td>
     <td class="r ${dc}">${scCell(r.prenc)}</td>
@@ -458,7 +458,7 @@ function exportExcel(){
     'Rend. Camión','Rend. Camioneta','%Rend Camión','%Rend Camioneta',
     '%Score Rend.','Vacío Arranque','Score Final'];
   const data=rows.map((r,i)=>[i+1,r.nombre||r.nom,r.nom,r.coord,r.udn,
-    f(r.nsIni),f(r.nsLle),f(r.cal),f(r.seg),f(r.pseg),
+    f(r.nsIni),f(r.nsLle),f(r.cal),f(r.seg),f3(r.pseg),
     f(r.renc),f(r.renp),f(r.prenc),f(r.prenp),f(r.pren),f(r.vac),f3(r.final)]);
   const ws=XLSX.utils.aoa_to_sheet([hdrs,...data]);
   const wb=XLSX.utils.book_new();
