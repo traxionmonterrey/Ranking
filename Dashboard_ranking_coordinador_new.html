@@ -396,15 +396,23 @@ function resetFilters(){
 
 // ── MONTHLY AGGREGATE ──
 function aggregateMensual(rows){
+  // Semanas presentes en el período filtrado
+  const requiredSems=new Set(rows.map(r=>(r.sem||'').trim()).filter(Boolean));
   const map={};
   rows.forEach(r=>{
     const k=r.coord+'::'+r.udn;
-    if(!map[k]) map[k]={coord:r.coord,udn:r.udn,jefe:r.jefe,rows:[]};
+    if(!map[k]) map[k]={coord:r.coord,udn:r.udn,jefe:r.jefe,semSet:new Set(),rows:[]};
+    map[k].semSet.add((r.sem||'').trim());
     map[k].rows.push(r);
   });
   const numCols=['ops','seg','renc','renp','vac','ops15','ptsDd','ptsJor','pts','ptsOp'];
   const pctCols=['nsIni','nsLle','cal','pseg','prenc','prenp','pren','pvac','phd','prot','psrot','final'];
-  return Object.values(map).map(g=>{
+  return Object.values(map).filter(g=>{
+    // Solo los presentes en TODAS las semanas del mes
+    if(!requiredSems.size) return true;
+    for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
+    return true;
+  }).map(g=>{
     const avg=col=>{const vs=g.rows.map(r=>r[col]).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;};
     const out={coord:g.coord,udn:g.udn,jefe:g.jefe};
     [...numCols,...pctCols].forEach(c=>out[c]=avg(c));
@@ -641,6 +649,23 @@ async function openCoordDetail(coord,udn,sem,mes){
       if(mes&&(r['Mes']||'').trim()!==mes) return false;
       return true;
     });
+    // Mensual: solo operadores presentes en TODAS las semanas del mes
+    if(VIEW==='mensual'){
+      const reqSems=new Set(scoreRows.map(r=>(r['Semana']||'').trim()).filter(Boolean));
+      const bySem={};
+      scoreRows.forEach(r=>{
+        const k=(r['NOMINA OP']||'').trim();
+        if(!bySem[k]) bySem[k]=new Set();
+        bySem[k].add((r['Semana']||'').trim());
+      });
+      scoreRows=scoreRows.filter(r=>{
+        const k=(r['NOMINA OP']||'').trim();
+        const s=bySem[k];
+        if(!reqSems.size||!s) return true;
+        for(const x of reqSems){ if(!s.has(x)) return false; }
+        return true;
+      });
+    }
     // Sort by Score Final desc
     scoreRows.sort((a,b)=>{
       const fa=parseFloat((a['Score Final']||'').replace('%',''))||0;
