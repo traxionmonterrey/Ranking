@@ -322,15 +322,23 @@ function resetFilters(){
   render();
 }
 function aggregateMensual(rows){
+  // Semanas presentes en el período filtrado (normalmente las 4-5 del mes)
+  const requiredSems=new Set(rows.map(r=>(r.sem||'').trim()).filter(Boolean));
   const map={};
   rows.forEach(r=>{
     const k=r.nom+'::'+r.udn;
-    if(!map[k]) map[k]={nom:r.nom,nombre:r.nombre,udn:r.udn,coord:r.coord,rows:[]};
+    if(!map[k]) map[k]={nom:r.nom,nombre:r.nombre,udn:r.udn,coord:r.coord,semSet:new Set(),rows:[]};
+    map[k].semSet.add((r.sem||'').trim());
     map[k].rows.push(r);
   });
   const pctCols=['nsIni','nsLle','cal','pseg','prenc','prenp','pren','final'];
   const numCols=['seg','renc','renp','vac'];
-  return Object.values(map).map(g=>{
+  return Object.values(map).filter(g=>{
+    // Solo operadores presentes en TODAS las semanas del mes (excluye bajas y altas parciales)
+    if(!requiredSems.size) return true;
+    for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
+    return true;
+  }).map(g=>{
     const avg=col=>{const vs=g.rows.map(r=>r[col]).filter(v=>v!==null);return vs.length?vs.reduce((a,b)=>a+b,0)/vs.length:null;};
     const out={nom:g.nom,nombre:g.nombre,udn:g.udn,coord:g.coord};
     [...pctCols,...numCols].forEach(c=>out[c]=avg(c));
