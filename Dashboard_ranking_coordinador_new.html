@@ -339,8 +339,21 @@ function num(v){
   return isNaN(n)?null:n;
 }
 
+// ── NORMALIZACIÓN (insensible a mayúsculas/minúsculas, acentos y espacios) ──
+function normTxt(s){
+  return (s||'').toString().normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toUpperCase().replace(/\s+/g,' ').trim();
+}
+function eqTxt(a,b){return normTxt(a)===normTxt(b);}
+
 // ── SELECTS ──
 function uniq(arr){return[...new Set(arr.filter(Boolean))].sort();}
+// Igual que uniq pero agrupa variantes que solo difieren en mayúsculas/acentos/espacios
+function uniqNorm(arr){
+  const seen={};
+  arr.filter(Boolean).forEach(v=>{const k=normTxt(v);if(!(k in seen)) seen[k]=v;});
+  return Object.values(seen).sort();
+}
 function fillSel(id,vals,ph){
   const s=document.getElementById(id),cur=s.value;
   s.innerHTML=ph!==null?`<option value="">${ph}</option>`:'';
@@ -348,8 +361,8 @@ function fillSel(id,vals,ph){
   if(vals.includes(cur)) s.value=cur;
 }
 function buildSelects(){
-  fillSel('f-udn',uniq(DATA.map(r=>r.udn)),'Todas');
-  fillSel('f-mes',uniq(DATA.map(r=>r.mes)),'Todos');
+  fillSel('f-udn',uniqNorm(DATA.map(r=>r.udn)),'Todas');
+  fillSel('f-mes',uniqNorm(DATA.map(r=>r.mes)),'Todos');
   fillSel('f-sem',uniq(DATA.map(r=>r.sem)),null);
 }
 function autoLatestWeek(){
@@ -362,7 +375,9 @@ function autoMes(){
   const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const act=meses[new Date().getMonth()];
   const sel=document.getElementById('f-mes');
-  for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===act){sel.value=act;break;}}
+  for(let i=0;i<sel.options.length;i++){
+    if(eqTxt(sel.options[i].value,act)){sel.value=sel.options[i].value;break;}
+  }
 }
 
 function setView(mode){
@@ -379,9 +394,9 @@ function getFiltered(){
   const v=id=>document.getElementById(id).value;
   const udn=v('f-udn'),mes=v('f-mes'),sem=v('f-sem');
   return DATA.filter(r=>{
-    if(udn&&r.udn!==udn) return false;
-    if(mes&&r.mes!==mes) return false;
-    if(VIEW==='semanal'&&sem&&r.sem!==sem) return false;
+    if(udn&&!eqTxt(r.udn,udn)) return false;
+    if(mes&&!eqTxt(r.mes,mes)) return false;
+    if(VIEW==='semanal'&&sem&&!eqTxt(r.sem,sem)) return false;
     return true;
   });
 }
@@ -396,14 +411,17 @@ function resetFilters(){
 
 // ── MONTHLY AGGREGATE ──
 function aggregateMensual(rows){
+  const hasF=r=>r.final!==null&&r.final!==undefined;
   // Semanas del período que realmente tienen Score Final cargado
-  const requiredSems=new Set(rows.filter(r=>r.final!==null&&r.final!==undefined).map(r=>(r.sem||'').trim()).filter(Boolean));
+  const requiredSems=new Set(rows.filter(hasF).map(r=>normTxt(r.sem)).filter(Boolean));
   const map={};
   rows.forEach(r=>{
-    const k=r.coord+'::'+r.udn;
+    // Clave insensible a mayúsculas/minúsculas, acentos y espacios
+    const k=normTxt(r.coord)+'::'+normTxt(r.udn);
     if(!map[k]) map[k]={coord:r.coord,udn:r.udn,jefe:r.jefe,semSet:new Set(),rows:[]};
+    if(!map[k].jefe&&r.jefe) map[k].jefe=r.jefe;
     // Solo cuenta la semana si ese registro trae Score Final
-    if(r.final!==null&&r.final!==undefined) map[k].semSet.add((r.sem||'').trim());
+    if(hasF(r)) map[k].semSet.add(normTxt(r.sem));
     map[k].rows.push(r);
   });
   const numCols=['ops','seg','renc','renp','vac','ops15','ptsDd','ptsJor','pts','ptsOp'];
@@ -642,27 +660,26 @@ async function openCoordDetail(coord,udn,sem,mes){
   try{
     await loadSupportData();
     // Filtrar Score Operador directo por columna Coordinador + período
-    const norm=s=>(s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .toUpperCase().replace(/\s+/g,' ').trim();
+    const norm=normTxt;
     const coordNorm=norm(coord);
     let scoreRows=DATA_SCORE_OPE.filter(r=>{
       if(norm(r['Coordinador'])!==coordNorm) return false;
-      if(VIEW==='semanal'&&sem&&(r['Semana']||'').trim()!==sem) return false;
-      if(mes&&(r['Mes']||'').trim()!==mes) return false;
+      if(VIEW==='semanal'&&sem&&!eqTxt(r['Semana'],sem)) return false;
+      if(mes&&!eqTxt(r['Mes'],mes)) return false;
       return true;
     });
     // Mensual: solo operadores con Score Final en TODAS las semanas del mes
     if(VIEW==='mensual'){
       const hasFinal=r=>String(r['Score Final']==null?'':r['Score Final']).trim()!=='';
-      const reqSems=new Set(scoreRows.filter(hasFinal).map(r=>(r['Semana']||'').trim()).filter(Boolean));
+      const reqSems=new Set(scoreRows.filter(hasFinal).map(r=>normTxt(r['Semana'])).filter(Boolean));
       const bySem={};
       scoreRows.forEach(r=>{
-        const k=(r['NOMINA OP']||'').trim();
+        const k=normTxt(r['NOMINA OP']);
         if(!bySem[k]) bySem[k]=new Set();
-        if(hasFinal(r)) bySem[k].add((r['Semana']||'').trim());
+        if(hasFinal(r)) bySem[k].add(normTxt(r['Semana']));
       });
       scoreRows=scoreRows.filter(r=>{
-        const k=(r['NOMINA OP']||'').trim();
+        const k=normTxt(r['NOMINA OP']);
         const s=bySem[k];
         if(!reqSems.size) return true;
         if(!s||!s.size) return false;
