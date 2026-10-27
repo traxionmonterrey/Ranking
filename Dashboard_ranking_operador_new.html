@@ -322,20 +322,22 @@ function resetFilters(){
   render();
 }
 function aggregateMensual(rows){
-  // Semanas presentes en el período filtrado (normalmente las 4-5 del mes)
-  const requiredSems=new Set(rows.map(r=>(r.sem||'').trim()).filter(Boolean));
+  // Semanas del período que realmente tienen Score Final cargado
+  const requiredSems=new Set(rows.filter(r=>r.final!==null&&r.final!==undefined).map(r=>(r.sem||'').trim()).filter(Boolean));
   const map={};
   rows.forEach(r=>{
     const k=r.nom+'::'+r.udn;
     if(!map[k]) map[k]={nom:r.nom,nombre:r.nombre,udn:r.udn,coord:r.coord,semSet:new Set(),rows:[]};
-    map[k].semSet.add((r.sem||'').trim());
+    // Solo cuenta la semana si ese registro trae Score Final
+    if(r.final!==null&&r.final!==undefined) map[k].semSet.add((r.sem||'').trim());
     map[k].rows.push(r);
   });
   const pctCols=['nsIni','nsLle','cal','pseg','prenc','prenp','pren','final'];
   const numCols=['seg','renc','renp','vac'];
   return Object.values(map).filter(g=>{
-    // Solo operadores presentes en TODAS las semanas del mes (excluye bajas y altas parciales)
+    // Solo operadores con Score Final en TODAS las semanas del mes (excluye bajas y altas parciales)
     if(!requiredSems.size) return true;
+    if(!g.semSet.size) return false;
     for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
     return true;
   }).map(g=>{
