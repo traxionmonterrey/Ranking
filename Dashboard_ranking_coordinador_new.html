@@ -396,20 +396,22 @@ function resetFilters(){
 
 // ── MONTHLY AGGREGATE ──
 function aggregateMensual(rows){
-  // Semanas presentes en el período filtrado
-  const requiredSems=new Set(rows.map(r=>(r.sem||'').trim()).filter(Boolean));
+  // Semanas del período que realmente tienen Score Final cargado
+  const requiredSems=new Set(rows.filter(r=>r.final!==null&&r.final!==undefined).map(r=>(r.sem||'').trim()).filter(Boolean));
   const map={};
   rows.forEach(r=>{
     const k=r.coord+'::'+r.udn;
     if(!map[k]) map[k]={coord:r.coord,udn:r.udn,jefe:r.jefe,semSet:new Set(),rows:[]};
-    map[k].semSet.add((r.sem||'').trim());
+    // Solo cuenta la semana si ese registro trae Score Final
+    if(r.final!==null&&r.final!==undefined) map[k].semSet.add((r.sem||'').trim());
     map[k].rows.push(r);
   });
   const numCols=['ops','seg','renc','renp','vac','ops15','ptsDd','ptsJor','pts','ptsOp'];
   const pctCols=['nsIni','nsLle','cal','pseg','prenc','prenp','pren','pvac','phd','prot','psrot','final'];
   return Object.values(map).filter(g=>{
-    // Solo los presentes en TODAS las semanas del mes
+    // Solo los que tienen Score Final en TODAS las semanas del mes
     if(!requiredSems.size) return true;
+    if(!g.semSet.size) return false;
     for(const s of requiredSems){ if(!g.semSet.has(s)) return false; }
     return true;
   }).map(g=>{
@@ -649,19 +651,21 @@ async function openCoordDetail(coord,udn,sem,mes){
       if(mes&&(r['Mes']||'').trim()!==mes) return false;
       return true;
     });
-    // Mensual: solo operadores presentes en TODAS las semanas del mes
+    // Mensual: solo operadores con Score Final en TODAS las semanas del mes
     if(VIEW==='mensual'){
-      const reqSems=new Set(scoreRows.map(r=>(r['Semana']||'').trim()).filter(Boolean));
+      const hasFinal=r=>String(r['Score Final']==null?'':r['Score Final']).trim()!=='';
+      const reqSems=new Set(scoreRows.filter(hasFinal).map(r=>(r['Semana']||'').trim()).filter(Boolean));
       const bySem={};
       scoreRows.forEach(r=>{
         const k=(r['NOMINA OP']||'').trim();
         if(!bySem[k]) bySem[k]=new Set();
-        bySem[k].add((r['Semana']||'').trim());
+        if(hasFinal(r)) bySem[k].add((r['Semana']||'').trim());
       });
       scoreRows=scoreRows.filter(r=>{
         const k=(r['NOMINA OP']||'').trim();
         const s=bySem[k];
-        if(!reqSems.size||!s) return true;
+        if(!reqSems.size) return true;
+        if(!s||!s.size) return false;
         for(const x of reqSems){ if(!s.has(x)) return false; }
         return true;
       });
